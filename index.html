@@ -17,7 +17,49 @@
   --purple:#7c3aed;--purple-bg:#f5f3ff;
   --radius:8px;--radius-lg:12px;
   --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --accent:#2563eb;--accent-bg:#eff6ff;--accent-hover:#1d4ed8;
+  --sidebar-bg:#fff;--sidebar-border:#e2e6ed;
 }
+body.theme-dark{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#263449;
+  --border:#334155;--border2:#475569;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --blue:#60a5fa;--blue-bg:#1e3a5f;--blue-border:#2563eb;
+  --green:#4ade80;--green-bg:#14532d;--green-border:#166534;
+  --amber:#fbbf24;--amber-bg:#451a03;--amber-border:#92400e;
+  --red:#f87171;--red-bg:#450a0a;--red-border:#991b1b;
+  --accent:#60a5fa;--accent-bg:#1e3a5f;--accent-hover:#3b82f6;
+  --sidebar-bg:#1e293b;--sidebar-border:#334155;
+}
+body.theme-green{
+  --bg:#f0fdf4;--surface:#fff;--surface2:#f0fdf4;
+  --border:#bbf7d0;--border2:#86efac;
+  --text:#14532d;--text2:#166534;--text3:#4ade80;
+  --blue:#16a34a;--blue-bg:#dcfce7;--blue-border:#86efac;
+  --accent:#16a34a;--accent-bg:#dcfce7;--accent-hover:#15803d;
+  --sidebar-bg:#fff;--sidebar-border:#bbf7d0;
+}
+body.theme-navy{
+  --bg:#f0f4ff;--surface:#fff;--surface2:#eef2ff;
+  --border:#c7d2fe;--border2:#a5b4fc;
+  --text:#1e1b4b;--text2:#3730a3;--text3:#6366f1;
+  --blue:#4f46e5;--blue-bg:#eef2ff;--blue-border:#c7d2fe;
+  --accent:#4f46e5;--accent-bg:#eef2ff;--accent-hover:#4338ca;
+  --sidebar-bg:#1e1b4b;--sidebar-border:#3730a3;
+}
+body.theme-navy #sidebar{background:var(--sidebar-bg)!important;border-color:var(--sidebar-border)!important}
+body.theme-navy .sidebar-logo h1{color:#a5b4fc!important}
+body.theme-navy .sidebar-logo p{color:#6366f1!important}
+body.theme-navy .nav-item{color:#c7d2fe!important}
+body.theme-navy .nav-item:hover{background:#3730a3!important;color:#e0e7ff!important}
+body.theme-navy .nav-item.active{background:#4f46e5!important;color:#fff!important}
+body.theme-navy .nav-section{color:#6366f1!important}
+
+/* THEME SWITCHER */
+.theme-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:1px solid var(--border);margin-top:auto}
+.theme-bar span{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.theme-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.theme-dot:hover,.theme-dot.active{border-color:var(--text2);transform:scale(1.15)}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 a{color:var(--blue);text-decoration:none}
 
@@ -34,7 +76,7 @@ a{color:var(--blue);text-decoration:none}
 .nav-section{padding:12px 8px 4px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);margin:1px 8px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s}
 .nav-item:hover{background:var(--bg);color:var(--text)}
-.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);font-weight:500}
 .nav-item svg{width:16px;height:16px;flex-shrink:0}
 .badge-count{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;font-weight:600}
 
@@ -80,8 +122,8 @@ tr:hover td{background:var(--surface2)}
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s}
 .btn:hover{background:var(--bg);border-color:var(--border2)}
-.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn.primary:hover{background:#1d4ed8}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
 .btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
 .btn.sm{padding:4px 10px;font-size:12px}
 
@@ -207,6 +249,13 @@ textarea{resize:vertical;min-height:70px}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     Avaliação Online
   </div>
+  <div class="theme-bar">
+    <span>Tema</span>
+    <div class="theme-dot active" id="td-default" style="background:#2563eb" title="Azul (padrão)" onclick="setTheme('default','td-default')"></div>
+    <div class="theme-dot" id="td-dark" style="background:#1e293b;border-color:#475569" title="Escuro" onclick="setTheme('dark','td-dark')"></div>
+    <div class="theme-dot" id="td-green" style="background:#16a34a" title="Verde" onclick="setTheme('green','td-green')"></div>
+    <div class="theme-dot" id="td-navy" style="background:#4f46e5" title="Navy" onclick="setTheme('navy','td-navy')"></div>
+  </div>
 </nav>
 
 <!-- MAIN -->
@@ -325,7 +374,7 @@ textarea{resize:vertical;min-height:70px}
         <div class="table-header"><h3>Retreinamentos por Falha Operacional</h3></div>
         <table>
           <thead><tr>
-            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Motivo</th><th>Responsável</th><th>Status</th>
+            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Motivo</th><th>Responsável</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="retrein-tbody"></tbody>
         </table>
@@ -685,9 +734,82 @@ textarea{resize:vertical;min-height:70px}
     </div>
   </div>
 
-</div>
+  <!-- Edit Retreinamento -->
+  <div class="modal hidden" id="modal-retrein-edit">
+    <div class="modal-head"><h3>Editar Retreinamento</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Data da Ocorrência</label><input type="date" id="fre-data"></div>
+        <div class="form-group"><label class="lbl">Operador</label><input type="text" id="fre-operador"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="fre-proc"></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Motivo</label><textarea id="fre-motivo"></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fre-responsavel"></div>
+        <div class="form-group"><label class="lbl">Data do Retreinamento</label><input type="date" id="fre-data-treino"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Status</label><select class="form-sel" id="fre-status"><option value="Pendente">Pendente</option><option value="Concluído">Concluído</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveRetreinEdit()">Salvar</button>
+    </div>
+  </div>
 
-<script>
+  <!-- Edit Programado -->
+  <div class="modal hidden" id="modal-prog-edit">
+    <div class="modal-head"><h3>Editar Treinamento Programado</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="fpe-proc"></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Operadores</label><input type="text" id="fpe-ops"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Frequência</label><select class="form-sel" id="fpe-freq"><option value="Trimestral">Trimestral</option><option value="Semestral">Semestral</option><option value="Anual">Anual</option></select></div>
+        <div class="form-group"><label class="lbl">Próxima Data</label><input type="date" id="fpe-data"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Observações</label><textarea id="fpe-obs"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveProgEdit()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- Edit Question -->
+  <div class="modal hidden" id="modal-question-edit">
+    <div class="modal-head"><h3>Editar Questão</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Pergunta *</label><textarea id="feq-pergunta" style="min-height:80px"></textarea></div>
+      </div>
+      <div id="feq-opcoes">
+        <div class="form-row full"><div class="form-group"><label class="lbl">Opção A *</label><input type="text" class="feq-opt" data-idx="0" placeholder="Opção A"></div></div>
+        <div class="form-row full"><div class="form-group"><label class="lbl">Opção B *</label><input type="text" class="feq-opt" data-idx="1" placeholder="Opção B"></div></div>
+        <div class="form-row full"><div class="form-group"><label class="lbl">Opção C</label><input type="text" class="feq-opt" data-idx="2" placeholder="Opção C (opcional)"></div></div>
+        <div class="form-row full"><div class="form-group"><label class="lbl">Opção D</label><input type="text" class="feq-opt" data-idx="3" placeholder="Opção D (opcional)"></div></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Resposta Correta *</label><select class="form-sel" id="feq-correta"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveQuestionEdit()">Salvar</button>
+    </div>
+  </div>
+
+</div>
 // ═══════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════
@@ -934,11 +1056,13 @@ function renderRetreinamentos(){
     <td>${fmtDate(r.data)}</td>
     <td>${r.operador}</td>
     <td>${r.proc}</td>
-    <td>${r.motivo}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.motivo}">${r.motivo}</td>
     <td>${r.responsavel}</td>
-    <td>
-      ${r.status==='Concluído'?'<span class="badge ok">Concluído</span>':'<span class="badge warn">Pendente</span>'}
-      ${r.status==='Pendente'?`<button class="btn sm" style="margin-left:6px" onclick="concluirRetreino(${r.id})">Concluir</button>`:''}
+    <td>${r.status==='Concluído'?'<span class="badge ok">Concluído</span>':'<span class="badge warn">Pendente</span>'}</td>
+    <td style="white-space:nowrap">
+      ${r.status==='Pendente'?`<button class="btn sm" onclick="concluirRetreino(${r.id})">Concluir</button> `:''}
+      <button class="btn sm" onclick="openEditRetreino(${r.id})">Editar</button>
+      <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRetreino(${r.id})">Excluir</button>
     </td>
   </tr>`).join('');
   document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
@@ -969,8 +1093,10 @@ function renderProgramados(){
       <td>${fmtDate(p.proxima_data)}</td>
       <td>${fmtDate(p.ultimo)||'—'}</td>
       <td>${stBadge}</td>
-      <td>
+      <td style="white-space:nowrap">
         <button class="btn sm" onclick="realizarTreinProg(${p.id})">Realizar</button>
+        <button class="btn sm" onclick="openEditProg(${p.id})">Editar</button>
+        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProg(${p.id})">Excluir</button>
       </td>
     </tr>`;
   }).join('');
@@ -1014,10 +1140,13 @@ function renderQuestionList(){
   const el = document.getElementById('question-list');
   if(!qs.length){ el.innerHTML='<p style="color:var(--text3);font-size:13px">Nenhuma questão cadastrada para este procedimento.</p>'; return; }
   el.innerHTML = qs.map((q,i)=>`
-    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
-      <div style="font-size:13px;font-weight:500">${i+1}. ${q.pergunta}</div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;background:var(--surface)">
+      <div style="font-size:13px;font-weight:500;color:var(--text)">${i+1}. ${q.pergunta}</div>
       <div style="font-size:12px;color:var(--text3);margin-top:4px">${q.opcoes.map((o,j)=>`${['A','B','C','D'][j]}) ${o}`).join(' | ')} — <span style="color:var(--green)">✓ ${['A','B','C','D'][q.correta]}</span></div>
-      <button class="btn sm" style="margin-top:6px;color:var(--red);border-color:var(--red)" onclick="removeQuestion('${pid}',${i})">Remover</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn sm" onclick="openEditQuestion('${pid}',${i})">Editar</button>
+        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="removeQuestion('${pid}',${i})">Excluir</button>
+      </div>
     </div>`).join('');
 }
 
@@ -1240,6 +1369,118 @@ function saveQuestion(){
   questions[pid].push({pergunta:perg, opcoes:opts, correta});
   persist(); closeModal(); renderQuestionList();
 }
+
+// ═══════════════════════════════════════════════════════
+// EDIT / DELETE — RETREINAMENTOS
+// ═══════════════════════════════════════════════════════
+let editRetreinId = null;
+function openEditRetreino(id){
+  const r = retreinamentos.find(x=>x.id===id);
+  if(!r) return;
+  editRetreinId = id;
+  populateProcsSelect('fre-proc');
+  document.getElementById('fre-data').value = r.data;
+  document.getElementById('fre-operador').value = r.operador;
+  document.getElementById('fre-proc').value = procs.find(p=>p.numero===r.proc)?.id || '';
+  document.getElementById('fre-motivo').value = r.motivo;
+  document.getElementById('fre-responsavel').value = r.responsavel;
+  document.getElementById('fre-data-treino').value = r.data_treino||'';
+  document.getElementById('fre-status').value = r.status;
+  openModal('retrein-edit');
+}
+function saveRetreinEdit(){
+  const r = retreinamentos.find(x=>x.id===editRetreinId);
+  if(!r) return;
+  const procId = document.getElementById('fre-proc').value;
+  const p = procs.find(x=>String(x.id)===String(procId));
+  r.data = document.getElementById('fre-data').value;
+  r.operador = document.getElementById('fre-operador').value.trim();
+  r.proc = p?.numero || r.proc;
+  r.motivo = document.getElementById('fre-motivo').value.trim();
+  r.responsavel = document.getElementById('fre-responsavel').value.trim();
+  r.data_treino = document.getElementById('fre-data-treino').value;
+  r.status = document.getElementById('fre-status').value;
+  persist(); closeModal(); renderRetreinamentos();
+}
+function deleteRetreino(id){
+  if(!confirm('Excluir este retreinamento?')) return;
+  const idx = retreinamentos.findIndex(x=>x.id===id);
+  if(idx>-1){ retreinamentos.splice(idx,1); persist(); renderRetreinamentos(); renderDashboard(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// EDIT / DELETE — PROGRAMADOS
+// ═══════════════════════════════════════════════════════
+let editProgId = null;
+function openEditProg(id){
+  const p = programados.find(x=>x.id===id);
+  if(!p) return;
+  editProgId = id;
+  populateProcsSelect('fpe-proc');
+  document.getElementById('fpe-proc').value = procs.find(x=>x.numero===p.proc)?.id||'';
+  document.getElementById('fpe-ops').value = p.operadores;
+  document.getElementById('fpe-freq').value = p.frequencia;
+  document.getElementById('fpe-data').value = p.proxima_data;
+  document.getElementById('fpe-obs').value = p.obs||'';
+  openModal('prog-edit');
+}
+function saveProgEdit(){
+  const p = programados.find(x=>x.id===editProgId);
+  if(!p) return;
+  const procId = document.getElementById('fpe-proc').value;
+  const proc = procs.find(x=>String(x.id)===String(procId));
+  p.proc = proc?.numero||p.proc;
+  p.setor = proc?.setor||p.setor;
+  p.operadores = document.getElementById('fpe-ops').value.trim();
+  p.frequencia = document.getElementById('fpe-freq').value;
+  p.proxima_data = document.getElementById('fpe-data').value;
+  p.obs = document.getElementById('fpe-obs').value;
+  persist(); closeModal(); renderProgramados();
+}
+function deleteProg(id){
+  if(!confirm('Excluir este treinamento programado?')) return;
+  const idx = programados.findIndex(x=>x.id===id);
+  if(idx>-1){ programados.splice(idx,1); persist(); renderProgramados(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// EDIT — QUESTÕES
+// ═══════════════════════════════════════════════════════
+let editQPid = null, editQIdx = null;
+function openEditQuestion(pid, idx){
+  const q = questions[pid]?.[idx];
+  if(!q) return;
+  editQPid = pid; editQIdx = idx;
+  document.getElementById('feq-pergunta').value = q.pergunta;
+  const inputs = document.querySelectorAll('.feq-opt');
+  inputs.forEach((inp,i)=>{ inp.value = q.opcoes[i]||''; });
+  document.getElementById('feq-correta').value = q.correta;
+  openModal('question-edit');
+}
+function saveQuestionEdit(){
+  const perg = document.getElementById('feq-pergunta').value.trim();
+  const opts = [...document.querySelectorAll('.feq-opt')].map(i=>i.value.trim()).filter(Boolean);
+  const correta = parseInt(document.getElementById('feq-correta').value);
+  if(!perg||opts.length<2){ alert('Pergunta e pelo menos 2 opções são obrigatórias.'); return; }
+  questions[editQPid][editQIdx] = {pergunta:perg, opcoes:opts, correta};
+  persist(); closeModal(); renderQuestionList();
+}
+
+// ═══════════════════════════════════════════════════════
+// THEME SWITCHER
+// ═══════════════════════════════════════════════════════
+function setTheme(theme, dotId){
+  document.body.className = theme==='default' ? '' : 'theme-'+theme;
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  document.getElementById(dotId).classList.add('active');
+  try{ sessionStorage.setItem('theme', theme); sessionStorage.setItem('themeBtn', dotId); }catch(e){}
+}
+(function initTheme(){
+  try{
+    const t=sessionStorage.getItem('theme'), b=sessionStorage.getItem('themeBtn');
+    if(t && b) setTheme(t,b);
+  }catch(e){}
+})();
 
 // ═══════════════════════════════════════════════════════
 // INIT
