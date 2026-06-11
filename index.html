@@ -223,6 +223,10 @@ textarea{resize:vertical;min-height:70px}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     Avaliação Online
   </div>
+  <div class="nav-item" data-page="capacitacao" onclick="navTo('capacitacao',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    Capacitação Assistida
+  </div>
   <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     Banco de Questões
@@ -410,6 +414,26 @@ textarea{resize:vertical;min-height:70px}
             <button class="btn primary" onclick="resetQuiz()">Nova Avaliação</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- CAPACITAÇÃO ASSISTIDA -->
+    <div class="page" id="page-capacitacao">
+      <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaCapacitacao()">+ Nova Capacitação</button></div>
+      <div class="alert info" style="margin-bottom:16px">📚 Fluxo de integração: <strong>1) Capacitação em Sala</strong> → <strong>2) Prova Online</strong> → <strong>3) Capacitação em Campo</strong>. Cada etapa deve ser registrada pelo responsável.</div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Capacitação Assistida de Operadores</h3>
+          <div class="search-bar"><input type="text" id="search-capac" placeholder="Buscar colaborador, procedimento..." oninput="renderCapacitacao()"></div>
+          <button class="btn" onclick="printCapacitacao()">🖨️ Imprimir</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>1️⃣ Sala</th><th>2️⃣ Prova</th><th>3️⃣ Campo</th><th>Status Geral</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="capac-tbody"></tbody>
+        </table>
+        <div id="capac-empty" class="empty hidden"><p>Nenhuma capacitação cadastrada ainda.</p></div>
       </div>
     </div>
 
@@ -814,6 +838,35 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveAgendarAvaliacao()">Agendar</button></div>
   </div>
 
+  <!-- Nova Capacitação -->
+  <div class="modal hidden" id="modal-capac-nova">
+    <div class="modal-head"><h3>Nova Capacitação Assistida</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fcap-operador"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fcap-proc"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><input type="text" id="fcap-obs" placeholder="Opcional"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveNovaCapacitacao()">Criar</button></div>
+  </div>
+
+  <!-- Registrar Etapa -->
+  <div class="modal hidden" id="modal-capac-etapa">
+    <div class="modal-head"><h3 id="capac-etapa-title">Registrar Etapa</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="capac-etapa-info" class="alert info" style="margin-bottom:14px"></div>
+      <div class="form-row" id="capac-row-data">
+        <div class="form-group"><label class="lbl">Data *</label><input type="date" id="fcap-et-data"></div>
+        <div class="form-group" id="capac-grp-resp"><label class="lbl" id="capac-lbl-resp">Responsável *</label><select class="form-sel" id="fcap-et-resp"></select></div>
+      </div>
+      <div class="form-row" id="capac-row-resultado" style="display:none">
+        <div class="form-group"><label class="lbl">Resultado *</label><select class="form-sel" id="fcap-et-resultado"><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option></select></div>
+        <div class="form-group" id="capac-grp-nota" style="display:none"><label class="lbl">Nota (%)</label><input type="text" id="fcap-et-nota" placeholder="Ex: 85"></div>
+      </div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><textarea id="fcap-et-obs" placeholder="Opcional"></textarea></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapacEtapa()">Registrar</button></div>
+  </div>
+
 </div>
 
 <script>
@@ -833,6 +886,7 @@ let retreinamentos = loadState('retreinamentos', []);
 let programados = loadState('programados', []);
 let questions = loadState('questions', {});
 let operadores = loadState('operadores', []);
+let capacitacoes = loadState('capacitacoes', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -845,6 +899,7 @@ function persist(){
   saveState('programados', programados);
   saveState('questions', questions);
   saveState('operadores', operadores);
+  saveState('capacitacoes', capacitacoes);
   saveState('nextId', nextId);
 }
 
@@ -885,7 +940,7 @@ const pageTitles = {
   dashboard:'Dashboard', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Capacitação Assistida'
 };
 
 function navTo(page, el){
@@ -906,6 +961,7 @@ function navTo(page, el){
   if(page==='quiz') renderQuizSelector();
   if(page==='questoes') renderBancoQuestoes();
   if(page==='colaboradores') renderColaboradores();
+  if(page==='capacitacao') renderCapacitacao();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1706,6 +1762,179 @@ document.addEventListener('DOMContentLoaded', function(){
   const inp = document.getElementById('novo-colaborador');
   if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
 });
+
+// ═══════════════════════════════════════════════════════
+// CAPACITAÇÃO ASSISTIDA
+// ═══════════════════════════════════════════════════════
+function capacStatusGeral(c){
+  // Reprovado if any stage reproved
+  if(c.prova_resultado==='Reprovado' || c.campo_resultado==='Reprovado') return 'Reprovado';
+  if(c.sala_status==='Concluída' && c.prova_status==='Realizada' && c.prova_resultado==='Aprovado' && c.campo_status==='Concluída' && c.campo_resultado==='Aprovado') return 'Capacitado';
+  return 'Em andamento';
+}
+
+function etapaBadge(status, resultado, data){
+  if(status!=='Concluída' && status!=='Realizada') return '<span class="badge neutral">Pendente</span>';
+  let cls = 'ok', txt = 'OK';
+  if(resultado==='Reprovado'){ cls='danger'; txt='Reprovado'; }
+  else if(resultado==='Aprovado'){ cls='ok'; txt='Aprovado'; }
+  return `<span class="badge ${cls}">${txt}</span><br><span style="font-size:10px;color:var(--text3)">${fmtDate(data)}</span>`;
+}
+
+function renderCapacitacao(){
+  const search = (document.getElementById('search-capac')||{}).value?.toLowerCase()||'';
+  const filtered = capacitacoes.filter(c=>!search||(c.operador+c.proc).toLowerCase().includes(search));
+  const empty = document.getElementById('capac-empty');
+  const tbl = document.querySelector('#page-capacitacao table');
+  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('capac-tbody').innerHTML = filtered.map(c=>{
+    const geral = capacStatusGeral(c);
+    const geralBadge = geral==='Capacitado'?'<span class="badge ok">✅ Capacitado</span>'
+      : geral==='Reprovado'?'<span class="badge danger">❌ Reprovado</span>'
+      : '<span class="badge warn">⏳ Em andamento</span>';
+    // Action buttons per pending stage
+    let acoes = '';
+    if(c.sala_status!=='Concluída') acoes += `<button class="btn sm" onclick="openCapacEtapa(${c.id},'sala')">Reg. Sala</button> `;
+    else if(c.prova_status!=='Realizada') acoes += `<button class="btn sm" onclick="openCapacEtapa(${c.id},'prova')">Reg. Prova</button> `;
+    else if(c.campo_status!=='Concluída') acoes += `<button class="btn sm" onclick="openCapacEtapa(${c.id},'campo')">Reg. Campo</button> `;
+    acoes += `<button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapacitacao(${c.id})">Excluir</button>`;
+    return `<tr>
+      <td><strong>${c.operador}</strong></td>
+      <td>${c.proc}</td>
+      <td><span class="badge neutral">${c.revisao||'—'}</span></td>
+      <td>${etapaBadge(c.sala_status, null, c.sala_data)}</td>
+      <td>${etapaBadge(c.prova_status, c.prova_resultado, c.prova_data)}</td>
+      <td>${etapaBadge(c.campo_status, c.campo_resultado, c.campo_data)}</td>
+      <td>${geralBadge}</td>
+      <td style="white-space:nowrap">${acoes}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openNovaCapacitacao(){
+  populateOperadoresSelect('fcap-operador');
+  populateProcsSelect('fcap-proc');
+  document.getElementById('fcap-obs').value='';
+  openModal('capac-nova');
+}
+
+function saveNovaCapacitacao(){
+  const op = document.getElementById('fcap-operador').value;
+  const procId = document.getElementById('fcap-proc').value;
+  if(!op){ alert('Selecione um colaborador.'); return; }
+  const proc = procs.find(x=>String(x.id)===String(procId));
+  capacitacoes.push({
+    id:genId(), operador:op, proc:proc?proc.numero:procId, revisao:proc?proc.revisao:'', setor:proc?proc.setor:'',
+    obs:document.getElementById('fcap-obs').value.trim(),
+    sala_status:'Pendente', sala_data:'', sala_resp:'',
+    prova_status:'Pendente', prova_data:'', prova_resultado:'', prova_nota:'',
+    campo_status:'Pendente', campo_data:'', campo_resp:'', campo_resultado:''
+  });
+  persist(); closeModal(); renderCapacitacao();
+}
+
+function deleteCapacitacao(id){
+  if(!confirm('Excluir esta capacitação?')) return;
+  capacitacoes = capacitacoes.filter(c=>c.id!==id);
+  persist(); renderCapacitacao();
+}
+
+let capacEtapaCtx = {id:null, etapa:null};
+function openCapacEtapa(id, etapa){
+  const c = capacitacoes.find(x=>x.id===id);
+  if(!c) return;
+  capacEtapaCtx = {id, etapa};
+  const titulo = {sala:'1️⃣ Registrar Capacitação em Sala', prova:'2️⃣ Registrar Prova Online', campo:'3️⃣ Registrar Capacitação em Campo'}[etapa];
+  document.getElementById('capac-etapa-title').textContent = titulo;
+  document.getElementById('capac-etapa-info').innerHTML = `<strong>${c.operador}</strong> — ${c.proc}`;
+  document.getElementById('fcap-et-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fcap-et-obs').value = '';
+  // Responsible label & visibility
+  const rowResultado = document.getElementById('capac-row-resultado');
+  const grpResp = document.getElementById('capac-grp-resp');
+  const grpNota = document.getElementById('capac-grp-nota');
+  const lblResp = document.getElementById('capac-lbl-resp');
+  if(etapa==='sala'){
+    lblResp.textContent = 'Instrutor *';
+    grpResp.style.display = '';
+    populateOperadoresSelect('fcap-et-resp');
+    rowResultado.style.display = 'none';
+    grpNota.style.display = 'none';
+  } else if(etapa==='prova'){
+    grpResp.style.display = 'none';
+    rowResultado.style.display = '';
+    grpNota.style.display = '';
+  } else if(etapa==='campo'){
+    lblResp.textContent = 'Responsável *';
+    grpResp.style.display = '';
+    populateOperadoresSelect('fcap-et-resp');
+    rowResultado.style.display = '';
+    grpNota.style.display = 'none';
+  }
+  openModal('capac-etapa');
+}
+
+function saveCapacEtapa(){
+  const c = capacitacoes.find(x=>x.id===capacEtapaCtx.id);
+  if(!c) return;
+  const etapa = capacEtapaCtx.etapa;
+  const data = document.getElementById('fcap-et-data').value;
+  const obs = document.getElementById('fcap-et-obs').value.trim();
+  if(!data){ alert('Informe a data.'); return; }
+  if(etapa==='sala'){
+    const resp = document.getElementById('fcap-et-resp').value;
+    if(!resp){ alert('Selecione o instrutor.'); return; }
+    c.sala_status='Concluída'; c.sala_data=data; c.sala_resp=resp; c.sala_obs=obs;
+  } else if(etapa==='prova'){
+    c.prova_status='Realizada'; c.prova_data=data;
+    c.prova_resultado=document.getElementById('fcap-et-resultado').value;
+    c.prova_nota=document.getElementById('fcap-et-nota').value.trim();
+    c.prova_obs=obs;
+  } else if(etapa==='campo'){
+    const resp = document.getElementById('fcap-et-resp').value;
+    if(!resp){ alert('Selecione o responsável.'); return; }
+    c.campo_status='Concluída'; c.campo_data=data; c.campo_resp=resp;
+    c.campo_resultado=document.getElementById('fcap-et-resultado').value;
+    c.campo_obs=obs;
+  }
+  // If fully completed and approved, register in training log
+  const geral = capacStatusGeral(c);
+  if(geral==='Capacitado' && !c._registrado){
+    c._registrado = true;
+    treinamentos.push({id:genId(), data:c.campo_data||data, operador:c.operador, proc:c.proc, revisao:c.revisao, setor:c.setor, tipo:'Capacitação Assistida', resultado:'Aprovado', instrutor:c.campo_resp||'—', obs:'Capacitação assistida concluída (Sala + Prova + Campo)'});
+    renderDashboard();
+  }
+  persist(); closeModal(); renderCapacitacao();
+}
+
+function printCapacitacao(){
+  const search = (document.getElementById('search-capac')||{}).value?.toLowerCase()||'';
+  const rows = capacitacoes.filter(c=>!search||(c.operador+c.proc).toLowerCase().includes(search));
+  if(!rows.length){ alert('Não há capacitações para imprimir.'); return; }
+  const win = window.open('', '_blank');
+  let html = '<html><head><title>Capacitação Assistida</title><meta charset="UTF-8"><style>'+
+    'body{font-family:Arial,sans-serif;padding:24px;color:#1a2332}'+
+    'h1{font-size:18px;border-bottom:2px solid #2563eb;padding-bottom:8px}'+
+    '.sub{font-size:12px;color:#666;margin-bottom:16px}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px}'+
+    'th{background:#2563eb;color:#fff;text-align:left;padding:7px;border:1px solid #1d4ed8}'+
+    'td{padding:6px 7px;border:1px solid #ddd}'+
+    'tr:nth-child(even){background:#f4f6f9}'+
+    '@media print{button{display:none}}</style></head><body>';
+  html += '<h1>⚙ GestorPRO — Capacitação Assistida</h1>';
+  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' registro(s)</div>';
+  html += '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Sala</th><th>Prova</th><th>Campo</th><th>Status Geral</th></tr></thead><tbody>';
+  rows.forEach(c=>{
+    const sala = c.sala_status==='Concluída'?('OK '+fmtDate(c.sala_data)):'Pendente';
+    const prova = c.prova_status==='Realizada'?((c.prova_resultado||'')+' '+fmtDate(c.prova_data)):'Pendente';
+    const campo = c.campo_status==='Concluída'?((c.campo_resultado||'')+' '+fmtDate(c.campo_data)):'Pendente';
+    html += '<tr><td>'+c.operador+'</td><td>'+c.proc+'</td><td>'+(c.revisao||'—')+'</td><td>'+sala+'</td><td>'+prova+'</td><td>'+campo+'</td><td>'+capacStatusGeral(c)+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '<script>window.onload=function(){window.print();}<\\/script></body></html>';
+  win.document.write(html); win.document.close();
+}
 
 // ═══════════════════════════════════════════════════════
 // INIT
