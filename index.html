@@ -222,6 +222,10 @@ textarea{resize:vertical;min-height:70px}
   <div class="nav-item" data-page="quiz" onclick="navTo('quiz',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     Avaliação Online
+  </div>
+  <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Banco de Questões
   </div></nav>
 
 <!-- MAIN -->
@@ -375,22 +379,12 @@ textarea{resize:vertical;min-height:70px}
     <!-- QUIZ / AVALIAÇÃO -->
     <div class="page" id="page-quiz">
       <div id="quiz-selector">
-        <div class="table-wrap" style="margin-bottom:16px">
+        <div class="table-wrap">
           <div class="table-header">
             <h3>📋 Fila de Avaliações Agendadas</h3>
             <button class="btn primary" onclick="openAgendarAvaliacao()">+ Agendar Avaliação</button>
           </div>
           <div id="agenda-lista"><p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma avaliação agendada.</p></div>
-        </div>
-        <div class="table-wrap">
-          <div class="table-header"><h3>Gerenciar Questões por Procedimento</h3></div>
-          <div style="padding:16px">
-            <div class="form-row">
-              <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="quiz-proc-sel" onchange="renderQuestionList()"></select></div>
-            </div>
-            <button class="btn primary" style="margin-bottom:12px" onclick="openAddQuestion()">+ Adicionar Questão</button>
-            <div id="question-list"></div>
-          </div>
         </div>
       </div>
   </div>
@@ -411,6 +405,20 @@ textarea{resize:vertical;min-height:70px}
           <div style="padding:0 24px 24px;text-align:center">
             <button class="btn primary" onclick="resetQuiz()">Nova Avaliação</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANCO DE QUESTÕES -->
+    <div class="page" id="page-questoes">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Banco de Questões por Procedimento</h3></div>
+        <div style="padding:16px">
+          <div class="form-row">
+            <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="quiz-proc-sel" onchange="renderQuestionList()"></select></div>
+          </div>
+          <button class="btn primary" style="margin-bottom:12px" onclick="openAddQuestion()">+ Adicionar Questão</button>
+          <div id="question-list"></div>
         </div>
       </div>
     </div>
@@ -855,7 +863,7 @@ const pageTitles = {
   dashboard:'Dashboard', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online'
+  quiz:'Avaliação Online', questoes:'Banco de Questões'
 };
 
 function navTo(page, el){
@@ -874,6 +882,7 @@ function navTo(page, el){
   if(page==='retreinamentos') renderRetreinamentos();
   if(page==='programados') renderProgramados();
   if(page==='quiz') renderQuizSelector();
+  if(page==='questoes') renderBancoQuestoes();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1195,20 +1204,16 @@ function realizarTreinProg(id){
 let quizState = { questions:[], idx:0, answers:[], procId:null };
 
 function renderQuizSelector(){
-  const sel = document.getElementById('quiz-proc-sel');
-  if(sel) sel.innerHTML = procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
   document.getElementById('quiz-selector').classList.remove('hidden');
   document.getElementById('quiz-runner').classList.add('hidden');
   document.getElementById('quiz-result').classList.add('hidden');
-  renderQuestionList();
   renderAgenda();
 }
 
-function quizTab(tab, el){
-  document.querySelectorAll('#page-quiz .tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('quiz-tab-start').classList.toggle('hidden', tab!=='start');
-  document.getElementById('quiz-tab-manage').classList.toggle('hidden', tab!=='manage');
+function renderBancoQuestoes(){
+  const sel = document.getElementById('quiz-proc-sel');
+  if(sel) sel.innerHTML = procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
+  renderQuestionList();
 }
 
 function renderQuestionList(){
