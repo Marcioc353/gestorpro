@@ -324,9 +324,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap">
         <div class="table-header">
           <h3>Registros de Treinamentos</h3>
-          <div class="search-bar">
-            <input type="text" id="search-trein" placeholder="Buscar operador..." oninput="renderTreinamentos()">
-          </div>
+          <select id="search-trein" onchange="renderTreinamentos()"><option value="">Todos os operadores</option></select>
           <select id="filter-trein-proc" onchange="renderTreinamentos()"><option value="">Todos os procedimentos</option></select>
           <button class="btn" onclick="printSelectedTrein()">🖨️ Imprimir selecionados</button>
           <button class="btn danger" onclick="deleteSelectedTrein()">Excluir selecionados</button>
@@ -1105,8 +1103,16 @@ function renderRevisoes(){
 // TREINAMENTOS
 // ═══════════════════════════════════════════════════════
 function renderTreinamentos(){
-  const search = (document.getElementById('search-trein')||{}).value?.toLowerCase()||'';
+  const fop = (document.getElementById('search-trein')||{}).value||'';
   const fproc = (document.getElementById('filter-trein-proc')||{}).value||'';
+  // Populate operator filter
+  const of = document.getElementById('search-trein');
+  if(of){
+    const curOp = of.value;
+    const opsInLog = [...new Set(treinamentos.map(t=>t.operador))].sort((a,b)=>a.localeCompare(b));
+    of.innerHTML = '<option value="">Todos os operadores</option>' + opsInLog.map(o=>`<option value="${o}">${o}</option>`).join('');
+    of.value = curOp;
+  }
   // Populate procedure filter
   const sf = document.getElementById('filter-trein-proc');
   if(sf){
@@ -1116,7 +1122,7 @@ function renderTreinamentos(){
     sf.value = cur;
   }
   const filtered = treinamentos.filter(t=>{
-    if(search && !(t.operador+t.proc).toLowerCase().includes(search)) return false;
+    if(fop && t.operador!==fop) return false;
     if(fproc && t.proc!==fproc) return false;
     return true;
   });
@@ -1166,11 +1172,12 @@ function printSelectedTrein(){
   let ids = getSelectedTrein();
   // If nothing selected, print all currently filtered
   const fproc = (document.getElementById('filter-trein-proc')||{}).value||'';
+  const fop = (document.getElementById('search-trein')||{}).value||'';
   let rows;
   if(ids.length){
     rows = treinamentos.filter(t=>ids.includes(t.id));
   } else {
-    rows = treinamentos.filter(t=>!fproc || t.proc===fproc);
+    rows = treinamentos.filter(t=>(!fproc || t.proc===fproc) && (!fop || t.operador===fop));
     if(!rows.length){ alert('Não há registros para imprimir.'); return; }
   }
   const win = window.open('', '_blank');
