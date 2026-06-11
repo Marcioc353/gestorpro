@@ -420,7 +420,7 @@ textarea{resize:vertical;min-height:70px}
     <!-- CAPACITAÇÃO ASSISTIDA (AVALIAÇÃO EM CAMPO) -->
     <div class="page" id="page-capacitacao">
       <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaCapacitacao()">+ Nova Avaliação em Campo</button></div>
-      <div class="alert info" style="margin-bottom:16px">🎯 Etapa final da integração. Após a capacitação em sala e a prova online (módulo Avaliação Online), o responsável registra aqui a <strong>avaliação prática em campo</strong>, aprovando ou reprovando o colaborador.</div>
+      <div class="alert info" style="margin-bottom:16px">🎯 Etapa final da integração. Após a capacitação em sala e a prova online (módulo Avaliação Online), o responsável registra aqui a <strong>avaliação prática em campo</strong>. Ao registrar o resultado, a avaliação é movida para os <strong>Registros de Treinamento</strong> — aqui ficam apenas as que ainda aguardam avaliação.</div>
       <div class="table-wrap">
         <div class="table-header">
           <h3>Avaliação Assistida em Campo</h3>
@@ -429,7 +429,7 @@ textarea{resize:vertical;min-height:70px}
         </div>
         <table>
           <thead><tr>
-            <th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Data</th><th>Resultado</th><th>Ações</th>
+            <th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="capac-tbody"></tbody>
         </table>
@@ -1772,24 +1772,16 @@ function renderCapacitacao(){
   if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   document.getElementById('capac-tbody').innerHTML = filtered.map(c=>{
-    let resBadge, acoes;
-    if(c.resultado==='Aprovado') resBadge='<span class="badge ok">✅ Aprovado</span>';
-    else if(c.resultado==='Reprovado') resBadge='<span class="badge danger">❌ Reprovado</span>';
-    else resBadge='<span class="badge warn">⏳ Aguardando</span>';
-    if(!c.resultado){
-      acoes = `<button class="btn sm primary" onclick="openCapacReg(${c.id})">Registrar</button> `;
-    } else {
-      acoes = `<button class="btn sm" onclick="openCapacReg(${c.id})">Editar</button> `;
-    }
-    acoes += `<button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapacitacao(${c.id})">Excluir</button>`;
     return `<tr>
       <td><strong>${c.operador}</strong></td>
       <td>${c.proc}</td>
       <td><span class="badge neutral">${c.revisao||'—'}</span></td>
       <td>${c.responsavel||'—'}</td>
-      <td>${c.data?fmtDate(c.data):'—'}</td>
-      <td>${resBadge}</td>
-      <td style="white-space:nowrap">${acoes}</td>
+      <td><span class="badge warn">⏳ Aguardando avaliação</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn sm primary" onclick="openCapacReg(${c.id})">Registrar Resultado</button>
+        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapacitacao(${c.id})">Excluir</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1841,15 +1833,13 @@ function saveCapacReg(){
   if(!c) return;
   const data = document.getElementById('fcap-reg-data').value;
   if(!data){ alert('Informe a data da avaliação.'); return; }
-  c.data = data;
-  c.resultado = document.getElementById('fcap-reg-resultado').value;
-  c.responsavel = document.getElementById('fcap-reg-resp').value || c.responsavel;
-  c.obs = document.getElementById('fcap-reg-obs').value.trim();
-  // Register in training log (only once)
-  if(c.resultado==='Aprovado' && !c._registrado){
-    c._registrado = true;
-    treinamentos.push({id:genId(), data:c.data, operador:c.operador, proc:c.proc, revisao:c.revisao, setor:c.setor, tipo:'Avaliação em Campo', resultado:'Aprovado', instrutor:c.responsavel||'—', obs:'Capacitação assistida — avaliação prática em campo aprovada'});
-  }
+  const resultado = document.getElementById('fcap-reg-resultado').value;
+  const resp = document.getElementById('fcap-reg-resp').value || c.responsavel;
+  const obs = document.getElementById('fcap-reg-obs').value.trim();
+  // Register in training log (approved or reproved)
+  treinamentos.push({id:genId(), data:data, operador:c.operador, proc:c.proc, revisao:c.revisao, setor:c.setor, tipo:'Avaliação em Campo', resultado:resultado, instrutor:resp||'—', obs: obs || 'Capacitação assistida — avaliação prática em campo'});
+  // Move out of Capacitação (now lives in Registros de Treinamento)
+  capacitacoes = capacitacoes.filter(x=>x.id!==capacRegId);
   persist(); closeModal(); renderCapacitacao(); renderDashboard();
 }
 
@@ -1868,11 +1858,11 @@ function printCapacitacao(){
     'tr:nth-child(even){background:#f4f6f9}'+
     '.sign{margin-top:40px;font-size:12px}.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}</style></head><body>';
-  html += '<h1>⚙ GestorPRO — Avaliação Assistida em Campo</h1>';
+  html += '<h1>⚙ GestorPRO — Avaliações em Campo Pendentes</h1>';
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' registro(s)</div>';
-  html += '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Data</th><th>Resultado</th></tr></thead><tbody>';
+  html += '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(c=>{
-    html += '<tr><td>'+c.operador+'</td><td>'+c.proc+'</td><td>'+(c.revisao||'—')+'</td><td>'+(c.responsavel||'—')+'</td><td>'+(c.data?fmtDate(c.data):'—')+'</td><td>'+(c.resultado||'Aguardando')+'</td></tr>';
+    html += '<tr><td>'+c.operador+'</td><td>'+c.proc+'</td><td>'+(c.revisao||'—')+'</td><td>'+(c.responsavel||'—')+'</td><td>Aguardando avaliação</td></tr>';
   });
   html += '</tbody></table>';
   html += '<div class="sign"><div class="sign-line">Responsável pela Avaliação</div></div>';
