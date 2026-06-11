@@ -440,13 +440,12 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap">
         <div class="table-header">
           <h3>Cadastro de Colaboradores</h3>
-          <div class="search-bar">
-            <input type="text" id="novo-colaborador" placeholder="Digite o nome do colaborador...">
-          </div>
+          <input type="text" id="novo-colaborador" placeholder="Nome do colaborador..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:200px">
+          <input type="email" id="novo-colaborador-email" placeholder="E-mail (opcional)" style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:200px">
           <button class="btn primary" onclick="addColaborador()">+ Adicionar</button>
         </div>
         <table>
-          <thead><tr><th>Nome</th><th style="width:120px">Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th>E-mail</th><th style="width:120px">Ações</th></tr></thead>
           <tbody id="colab-tbody"></tbody>
         </table>
         <div id="colab-empty" class="empty hidden"><p>Nenhum colaborador cadastrado ainda.</p></div>
@@ -891,6 +890,7 @@ let retreinamentos = loadState('retreinamentos', []);
 let programados = loadState('programados', []);
 let questions = loadState('questions', {});
 let operadores = loadState('operadores', []);
+operadores = operadores.map(o=> typeof o==='string' ? {nome:o, email:''} : o);
 let capacitacoes = loadState('capacitacoes', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
@@ -1240,8 +1240,10 @@ function concluirRetreino(id){
     const proc = procs.find(p=>p.numero===r.proc);
     treinamentos.push({id:genId(), data:r.data_treino||new Date().toISOString().slice(0,10), operador:r.operador, proc:r.proc, revisao:proc?proc.revisao:'', setor:proc?proc.setor:'', tipo:'Retreinamento', resultado:'Concluído', instrutor:r.responsavel||'—', obs:'Retreinamento: '+(r.motivo||'')});
     // Move out of Retreinamentos (now lives in Registros de Treinamento)
+    const opNome = r.operador, procNome = r.proc;
     retreinamentos = retreinamentos.filter(x=>x.id!==id);
     persist(); renderRetreinamentos(); renderDashboard();
+    notifyColaborador(opNome, 'Retreinamento Concluído — '+procNome, 'Olá '+opNome+',\n\nSeu retreinamento foi concluído:\n\nProcedimento: '+procNome+'\nResultado: Concluído\n\nAtenciosamente,\nGestorPRO');
   }
 }
 
@@ -1288,6 +1290,7 @@ function realizarTreinProg(id){
   treinamentos.push({id:genId(), data:hoje, operador:prog.operadores, proc:prog.proc, revisao:proc?proc.revisao:'', setor:proc?proc.setor:prog.setor||'', tipo:'Treinamento Programado ('+prog.frequencia+')', resultado:'Concluído', instrutor:prog.responsavel||'Programado', obs:prog.obs||''});
   persist(); renderProgramados(); renderDashboard();
   alert(`Treinamento realizado! Registro gravado. Próxima data: ${fmtDate(prog.proxima_data)}`);
+  notifyColaborador(prog.operadores, 'Treinamento Programado Concluído — '+prog.proc, 'Olá '+prog.operadores+',\n\nSeu treinamento programado foi concluído:\n\nProcedimento: '+prog.proc+'\nData: '+fmtDate(hoje)+'\nResultado: Concluído\n\nAtenciosamente,\nGestorPRO');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1515,6 +1518,7 @@ function saveRetreino(){
   retreinamentos.push({id:genId(),data:document.getElementById('frt-data').value,operador:op,proc:p?.numero||procId,motivo,responsavel:resp,data_treino:document.getElementById('frt-data-treino').value,status:'Pendente'});
   persist(); closeModal(); renderRetreinamentos();
   document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
+  notifyColaborador(op, 'Retreinamento Agendado — '+(p?p.numero:procId), 'Olá '+op+',\n\nVocê foi agendado para um retreinamento:\n\nProcedimento: '+(p?p.numero+' — '+p.descricao:procId)+'\nMotivo: '+motivo+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
 }
 
 // PROGRAMADO
@@ -1533,6 +1537,7 @@ function saveProg(){
   if(!ops||!data){ alert('Operador e data são obrigatórios.'); return; }
   programados.push({id:genId(),proc:p?.numero||procId,setor:p?.setor||'',operadores:ops,responsavel:document.getElementById('fprog-resp').value.trim(),frequencia:document.getElementById('fprog-freq').value,proxima_data:data,ultimo:'',obs:document.getElementById('fprog-obs').value});
   persist(); closeModal(); renderProgramados();
+  notifyColaborador(ops, 'Novo Treinamento Programado — '+(p?p.numero:procId), 'Olá '+ops+',\n\nVocê foi incluído em um treinamento programado:\n\nProcedimento: '+(p?p.numero+' — '+p.descricao:procId)+'\nFrequência: '+document.getElementById('fprog-freq').value+'\nPróxima data prevista: '+fmtDate(data)+'\n\nAtenciosamente,\nGestorPRO');
 }
 
 // QUESTION
@@ -1711,6 +1716,7 @@ function saveAgendarAvaliacao(){
   persist();
   closeModal();
   renderAgenda();
+  notifyColaborador(op, 'Avaliação Online Agendada — '+(proc?proc.numero:procId), 'Olá '+op+',\n\nVocê tem uma avaliação online agendada:\n\nProcedimento: '+(proc?proc.numero+' — '+proc.descricao:procId)+'\nData prevista: '+fmtDate(data)+'\n\nAcesse o sistema para realizar sua avaliação.\n\nAtenciosamente,\nGestorPRO');
 }
 
 function deleteAgenda(id){
@@ -1738,38 +1744,55 @@ function renderColaboradores(){
   const tbl = document.querySelector('#page-colaboradores table');
   if(!operadores.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
-  const sorted = [...operadores].sort((a,b)=>a.localeCompare(b));
-  document.getElementById('colab-tbody').innerHTML = sorted.map(nome=>`<tr>
-    <td>${nome}</td>
-    <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${nome.replace(/'/g,"\\\\'")}')">Excluir</button></td>
+  const sorted = [...operadores].sort((a,b)=>a.nome.localeCompare(b.nome));
+  document.getElementById('colab-tbody').innerHTML = sorted.map(o=>`<tr>
+    <td>${o.nome}</td>
+    <td>${o.email||'<span style="color:var(--text3)">—</span>'}</td>
+    <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${o.nome.replace(/'/g,"\\'")}')">Excluir</button></td>
   </tr>`).join('');
 }
 
 function addColaborador(){
   const inp = document.getElementById('novo-colaborador');
+  const inpEmail = document.getElementById('novo-colaborador-email');
   const nome = inp.value.trim();
+  const email = inpEmail.value.trim();
   if(!nome){ alert('Digite o nome do colaborador.'); return; }
-  if(operadores.some(o=>o.toLowerCase()===nome.toLowerCase())){ alert('Este colaborador já está cadastrado.'); return; }
-  operadores.push(nome);
+  if(operadores.some(o=>o.nome.toLowerCase()===nome.toLowerCase())){ alert('Este colaborador já está cadastrado.'); return; }
+  operadores.push({nome:nome, email:email});
   persist();
-  inp.value='';
+  inp.value=''; inpEmail.value='';
   renderColaboradores();
 }
 
 function deleteColaborador(nome){
   if(!confirm('Excluir o colaborador "'+nome+'"?')) return;
-  operadores = operadores.filter(o=>o!==nome);
+  operadores = operadores.filter(o=>o.nome!==nome);
   persist();
   renderColaboradores();
+}
+
+function getColaboradorEmail(nome){
+  const o = operadores.find(x=>x.nome===nome);
+  return o ? (o.email||'') : '';
+}
+
+function notifyColaborador(nome, assunto, corpo){
+  const email = getColaboradorEmail(nome);
+  if(!email) return;
+  if(confirm('Deseja notificar '+nome+' por e-mail ('+email+')?')){
+    const url = 'mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(assunto)+'&body='+encodeURIComponent(corpo);
+    window.location.href = url;
+  }
 }
 
 function populateOperadoresSelect(id, selectedVal){
   const sel = document.getElementById(id);
   if(!sel) return;
-  const sorted = [...operadores].sort((a,b)=>a.localeCompare(b));
-  let opts = '<option value="">— Selecione —</option>' + sorted.map(o=>`<option value="${o}">${o}</option>`).join('');
+  const nomes = operadores.map(o=>o.nome).sort((a,b)=>a.localeCompare(b));
+  let opts = '<option value="">— Selecione —</option>' + nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
   // If editing an existing value not in the list, include it
-  if(selectedVal && !operadores.includes(selectedVal)){
+  if(selectedVal && !nomes.includes(selectedVal)){
     opts += `<option value="${selectedVal}">${selectedVal}</option>`;
   }
   sel.innerHTML = opts;
@@ -1780,6 +1803,8 @@ function populateOperadoresSelect(id, selectedVal){
 document.addEventListener('DOMContentLoaded', function(){
   const inp = document.getElementById('novo-colaborador');
   if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
+  const inpE = document.getElementById('novo-colaborador-email');
+  if(inpE) inpE.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1828,6 +1853,7 @@ function saveNovaCapacitacao(){
     data:'', resultado:''
   });
   persist(); closeModal(); renderCapacitacao();
+  notifyColaborador(op, 'Avaliação em Campo Agendada — '+(proc?proc.numero:procId), 'Olá '+op+',\n\nVocê tem uma avaliação prática em campo agendada:\n\nProcedimento: '+(proc?proc.numero+' — '+proc.descricao:procId)+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
 }
 
 function deleteCapacitacao(id){
@@ -1860,8 +1886,10 @@ function saveCapacReg(){
   // Register in training log (approved or reproved)
   treinamentos.push({id:genId(), data:data, operador:c.operador, proc:c.proc, revisao:c.revisao, setor:c.setor, tipo:'Avaliação em Campo', resultado:resultado, instrutor:resp||'—', obs: obs || 'Capacitação assistida — avaliação prática em campo'});
   // Move out of Capacitação (now lives in Registros de Treinamento)
+  const opNome = c.operador, procNome = c.proc;
   capacitacoes = capacitacoes.filter(x=>x.id!==capacRegId);
   persist(); closeModal(); renderCapacitacao(); renderDashboard();
+  notifyColaborador(opNome, 'Avaliação em Campo Concluída — '+procNome, 'Olá '+opNome+',\n\nSua avaliação prática em campo foi registrada:\n\nProcedimento: '+procNome+'\nData: '+fmtDate(data)+'\nResultado: '+resultado+'\n\nAtenciosamente,\nGestorPRO');
 }
 
 function printCapacitacao(){
