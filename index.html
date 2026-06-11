@@ -844,7 +844,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-body">
       <div class="form-row full"><div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fcap-operador"></select></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fcap-proc"></select></div></div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável pela avaliação *</label><select class="form-sel" id="fcap-resp"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável pela avaliação *</label><input type="text" id="fcap-resp" placeholder="Nome do responsável"></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><input type="text" id="fcap-obs" placeholder="Opcional"></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveNovaCapacitacao()">Criar</button></div>
@@ -859,7 +859,7 @@ textarea{resize:vertical;min-height:70px}
         <div class="form-group"><label class="lbl">Data da avaliação *</label><input type="date" id="fcap-reg-data"></div>
         <div class="form-group"><label class="lbl">Resultado *</label><select class="form-sel" id="fcap-reg-resultado"><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option></select></div>
       </div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável</label><select class="form-sel" id="fcap-reg-resp"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fcap-reg-resp" placeholder="Nome do responsável"></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><textarea id="fcap-reg-obs" placeholder="Opcional"></textarea></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapacReg()">Registrar</button></div>
@@ -1796,8 +1796,8 @@ function renderCapacitacao(){
 
 function openNovaCapacitacao(){
   populateOperadoresSelect('fcap-operador');
-  populateOperadoresSelect('fcap-resp');
   populateProcsSelect('fcap-proc');
+  document.getElementById('fcap-resp').value='';
   document.getElementById('fcap-obs').value='';
   openModal('capac-nova');
 }
@@ -1831,7 +1831,7 @@ function openCapacReg(id){
   document.getElementById('capac-reg-info').innerHTML = `<strong>${c.operador}</strong> — ${c.proc} (${c.revisao||'—'})`;
   document.getElementById('fcap-reg-data').value = c.data || new Date().toISOString().slice(0,10);
   document.getElementById('fcap-reg-resultado').value = c.resultado || 'Aprovado';
-  populateOperadoresSelect('fcap-reg-resp', c.responsavel);
+  document.getElementById('fcap-reg-resp').value = c.responsavel || '';
   document.getElementById('fcap-reg-obs').value = c.obs || '';
   openModal('capac-reg');
 }
