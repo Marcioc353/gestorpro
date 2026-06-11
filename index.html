@@ -374,7 +374,7 @@ textarea{resize:vertical;min-height:70px}
         <div class="table-header"><h3>Treinamentos Periódicos (Equipamentos Hibernados)</h3></div>
         <table>
           <thead><tr>
-            <th>Procedimento</th><th>Operador</th><th>Frequência</th><th>Próxima Data</th><th>Último Realizado</th><th>Status</th><th>Ações</th>
+            <th>Procedimento</th><th>Operador</th><th>Responsável</th><th>Frequência</th><th>Próxima Data</th><th>Último Realizado</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="prog-tbody"></tbody>
         </table>
@@ -686,6 +686,12 @@ textarea{resize:vertical;min-height:70px}
           <select class="form-sel" id="fprog-ops"></select>
         </div>
       </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="lbl">Responsável</label>
+          <input type="text" id="fprog-resp" placeholder="Nome do responsável">
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="lbl">Frequência *</label>
@@ -782,6 +788,9 @@ textarea{resize:vertical;min-height:70px}
       </div>
       <div class="form-row full">
         <div class="form-group"><label class="lbl">Operador</label><select class="form-sel" id="fpe-ops"></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fpe-resp" placeholder="Nome do responsável"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="lbl">Frequência</label><select class="form-sel" id="fpe-freq"><option value="Trimestral">Trimestral</option><option value="Semestral">Semestral</option><option value="Anual">Anual</option></select></div>
@@ -1221,9 +1230,10 @@ function renderRetreinamentos(){
 function concluirRetreino(id){
   const r = retreinamentos.find(x=>x.id===id);
   if(r){
-    r.status='Concluído';
     const proc = procs.find(p=>p.numero===r.proc);
     treinamentos.push({id:genId(), data:r.data_treino||new Date().toISOString().slice(0,10), operador:r.operador, proc:r.proc, revisao:proc?proc.revisao:'', setor:proc?proc.setor:'', tipo:'Retreinamento', resultado:'Concluído', instrutor:r.responsavel||'—', obs:'Retreinamento: '+(r.motivo||'')});
+    // Move out of Retreinamentos (now lives in Registros de Treinamento)
+    retreinamentos = retreinamentos.filter(x=>x.id!==id);
     persist(); renderRetreinamentos(); renderDashboard();
   }
 }
@@ -1244,6 +1254,7 @@ function renderProgramados(){
     return `<tr>
       <td>${p.proc}</td>
       <td>${p.operadores}</td>
+      <td>${p.responsavel||'—'}</td>
       <td><span class="badge neutral">${p.frequencia}</span></td>
       <td>${fmtDate(p.proxima_data)}</td>
       <td>${fmtDate(p.ultimo)||'—'}</td>
@@ -1267,7 +1278,7 @@ function realizarTreinProg(id){
   prog.proxima_data = next.toISOString().slice(0,10);
   // Register a training record
   const proc = procs.find(p=>p.numero===prog.proc);
-  treinamentos.push({id:genId(), data:hoje, operador:prog.operadores, proc:prog.proc, revisao:proc?proc.revisao:'', setor:proc?proc.setor:prog.setor||'', tipo:'Treinamento Programado ('+prog.frequencia+')', resultado:'Concluído', instrutor:'Programado', obs:prog.obs||''});
+  treinamentos.push({id:genId(), data:hoje, operador:prog.operadores, proc:prog.proc, revisao:proc?proc.revisao:'', setor:proc?proc.setor:prog.setor||'', tipo:'Treinamento Programado ('+prog.frequencia+')', resultado:'Concluído', instrutor:prog.responsavel||'Programado', obs:prog.obs||''});
   persist(); renderProgramados(); renderDashboard();
   alert(`Treinamento realizado! Registro gravado. Próxima data: ${fmtDate(prog.proxima_data)}`);
 }
@@ -1503,6 +1514,7 @@ function saveRetreino(){
 function openNovoProg(){
   populateProcsSelect('fprog-proc');
   populateOperadoresSelect('fprog-ops');
+  document.getElementById('fprog-resp').value='';
   document.getElementById('fprog-data').value=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
   openModal('prog');
 }
@@ -1512,7 +1524,7 @@ function saveProg(){
   const ops=document.getElementById('fprog-ops').value.trim();
   const data=document.getElementById('fprog-data').value;
   if(!ops||!data){ alert('Operador e data são obrigatórios.'); return; }
-  programados.push({id:genId(),proc:p?.numero||procId,setor:p?.setor||'',operadores:ops,frequencia:document.getElementById('fprog-freq').value,proxima_data:data,ultimo:'',obs:document.getElementById('fprog-obs').value});
+  programados.push({id:genId(),proc:p?.numero||procId,setor:p?.setor||'',operadores:ops,responsavel:document.getElementById('fprog-resp').value.trim(),frequencia:document.getElementById('fprog-freq').value,proxima_data:data,ultimo:'',obs:document.getElementById('fprog-obs').value});
   persist(); closeModal(); renderProgramados();
 }
 
@@ -1583,6 +1595,7 @@ function openEditProg(id){
   populateProcsSelect('fpe-proc');
   document.getElementById('fpe-proc').value = procs.find(x=>x.numero===p.proc)?.id||'';
   populateOperadoresSelect('fpe-ops', p.operadores);
+  document.getElementById('fpe-resp').value = p.responsavel||'';
   document.getElementById('fpe-freq').value = p.frequencia;
   document.getElementById('fpe-data').value = p.proxima_data;
   document.getElementById('fpe-obs').value = p.obs||'';
@@ -1596,6 +1609,7 @@ function saveProgEdit(){
   p.proc = proc?.numero||p.proc;
   p.setor = proc?.setor||p.setor;
   p.operadores = document.getElementById('fpe-ops').value.trim();
+  p.responsavel = document.getElementById('fpe-resp').value.trim();
   p.frequencia = document.getElementById('fpe-freq').value;
   p.proxima_data = document.getElementById('fpe-data').value;
   p.obs = document.getElementById('fpe-obs').value;
