@@ -320,7 +320,7 @@ textarea{resize:vertical;min-height:70px}
         </div>
         <table>
           <thead><tr>
-            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Setor</th><th>Resultado</th><th>Assinatura</th>
+            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Setor</th><th>Resultado</th><th>Assinatura</th><th>Ações</th>
           </tr></thead>
           <tbody id="trein-tbody"></tbody>
         </table>
@@ -374,35 +374,25 @@ textarea{resize:vertical;min-height:70px}
     <!-- QUIZ / AVALIAÇÃO -->
     <div class="page" id="page-quiz">
       <div id="quiz-selector">
+        <div class="table-wrap" style="margin-bottom:16px">
+          <div class="table-header">
+            <h3>📋 Fila de Avaliações Agendadas</h3>
+            <button class="btn primary" onclick="openAgendarAvaliacao()">+ Agendar Avaliação</button>
+          </div>
+          <div id="agenda-lista"><p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma avaliação agendada.</p></div>
+        </div>
         <div class="table-wrap">
-          <div class="table-header"><h3>Selecione um procedimento para iniciar a avaliação</h3></div>
+          <div class="table-header"><h3>Gerenciar Questões por Procedimento</h3></div>
           <div style="padding:16px">
             <div class="form-row">
-              <div class="form-group">
-                <label class="lbl">Seu nome (operador)</label>
-                <input type="text" id="quiz-operador" placeholder="Ex: João Silva">
-              </div>
-              <div class="form-group">
-                <label class="lbl">Procedimento</label>
-                <select class="form-sel" id="quiz-proc-sel"></select>
-              </div>
+              <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="quiz-proc-sel" onchange="renderQuestionList()"></select></div>
             </div>
-            <div id="quiz-question-editor" style="margin-top:12px">
-              <div class="tabs">
-                <div class="tab active" onclick="quizTab('start',this)">Iniciar Avaliação</div>
-                <div class="tab" onclick="quizTab('manage',this)">Gerenciar Questões</div>
-              </div>
-              <div id="quiz-tab-start">
-                <button class="btn primary" style="margin-top:8px" onclick="startQuiz()">▶ Iniciar Avaliação</button>
-              </div>
-              <div id="quiz-tab-manage" class="hidden">
-                <button class="btn primary" onclick="openAddQuestion()">+ Adicionar Questão</button>
-                <div id="question-list" style="margin-top:12px"></div>
-              </div>
-            </div>
+            <button class="btn primary" style="margin-bottom:12px" onclick="openAddQuestion()">+ Adicionar Questão</button>
+            <div id="question-list"></div>
           </div>
         </div>
       </div>
+  </div>
       <div id="quiz-runner" class="hidden">
         <div class="quiz-wrap">
           <div class="quiz-progress"><div class="quiz-progress-bar" id="qpbar"></div></div>
@@ -777,6 +767,26 @@ textarea{resize:vertical;min-height:70px}
 
 </div>
 
+  <!-- Agendar Avaliação -->
+  <div class="modal hidden" id="modal-agendar">
+    <div class="modal-head"><h3>Agendar Avaliação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Colaborador(es) — um por linha ou separados por vírgula *</label><textarea id="fag-operadores" placeholder="João Silva&#10;Maria Santos&#10;Carlos Oliveira" style="min-height:90px"></textarea></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fag-proc"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Data prevista</label><input type="date" id="fag-data"></div>
+        <div class="form-group"><label class="lbl">Observação</label><input type="text" id="fag-obs" placeholder="Opcional"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveAgendarAvaliacao()">Agendar</button></div>
+  </div>
+
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════
 // DATA
@@ -1002,13 +1012,14 @@ function renderTreinamentos(){
   if(!filtered.length){ empty.classList.remove('hidden'); document.querySelector('#page-treinamentos table').style.display='none'; return; }
   empty.classList.add('hidden');
   document.querySelector('#page-treinamentos table').style.display='';
-  document.getElementById('trein-tbody').innerHTML = filtered.map(t=>`<tr>
+  document.getElementById('trein-tbody').innerHTML = filtered.map((t,i)=>`<tr>
     <td>${fmtDate(t.data)}</td>
     <td>${t.operador}</td>
     <td>${t.proc}</td>
     <td>${t.setor||'—'}</td>
     <td>${t.resultado==='Aprovado'?'<span class="badge ok">Aprovado</span>':t.resultado==='Reprovado'?'<span class="badge danger">Reprovado</span>':'<span class="badge neutral">Em andamento</span>'}</td>
     <td>${t.instrutor||'—'}</td>
+    <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTrein(${t.id})">Excluir</button></td>
   </tr>`).join('');
 }
 
@@ -1088,11 +1099,12 @@ let quizState = { questions:[], idx:0, answers:[], procId:null };
 
 function renderQuizSelector(){
   const sel = document.getElementById('quiz-proc-sel');
-  sel.innerHTML = procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
+  if(sel) sel.innerHTML = procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
   document.getElementById('quiz-selector').classList.remove('hidden');
   document.getElementById('quiz-runner').classList.add('hidden');
   document.getElementById('quiz-result').classList.add('hidden');
   renderQuestionList();
+  renderAgenda();
 }
 
 function quizTab(tab, el){
@@ -1189,6 +1201,11 @@ function showQuizResult(){
   `;
   // Auto-register training
   const proc = procs.find(p=>String(p.id)===String(procId));
+  // Mark agenda item as done if started from agenda
+  if(quizState.agendaId){
+    const ag = agendaAvaliacoes.find(x=>x.id===quizState.agendaId);
+    if(ag){ ag.status='Realizado'; ag.resultado=pass?'Aprovado':'Reprovado'; saveState('agendaAvaliacoes',agendaAvaliacoes); }
+  }
   treinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, setor:proc?.setor||'', resultado: pass?'Aprovado':'Reprovado', instrutor:'Sistema GestorPRO', obs:`Quiz: ${pct}% (${correct}/${qs.length})`});
   if(!pass){
     retreinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, motivo:`Reprovado na avaliação online (${pct}% — abaixo de 70%)`, responsavel:'A definir', status:'Pendente', data_treino:''});
@@ -1435,6 +1452,87 @@ function saveQuestionEdit(){
 }
 
 
+
+// ═══════════════════════════════════════════════════════
+// DELETE TREINAMENTO
+// ═══════════════════════════════════════════════════════
+function deleteTrein(id){
+  if(!confirm('Excluir este registro de treinamento?')) return;
+  const idx = treinamentos.findIndex(x=>x.id===id);
+  if(idx>-1){ treinamentos.splice(idx,1); persist(); renderTreinamentos(); renderDashboard(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// FILA DE AVALIAÇÕES (AGENDA)
+// ═══════════════════════════════════════════════════════
+var agendaAvaliacoes = loadState('agendaAvaliacoes', []);
+
+function renderAgenda(){
+  const el = document.getElementById('agenda-lista');
+  if(!el) return;
+  const pending = agendaAvaliacoes.filter(a=>a.status==='Pendente');
+  const done = agendaAvaliacoes.filter(a=>a.status!=='Pendente');
+  if(!agendaAvaliacoes.length){
+    el.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma avaliação agendada. Clique em "+ Agendar Avaliação" para criar.</p>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Data Prevista</th><th>Obs</th><th>Status</th><th>Ações</th></tr></thead><tbody>' +
+    agendaAvaliacoes.map(a=>`<tr>
+      <td><strong>${a.operador}</strong></td>
+      <td>${a.proc}</td>
+      <td>${fmtDate(a.data)||'—'}</td>
+      <td>${a.obs||'—'}</td>
+      <td>${a.status==='Pendente'?'<span class="badge warn">Pendente</span>':'<span class="badge ok">Realizado</span>'}</td>
+      <td style="white-space:nowrap">
+        ${a.status==='Pendente'?`<button class="btn sm primary" onclick="iniciarAvaliacaoAgenda(${a.id})">▶ Iniciar</button> `:''}
+        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAgenda(${a.id})">Excluir</button>
+      </td>
+    </tr>`).join('') +
+    '</tbody></table>';
+}
+
+function openAgendarAvaliacao(){
+  populateProcsSelect('fag-proc');
+  document.getElementById('fag-operadores').value='';
+  document.getElementById('fag-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fag-obs').value='';
+  openModal('agendar');
+}
+
+function saveAgendarAvaliacao(){
+  const raw = document.getElementById('fag-operadores').value.trim();
+  if(!raw){ alert('Informe pelo menos um colaborador.'); return; }
+  const procId = document.getElementById('fag-proc').value;
+  const proc = procs.find(x=>String(x.id)===String(procId));
+  const data = document.getElementById('fag-data').value;
+  const obs = document.getElementById('fag-obs').value.trim();
+  // Split by newline or comma
+  const operadores = raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  operadores.forEach(op=>{
+    agendaAvaliacoes.push({id:genId(), operador:op, proc:proc?proc.numero:procId, procId:procId, data, obs, status:'Pendente'});
+  });
+  saveState('agendaAvaliacoes', agendaAvaliacoes);
+  persist();
+  closeModal();
+  renderAgenda();
+}
+
+function deleteAgenda(id){
+  if(!confirm('Excluir este agendamento?')) return;
+  const idx = agendaAvaliacoes.findIndex(x=>x.id===id);
+  if(idx>-1){ agendaAvaliacoes.splice(idx,1); saveState('agendaAvaliacoes',agendaAvaliacoes); renderAgenda(); }
+}
+
+function iniciarAvaliacaoAgenda(id){
+  const ag = agendaAvaliacoes.find(x=>x.id===id);
+  if(!ag) return;
+  const qs = questions[ag.procId]||[];
+  if(!qs.length){ alert('Este procedimento não possui questões cadastradas. Adicione questões primeiro na seção abaixo.'); return; }
+  quizState = {questions:qs, idx:0, answers:[], procId:ag.procId, operador:ag.operador, agendaId:id};
+  document.getElementById('quiz-selector').classList.add('hidden');
+  document.getElementById('quiz-runner').classList.remove('hidden');
+  renderQuizQuestion();
+}
 
 // ═══════════════════════════════════════════════════════
 // INIT
