@@ -226,6 +226,11 @@ textarea{resize:vertical;min-height:70px}
   <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     Banco de Questões
+  </div>
+  <div class="nav-section">Cadastros</div>
+  <div class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Colaboradores
   </div></nav>
 
 <!-- MAIN -->
@@ -408,6 +413,24 @@ textarea{resize:vertical;min-height:70px}
       </div>
     </div>
 
+    <!-- COLABORADORES -->
+    <div class="page" id="page-colaboradores">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Cadastro de Colaboradores</h3>
+          <div class="search-bar">
+            <input type="text" id="novo-colaborador" placeholder="Digite o nome do colaborador...">
+          </div>
+          <button class="btn primary" onclick="addColaborador()">+ Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Nome</th><th style="width:120px">Ações</th></tr></thead>
+          <tbody id="colab-tbody"></tbody>
+        </table>
+        <div id="colab-empty" class="empty hidden"><p>Nenhum colaborador cadastrado ainda.</p></div>
+      </div>
+    </div>
+
     <!-- BANCO DE QUESTÕES -->
     <div class="page" id="page-questoes">
       <div class="table-wrap">
@@ -543,7 +566,7 @@ textarea{resize:vertical;min-height:70px}
         </div>
         <div class="form-group">
           <label class="lbl">Operador *</label>
-          <input type="text" id="ft-operador" placeholder="Nome do operador">
+          <select class="form-sel" id="ft-operador"></select>
         </div>
       </div>
       <div class="form-row full">
@@ -591,7 +614,7 @@ textarea{resize:vertical;min-height:70px}
         </div>
         <div class="form-group">
           <label class="lbl">Operador *</label>
-          <input type="text" id="frt-operador" placeholder="Nome do operador">
+          <select class="form-sel" id="frt-operador"></select>
         </div>
       </div>
       <div class="form-row full">
@@ -636,7 +659,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="form-row full">
         <div class="form-group">
           <label class="lbl">Operador *</label>
-          <input type="text" id="fprog-ops" placeholder="Nome do operador">
+          <select class="form-sel" id="fprog-ops"></select>
         </div>
       </div>
       <div class="form-row">
@@ -704,7 +727,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label class="lbl">Data da Ocorrência</label><input type="date" id="fre-data"></div>
-        <div class="form-group"><label class="lbl">Operador</label><input type="text" id="fre-operador"></div>
+        <div class="form-group"><label class="lbl">Operador</label><select class="form-sel" id="fre-operador"></select></div>
       </div>
       <div class="form-row full">
         <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="fre-proc"></select></div>
@@ -734,7 +757,7 @@ textarea{resize:vertical;min-height:70px}
         <div class="form-group"><label class="lbl">Procedimento</label><select class="form-sel" id="fpe-proc"></select></div>
       </div>
       <div class="form-row full">
-        <div class="form-group"><label class="lbl">Operador</label><input type="text" id="fpe-ops"></div>
+        <div class="form-group"><label class="lbl">Operador</label><select class="form-sel" id="fpe-ops"></select></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="lbl">Frequência</label><select class="form-sel" id="fpe-freq"><option value="Trimestral">Trimestral</option><option value="Semestral">Semestral</option><option value="Anual">Anual</option></select></div>
@@ -778,7 +801,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-head"><h3>Agendar Avaliação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="form-row full">
-        <div class="form-group"><label class="lbl">Colaborador *</label><input type="text" id="fag-operadores" placeholder="Nome do colaborador"></div>
+        <div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fag-operadores"></select></div>
       </div>
       <div class="form-row full">
         <div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fag-proc"></select></div>
@@ -809,6 +832,7 @@ let treinamentos = loadState('treinamentos', []);
 let retreinamentos = loadState('retreinamentos', []);
 let programados = loadState('programados', []);
 let questions = loadState('questions', {});
+let operadores = loadState('operadores', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -820,6 +844,7 @@ function persist(){
   saveState('retreinamentos', retreinamentos);
   saveState('programados', programados);
   saveState('questions', questions);
+  saveState('operadores', operadores);
   saveState('nextId', nextId);
 }
 
@@ -860,7 +885,7 @@ const pageTitles = {
   dashboard:'Dashboard', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores'
 };
 
 function navTo(page, el){
@@ -880,6 +905,7 @@ function navTo(page, el){
   if(page==='programados') renderProgramados();
   if(page==='quiz') renderQuizSelector();
   if(page==='questoes') renderBancoQuestoes();
+  if(page==='colaboradores') renderColaboradores();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1387,6 +1413,7 @@ function saveRevisao(){
 // TREINAMENTO
 function openNovoTrein(){
   populateProcsSelect('ft-proc');
+  populateOperadoresSelect('ft-operador');
   document.getElementById('ft-data').value=new Date().toISOString().slice(0,10);
   openModal('trein');
 }
@@ -1402,6 +1429,7 @@ function saveTrein(){
 // RETREINAMENTO
 function openNovoRetreino(){
   populateProcsSelect('frt-proc');
+  populateOperadoresSelect('frt-operador');
   document.getElementById('frt-data').value=new Date().toISOString().slice(0,10);
   openModal('retrein');
 }
@@ -1420,6 +1448,7 @@ function saveRetreino(){
 // PROGRAMADO
 function openNovoProg(){
   populateProcsSelect('fprog-proc');
+  populateOperadoresSelect('fprog-ops');
   document.getElementById('fprog-data').value=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
   openModal('prog');
 }
@@ -1460,8 +1489,8 @@ function openEditRetreino(id){
   if(!r) return;
   editRetreinId = id;
   populateProcsSelect('fre-proc');
+  populateOperadoresSelect('fre-operador', r.operador);
   document.getElementById('fre-data').value = r.data;
-  document.getElementById('fre-operador').value = r.operador;
   document.getElementById('fre-proc').value = procs.find(p=>p.numero===r.proc)?.id || '';
   document.getElementById('fre-motivo').value = r.motivo;
   document.getElementById('fre-responsavel').value = r.responsavel;
@@ -1499,7 +1528,7 @@ function openEditProg(id){
   editProgId = id;
   populateProcsSelect('fpe-proc');
   document.getElementById('fpe-proc').value = procs.find(x=>x.numero===p.proc)?.id||'';
-  document.getElementById('fpe-ops').value = p.operadores;
+  populateOperadoresSelect('fpe-ops', p.operadores);
   document.getElementById('fpe-freq').value = p.frequencia;
   document.getElementById('fpe-data').value = p.proxima_data;
   document.getElementById('fpe-obs').value = p.obs||'';
@@ -1589,7 +1618,7 @@ function renderAgenda(){
 
 function openAgendarAvaliacao(){
   populateProcsSelect('fag-proc');
-  document.getElementById('fag-operadores').value='';
+  populateOperadoresSelect('fag-operadores');
   document.getElementById('fag-data').value=new Date().toISOString().slice(0,10);
   document.getElementById('fag-obs').value='';
   openModal('agendar');
@@ -1625,6 +1654,58 @@ function iniciarAvaliacaoAgenda(id){
   document.getElementById('quiz-runner').classList.remove('hidden');
   renderQuizQuestion();
 }
+
+// ═══════════════════════════════════════════════════════
+// COLABORADORES
+// ═══════════════════════════════════════════════════════
+function renderColaboradores(){
+  const empty = document.getElementById('colab-empty');
+  const tbl = document.querySelector('#page-colaboradores table');
+  if(!operadores.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  const sorted = [...operadores].sort((a,b)=>a.localeCompare(b));
+  document.getElementById('colab-tbody').innerHTML = sorted.map(nome=>`<tr>
+    <td>${nome}</td>
+    <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${nome.replace(/'/g,"\\\\'")}')">Excluir</button></td>
+  </tr>`).join('');
+}
+
+function addColaborador(){
+  const inp = document.getElementById('novo-colaborador');
+  const nome = inp.value.trim();
+  if(!nome){ alert('Digite o nome do colaborador.'); return; }
+  if(operadores.some(o=>o.toLowerCase()===nome.toLowerCase())){ alert('Este colaborador já está cadastrado.'); return; }
+  operadores.push(nome);
+  persist();
+  inp.value='';
+  renderColaboradores();
+}
+
+function deleteColaborador(nome){
+  if(!confirm('Excluir o colaborador "'+nome+'"?')) return;
+  operadores = operadores.filter(o=>o!==nome);
+  persist();
+  renderColaboradores();
+}
+
+function populateOperadoresSelect(id, selectedVal){
+  const sel = document.getElementById(id);
+  if(!sel) return;
+  const sorted = [...operadores].sort((a,b)=>a.localeCompare(b));
+  let opts = '<option value="">— Selecione —</option>' + sorted.map(o=>`<option value="${o}">${o}</option>`).join('');
+  // If editing an existing value not in the list, include it
+  if(selectedVal && !operadores.includes(selectedVal)){
+    opts += `<option value="${selectedVal}">${selectedVal}</option>`;
+  }
+  sel.innerHTML = opts;
+  if(selectedVal) sel.value = selectedVal;
+}
+
+// Allow adding colaborador by pressing Enter
+document.addEventListener('DOMContentLoaded', function(){
+  const inp = document.getElementById('novo-colaborador');
+  if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
+});
 
 // ═══════════════════════════════════════════════════════
 // INIT
