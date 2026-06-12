@@ -2388,22 +2388,27 @@ function renderPesquisa(){
 
   const fop=opSel.value, far=arSel.value, fpr=prSel.value, fcap=(cpSel||{}).value||'';
 
-  // Helper: does an operador belong to area?
-  const opInArea = (nome)=> !far || getColaboradorArea(nome)===far;
-  const match = (operador, proc)=> (!fop||operador===fop) && opInArea(operador) && (!fpr||proc===fpr);
-
-  // Filter datasets
-  const treinF = treinamentos.filter(t=>match(t.operador, t.proc));
-  const progF = programados.filter(p=>match(p.operadores, p.proc));
-  const retreF = retreinamentos.filter(r=>match(r.operador, r.proc));
-  const compF = avaliacoesComp.filter(a=> (!fop||a.colaborador===fop) && (!far||a.area===far||getColaboradorArea(a.colaborador)===far) );
-  const capF = capacRegistros.filter(r=> (!fop||r.operador===fop) && (!far||getColaboradorArea(r.operador)===far) && (!fcap||r.capacitacao===fcap) );
-
   const out = document.getElementById('pq-resultado');
   if(!fop && !far && !fpr && !fcap){
     out.innerHTML = '<div class="empty"><p>Selecione um colaborador, área, procedimento ou capacitação para ver o panorama.</p></div>';
     return;
   }
+
+  // Foco da pesquisa:
+  // - Treinamentos aparecem quando há Colaborador, Área ou Procedimento
+  // - Capacitações aparecem quando há Colaborador, Área ou Capacitação
+  // Assim, filtrar só por Capacitação não traz treinamentos, e vice-versa.
+  const showTraining = !!(fop || far || fpr);
+  const showCapac = !!(fop || far || fcap);
+
+  const opInArea = (nome)=> !far || getColaboradorArea(nome)===far;
+  const match = (operador, proc)=> (!fop||operador===fop) && opInArea(operador) && (!fpr||proc===fpr);
+
+  const treinF = treinamentos.filter(t=>match(t.operador, t.proc));
+  const progF = programados.filter(p=>match(p.operadores, p.proc));
+  const retreF = retreinamentos.filter(r=>match(r.operador, r.proc));
+  const compF = avaliacoesComp.filter(a=> (!fop||a.colaborador===fop) && (!far||a.area===far||getColaboradorArea(a.colaborador)===far) );
+  const capF = capacRegistros.filter(r=> (!fop||r.operador===fop) && (!far||getColaboradorArea(r.operador)===far) && (!fcap||r.capacitacao===fcap) );
 
   // Descriptive summary
   let escopo = [];
@@ -2411,90 +2416,91 @@ function renderPesquisa(){
   if(far) escopo.push('Área: <strong>'+far+'</strong>');
   if(fpr) escopo.push('Procedimento: <strong>'+fpr+'</strong>');
   if(fcap) escopo.push('Capacitação: <strong>'+fcap+'</strong>');
-
   let html = '<div class="alert info" style="margin-bottom:16px">'+escopo.join(' &nbsp;|&nbsp; ')+'</div>';
 
-  // Cards - treinamentos
   const aprovados = treinF.filter(t=>t.resultado==='Aprovado').length;
   const reprovados = treinF.filter(t=>t.resultado==='Reprovado').length;
-  html += '<div class="stat-grid" style="margin-bottom:16px">'+
-    cardMini('Treinamentos Realizados', treinF.length)+
-    cardMini('Programados (em aberto)', progF.length)+
-    cardMini('Retreinamentos Pendentes', retreF.length)+
-    cardMini('Avaliações Comportamentais', compF.length)+
-  '</div>';
 
-  // Capacitações: status cards (Válidos / Alerta 90d / Vencidos)
-  const capValidos = capF.filter(r=>capVencStatus(r.vencimento)==='valido').length;
-  const capAlerta = capF.filter(r=>capVencStatus(r.vencimento)==='vencendo').length;
-  const capVencidos = capF.filter(r=>capVencStatus(r.vencimento)==='vencido').length;
-  html += '<h3 style="margin:18px 0 10px;font-size:15px">🎓 Capacitações</h3>';
-  html += '<div class="stat-grid" style="margin-bottom:16px">'+
-    cardMiniColor('Capacitações Realizadas', capF.length, 'var(--blue)')+
-    cardMiniColor('✅ Válidas', capValidos, 'var(--green)')+
-    cardMiniColor('🟡 Alerta (90 dias)', capAlerta, 'var(--amber)')+
-    cardMiniColor('🔴 Vencidos', capVencidos, 'var(--red)')+
-  '</div>';
+  // ===== SEÇÃO TREINAMENTOS =====
+  if(showTraining){
+    html += '<h3 style="margin:4px 0 10px;font-size:15px">📋 Treinamentos</h3>';
+    html += '<div class="stat-grid" style="margin-bottom:16px">'+
+      cardMini('Treinamentos Realizados', treinF.length)+
+      cardMini('Programados (em aberto)', progF.length)+
+      cardMini('Retreinamentos Pendentes', retreF.length)+
+      cardMini('Avaliações Comportamentais', compF.length)+
+    '</div>';
 
-  // Chart: treinamentos por tipo
-  const tipos = {};
-  treinF.forEach(t=>{ const k=(t.tipo||'Outro').replace(/ \(.*\)/,''); tipos[k]=(tipos[k]||0)+1; });
-  const tiposArr = Object.keys(tipos).map(k=>({label:k, value:tipos[k]}));
-  if(tiposArr.length) html += barChart('Treinamentos Realizados por Tipo', tiposArr, 'var(--blue)');
+    const tipos = {};
+    treinF.forEach(t=>{ const k=(t.tipo||'Outro').replace(/ \(.*\)/,''); tipos[k]=(tipos[k]||0)+1; });
+    const tiposArr = Object.keys(tipos).map(k=>({label:k, value:tipos[k]}));
+    if(tiposArr.length) html += barChart('Treinamentos Realizados por Tipo', tiposArr, 'var(--blue)');
 
-  // Chart: resultados
-  html += barChart('Resultados dos Treinamentos', [
-    {label:'Aprovado', value:aprovados},
-    {label:'Reprovado', value:reprovados},
-    {label:'Concluído', value:treinF.filter(t=>t.resultado==='Concluído').length}
-  ], 'var(--green)');
+    html += barChart('Resultados dos Treinamentos', [
+      {label:'Aprovado', value:aprovados},
+      {label:'Reprovado', value:reprovados},
+      {label:'Concluído', value:treinF.filter(t=>t.resultado==='Concluído').length}
+    ], 'var(--green)');
 
-  // Chart: capacitações por status
-  if(capF.length){
-    html += barChart('Capacitações por Status de Validade', [
-      {label:'Válidos', value:capValidos},
-      {label:'Alerta (90d)', value:capAlerta},
-      {label:'Vencidos', value:capVencidos}
-    ], 'var(--amber)');
+    if(far && !fop){
+      const porColab={};
+      treinF.forEach(t=>{ porColab[t.operador]=(porColab[t.operador]||0)+1; });
+      const arr=Object.keys(porColab).map(k=>({label:k,value:porColab[k]})).sort((a,b)=>b.value-a.value);
+      if(arr.length) html += barChart('Treinamentos por Colaborador', arr, 'var(--blue)');
+    }
+
+    html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento dos Treinamentos</h3></div>';
+    if(treinF.length){
+      html += '<table><thead><tr><th>Data</th><th>Colaborador</th><th>Procedimento</th><th>Tipo</th><th>Resultado</th></tr></thead><tbody>';
+      treinF.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).forEach(t=>{
+        html += '<tr><td>'+fmtDate(t.data)+'</td><td>'+t.operador+'</td><td>'+t.proc+'</td><td>'+(t.tipo||'—')+'</td><td>'+(t.resultado||'—')+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<div class="empty"><p>Nenhum treinamento realizado para este filtro.</p></div>';
+    }
+    html += '</div>';
+
+    if(progF.length || retreF.length){
+      html += '<div class="table-wrap" style="margin-top:16px"><div class="table-header"><h3>Pendências e Programações</h3></div><table><thead><tr><th>Tipo</th><th>Colaborador</th><th>Procedimento</th><th>Detalhe</th></tr></thead><tbody>';
+      progF.forEach(p=>{ html += '<tr><td>Programado</td><td>'+p.operadores+'</td><td>'+p.proc+'</td><td>Próxima: '+fmtDate(p.proxima_data)+'</td></tr>'; });
+      retreF.forEach(r=>{ html += '<tr><td>Retreinamento</td><td>'+r.operador+'</td><td>'+r.proc+'</td><td>'+(r.status||'Pendente')+'</td></tr>'; });
+      html += '</tbody></table></div>';
+    }
   }
 
-  // If area selected: chart by collaborator
-  if(far && !fop){
-    const porColab={};
-    treinF.forEach(t=>{ porColab[t.operador]=(porColab[t.operador]||0)+1; });
-    const arr=Object.keys(porColab).map(k=>({label:k,value:porColab[k]})).sort((a,b)=>b.value-a.value);
-    if(arr.length) html += barChart('Treinamentos por Colaborador', arr, 'var(--blue)');
-  }
+  // ===== SEÇÃO CAPACITAÇÕES =====
+  if(showCapac){
+    const capValidos = capF.filter(r=>capVencStatus(r.vencimento)==='valido').length;
+    const capAlerta = capF.filter(r=>capVencStatus(r.vencimento)==='vencendo').length;
+    const capVencidos = capF.filter(r=>capVencStatus(r.vencimento)==='vencido').length;
+    html += '<h3 style="margin:18px 0 10px;font-size:15px">🎓 Capacitações</h3>';
+    html += '<div class="stat-grid" style="margin-bottom:16px">'+
+      cardMiniColor('Capacitações Realizadas', capF.length, 'var(--blue)')+
+      cardMiniColor('✅ Válidas', capValidos, 'var(--green)')+
+      cardMiniColor('🟡 Alerta (90 dias)', capAlerta, 'var(--amber)')+
+      cardMiniColor('🔴 Vencidos', capVencidos, 'var(--red)')+
+    '</div>';
 
-  // Detail table - treinamentos
-  html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento dos Treinamentos</h3></div>';
-  if(treinF.length){
-    html += '<table><thead><tr><th>Data</th><th>Colaborador</th><th>Procedimento</th><th>Tipo</th><th>Resultado</th></tr></thead><tbody>';
-    treinF.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).forEach(t=>{
-      html += '<tr><td>'+fmtDate(t.data)+'</td><td>'+t.operador+'</td><td>'+t.proc+'</td><td>'+(t.tipo||'—')+'</td><td>'+(t.resultado||'—')+'</td></tr>';
-    });
-    html += '</tbody></table>';
-  } else {
-    html += '<div class="empty"><p>Nenhum treinamento realizado para este filtro.</p></div>';
-  }
-  html += '</div>';
+    if(capF.length){
+      html += barChart('Capacitações por Status de Validade', [
+        {label:'Válidos', value:capValidos},
+        {label:'Alerta (90d)', value:capAlerta},
+        {label:'Vencidos', value:capVencidos}
+      ], 'var(--amber)');
+    }
 
-  // Detail table - capacitações
-  if(capF.length){
-    html += '<div class="table-wrap" style="margin-top:16px"><div class="table-header"><h3>Detalhamento das Capacitações</h3></div>';
-    html += '<table><thead><tr><th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>';
-    capF.slice().sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||'')).forEach(r=>{
-      html += '<tr><td>'+r.operador+'</td><td>'+r.capacitacao+'</td><td>'+(r.funcao||'—')+'</td><td>'+fmtDate(r.dataRealizada)+'</td><td>'+fmtDate(r.vencimento)+'</td><td>'+capVencBadge(r.vencimento)+'</td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  // Pending/scheduled detail
-  if(progF.length || retreF.length){
-    html += '<div class="table-wrap" style="margin-top:16px"><div class="table-header"><h3>Pendências e Programações</h3></div><table><thead><tr><th>Tipo</th><th>Colaborador</th><th>Procedimento</th><th>Detalhe</th></tr></thead><tbody>';
-    progF.forEach(p=>{ html += '<tr><td>Programado</td><td>'+p.operadores+'</td><td>'+p.proc+'</td><td>Próxima: '+fmtDate(p.proxima_data)+'</td></tr>'; });
-    retreF.forEach(r=>{ html += '<tr><td>Retreinamento</td><td>'+r.operador+'</td><td>'+r.proc+'</td><td>'+(r.status||'Pendente')+'</td></tr>'; });
-    html += '</tbody></table></div>';
+    html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento das Capacitações</h3></div>';
+    if(capF.length){
+      html += '<table><thead><tr><th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>';
+      capF.slice().sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||'')).forEach(r=>{
+        html += '<tr><td>'+r.operador+'</td><td>'+r.capacitacao+'</td><td>'+(r.funcao||'—')+'</td><td>'+fmtDate(r.dataRealizada)+'</td><td>'+fmtDate(r.vencimento)+'</td><td>'+capVencBadge(r.vencimento)+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<div class="empty"><p>Nenhuma capacitação realizada para este filtro.</p></div>';
+    }
+    html += '</div>';
   }
 
   out.innerHTML = html;
