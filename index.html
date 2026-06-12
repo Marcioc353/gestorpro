@@ -224,8 +224,8 @@ textarea{resize:vertical;min-height:70px}
     Avaliação Online
   </div>
   <div class="nav-item" data-page="capacitacao" onclick="navTo('capacitacao',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-    Capacitação Assistida
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Avaliação Comportamental
   </div>
   <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -429,23 +429,40 @@ textarea{resize:vertical;min-height:70px}
       </div>
     </div>
 
-    <!-- CAPACITAÇÃO ASSISTIDA (AVALIAÇÃO EM CAMPO) -->
+    <!-- AVALIAÇÃO COMPORTAMENTAL -->
     <div class="page" id="page-capacitacao">
-      <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaCapacitacao()">+ Nova Avaliação em Campo</button></div>
-      <div class="alert info" style="margin-bottom:16px">🎯 Etapa final da integração. Após a capacitação em sala e a prova online (módulo Avaliação Online), o responsável registra aqui a <strong>avaliação prática em campo</strong>. Ao registrar o resultado, a avaliação é movida para os <strong>Registros de Treinamento</strong> — aqui ficam apenas as que ainda aguardam avaliação.</div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <h3>Avaliação Assistida em Campo</h3>
-          <div class="search-bar"><input type="text" id="search-capac" placeholder="Buscar colaborador, procedimento..." oninput="renderCapacitacao()"></div>
-          <button class="btn" onclick="printCapacitacao()">🖨️ Imprimir</button>
+      <!-- LIST VIEW -->
+      <div id="avalcomp-list">
+        <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaAvalComp()">+ Nova Avaliação Comportamental</button></div>
+        <div class="alert info" style="margin-bottom:16px">📋 O <strong>Gestor</strong> avalia o comportamento do colaborador no período observado. Crie a avaliação e clique em <strong>Iniciar Avaliação</strong> para responder o questionário (Atende / Não Atende / Oportunidade de Melhoria).</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <h3>Avaliações Comportamentais</h3>
+            <select id="filter-avalcomp-op" onchange="renderAvalComp()"><option value="">Todos os colaboradores</option></select>
+            <button class="btn" onclick="printAvalComp()">🖨️ Imprimir</button>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Colaborador</th><th>Área</th><th>Período Observado</th><th>Avaliador</th><th>Resultado</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="avalcomp-tbody"></tbody>
+          </table>
+          <div id="avalcomp-empty" class="empty hidden"><p>Nenhuma avaliação comportamental cadastrada ainda.</p></div>
         </div>
-        <table>
-          <thead><tr>
-            <th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Status</th><th>Ações</th>
-          </tr></thead>
-          <tbody id="capac-tbody"></tbody>
-        </table>
-        <div id="capac-empty" class="empty hidden"><p>Nenhuma avaliação em campo cadastrada ainda.</p></div>
+      </div>
+      <!-- RUNNER VIEW (questionário) -->
+      <div id="avalcomp-runner" class="hidden">
+        <div class="table-wrap">
+          <div class="table-header"><h3 id="avalcomp-runner-title">Avaliação Comportamental</h3></div>
+          <div style="padding:20px">
+            <div id="avalcomp-runner-info" class="alert info" style="margin-bottom:20px"></div>
+            <div id="avalcomp-questions"></div>
+            <div style="margin-top:20px;display:flex;gap:12px">
+              <button class="btn primary" onclick="saveAvalComp()">✓ Concluir Avaliação</button>
+              <button class="btn" onclick="cancelAvalComp()">Cancelar</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -861,31 +878,26 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveAgendarAvaliacao()">Agendar</button></div>
   </div>
 
-  <!-- Nova Avaliação em Campo -->
-  <div class="modal hidden" id="modal-capac-nova">
-    <div class="modal-head"><h3>Nova Avaliação em Campo</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+  <!-- Nova Avaliação Comportamental -->
+  <div class="modal hidden" id="modal-avalcomp-nova">
+    <div class="modal-head"><h3>Nova Avaliação Comportamental</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fcap-operador"></select></div></div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fcap-proc"></select></div></div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável pela avaliação *</label><input type="text" id="fcap-resp" placeholder="Nome do responsável"></div></div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><input type="text" id="fcap-obs" placeholder="Opcional"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fac-colaborador"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Área do Colaborador *</label><input type="text" id="fac-area" placeholder="Ex: Forno, Utilidades, Logística..."></div></div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Período observado — Início *</label><input type="date" id="fac-inicio"></div>
+        <div class="form-group"><label class="lbl">Período observado — Fim *</label><input type="date" id="fac-fim"></div>
+      </div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável (avaliador) *</label><input type="text" id="fac-avaliador" placeholder="Nome do gestor/avaliador"></div></div>
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveNovaCapacitacao()">Criar</button></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveNovaAvalComp()">Criar</button></div>
   </div>
 
-  <!-- Registrar Resultado da Avaliação em Campo -->
-  <div class="modal hidden" id="modal-capac-reg">
-    <div class="modal-head"><h3>Registrar Avaliação em Campo</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div id="capac-reg-info" class="alert info" style="margin-bottom:14px"></div>
-      <div class="form-row">
-        <div class="form-group"><label class="lbl">Data da avaliação *</label><input type="date" id="fcap-reg-data"></div>
-        <div class="form-group"><label class="lbl">Resultado *</label><select class="form-sel" id="fcap-reg-resultado"><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option></select></div>
-      </div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fcap-reg-resp" placeholder="Nome do responsável"></div></div>
-      <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><textarea id="fcap-reg-obs" placeholder="Opcional"></textarea></div></div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapacReg()">Registrar</button></div>
+  <!-- Visualizar Avaliação Comportamental -->
+  <div class="modal hidden" id="modal-avalcomp-ver">
+    <div class="modal-head"><h3>Avaliação Comportamental</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="avalcomp-ver-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal()">Fechar</button></div>
   </div>
 
   <!-- Visualizar Prova -->
@@ -915,7 +927,7 @@ let programados = loadState('programados', []);
 let questions = loadState('questions', {});
 let operadores = loadState('operadores', []);
 operadores = operadores.map(o=> typeof o==='string' ? {nome:o, email:''} : o);
-let capacitacoes = loadState('capacitacoes', []);
+let avaliacoesComp = loadState('avaliacoesComp', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -928,7 +940,7 @@ function persist(){
   saveState('programados', programados);
   saveState('questions', questions);
   saveState('operadores', operadores);
-  saveState('capacitacoes', capacitacoes);
+  saveState('avaliacoesComp', avaliacoesComp);
   saveState('nextId', nextId);
 }
 
@@ -969,7 +981,7 @@ const pageTitles = {
   dashboard:'Dashboard', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Capacitação Assistida'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental'
 };
 
 function navTo(page, el){
@@ -990,7 +1002,7 @@ function navTo(page, el){
   if(page==='quiz') renderQuizSelector();
   if(page==='questoes') renderBancoQuestoes();
   if(page==='colaboradores') renderColaboradores();
-  if(page==='capacitacao') renderCapacitacao();
+  if(page==='capacitacao') renderAvalComp();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1899,113 +1911,180 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 // ═══════════════════════════════════════════════════════
-// CAPACITAÇÃO ASSISTIDA — AVALIAÇÃO EM CAMPO
+// AVALIAÇÃO COMPORTAMENTAL
 // ═══════════════════════════════════════════════════════
-function renderCapacitacao(){
-  const search = (document.getElementById('search-capac')||{}).value?.toLowerCase()||'';
-  const filtered = capacitacoes.filter(c=>!search||(c.operador+c.proc).toLowerCase().includes(search));
-  const empty = document.getElementById('capac-empty');
-  const tbl = document.querySelector('#page-capacitacao table');
+const AVAL_COMP_PERGUNTAS = [
+  'Assiduidade de horário',
+  'Participação nas reuniões',
+  'Abertura de Informes de Desvios',
+  'Comportamento/relacionamento com os colegas de trabalho',
+  'Levantamento de melhorias',
+  'Conhecimento técnico',
+  'Pró-atividade em práticas de 5S'
+];
+const AVAL_COMP_OPCOES = ['Atende','Não Atende','Oportunidade de Melhoria'];
+
+function avalCompResultado(a){
+  if(a.status!=='Concluída') return 'Pendente';
+  const naoAtende = (a.respostas||[]).filter(r=>r.resposta==='Não Atende').length;
+  return naoAtende>0 ? 'Requer Ação' : 'Aprovado';
+}
+
+function renderAvalComp(){
+  // Show list view, hide runner
+  document.getElementById('avalcomp-list').classList.remove('hidden');
+  document.getElementById('avalcomp-runner').classList.add('hidden');
+  // Populate operator filter
+  const ofEl = document.getElementById('filter-avalcomp-op');
+  if(ofEl){ const cur=ofEl.value; const ops=[...new Set(avaliacoesComp.map(a=>a.colaborador))].sort((x,y)=>x.localeCompare(y)); ofEl.innerHTML='<option value="">Todos os colaboradores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
+  const filtered = avaliacoesComp.filter(a=>!fop||a.colaborador===fop);
+  const empty = document.getElementById('avalcomp-empty');
+  const tbl = document.querySelector('#avalcomp-list table');
   if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
-  document.getElementById('capac-tbody').innerHTML = filtered.map(c=>{
+  document.getElementById('avalcomp-tbody').innerHTML = filtered.map(a=>{
+    const res = avalCompResultado(a);
+    let resBadge, acoes;
+    if(a.status!=='Concluída'){
+      resBadge='<span class="badge warn">⏳ Aguardando</span>';
+      acoes=`<button class="btn sm primary" onclick="iniciarAvalComp(${a.id})">▶ Iniciar Avaliação</button> `;
+    } else {
+      resBadge = res==='Aprovado' ? '<span class="badge ok">✅ Aprovado</span>' : '<span class="badge danger">⚠ Requer Ação</span>';
+      acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver Avaliação</button> `;
+    }
+    acoes += `<button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAvalComp(${a.id})">Excluir</button>`;
+    const periodo = (a.inicio?fmtDate(a.inicio):'—')+' a '+(a.fim?fmtDate(a.fim):'—');
     return `<tr>
-      <td><strong>${c.operador}</strong></td>
-      <td>${c.proc}</td>
-      <td><span class="badge neutral">${c.revisao||'—'}</span></td>
-      <td>${c.responsavel||'—'}</td>
-      <td><span class="badge warn">⏳ Aguardando avaliação</span></td>
-      <td style="white-space:nowrap">
-        <button class="btn sm primary" onclick="openCapacReg(${c.id})">Registrar Resultado</button>
-        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapacitacao(${c.id})">Excluir</button>
-      </td>
+      <td><strong>${a.colaborador}</strong></td>
+      <td>${a.area||'—'}</td>
+      <td>${periodo}</td>
+      <td>${a.avaliador||'—'}</td>
+      <td>${resBadge}</td>
+      <td style="white-space:nowrap">${acoes}</td>
     </tr>`;
   }).join('');
 }
 
-function openNovaCapacitacao(){
-  populateOperadoresSelect('fcap-operador');
-  populateProcsSelect('fcap-proc');
-  document.getElementById('fcap-resp').value='';
-  document.getElementById('fcap-obs').value='';
-  openModal('capac-nova');
+function openNovaAvalComp(){
+  populateOperadoresSelect('fac-colaborador');
+  document.getElementById('fac-area').value='';
+  document.getElementById('fac-inicio').value='';
+  document.getElementById('fac-fim').value='';
+  document.getElementById('fac-avaliador').value='';
+  openModal('avalcomp-nova');
 }
 
-function saveNovaCapacitacao(){
-  const op = document.getElementById('fcap-operador').value;
-  const procId = document.getElementById('fcap-proc').value;
-  const resp = document.getElementById('fcap-resp').value;
-  if(!op){ alert('Selecione um colaborador.'); return; }
-  if(!resp){ alert('Selecione o responsável pela avaliação.'); return; }
-  const proc = procs.find(x=>String(x.id)===String(procId));
-  capacitacoes.push({
-    id:genId(), operador:op, proc:proc?proc.numero:procId, revisao:proc?proc.revisao:'', setor:proc?proc.setor:'',
-    responsavel:resp, obs:document.getElementById('fcap-obs').value.trim(),
-    data:'', resultado:''
+function saveNovaAvalComp(){
+  const colaborador = document.getElementById('fac-colaborador').value;
+  const area = document.getElementById('fac-area').value.trim();
+  const inicio = document.getElementById('fac-inicio').value;
+  const fim = document.getElementById('fac-fim').value;
+  const avaliador = document.getElementById('fac-avaliador').value.trim();
+  if(!colaborador){ alert('Selecione o colaborador.'); return; }
+  if(!area){ alert('Informe a área do colaborador.'); return; }
+  if(!inicio||!fim){ alert('Informe o período observado (início e fim).'); return; }
+  if(!avaliador){ alert('Informe o responsável (avaliador).'); return; }
+  avaliacoesComp.push({id:genId(), colaborador, area, inicio, fim, avaliador, status:'Pendente', respostas:[], data_avaliacao:''});
+  persist(); closeModal(); renderAvalComp();
+}
+
+function deleteAvalComp(id){
+  if(!confirm('Excluir esta avaliação comportamental?')) return;
+  avaliacoesComp = avaliacoesComp.filter(a=>a.id!==id);
+  persist(); renderAvalComp();
+}
+
+let avalCompRunId = null;
+function iniciarAvalComp(id){
+  const a = avaliacoesComp.find(x=>x.id===id);
+  if(!a) return;
+  avalCompRunId = id;
+  document.getElementById('avalcomp-list').classList.add('hidden');
+  document.getElementById('avalcomp-runner').classList.remove('hidden');
+  document.getElementById('avalcomp-runner-info').innerHTML = `<strong>${a.colaborador}</strong> — Área: ${a.area}<br>Período observado: ${fmtDate(a.inicio)} a ${fmtDate(a.fim)} | Avaliador: ${a.avaliador}`;
+  document.getElementById('avalcomp-questions').innerHTML = AVAL_COMP_PERGUNTAS.map((p,i)=>`
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">${i+1}. ${p}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${AVAL_COMP_OPCOES.map(op=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:6px">
+          <input type="radio" name="acq-${i}" value="${op}"> ${op}
+        </label>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function cancelAvalComp(){
+  avalCompRunId = null;
+  renderAvalComp();
+}
+
+function saveAvalComp(){
+  const a = avaliacoesComp.find(x=>x.id===avalCompRunId);
+  if(!a) return;
+  const respostas = [];
+  for(let i=0;i<AVAL_COMP_PERGUNTAS.length;i++){
+    const sel = document.querySelector(`input[name="acq-${i}"]:checked`);
+    if(!sel){ alert('Responda todas as questões antes de concluir. Falta a questão '+(i+1)+'.'); return; }
+    respostas.push({pergunta:AVAL_COMP_PERGUNTAS[i], resposta:sel.value});
+  }
+  a.respostas = respostas;
+  a.status = 'Concluída';
+  a.data_avaliacao = new Date().toISOString().slice(0,10);
+  persist();
+  avalCompRunId = null;
+  renderAvalComp();
+  const res = avalCompResultado(a);
+  alert('Avaliação concluída! Resultado: '+res);
+}
+
+function verAvalComp(id){
+  const a = avaliacoesComp.find(x=>x.id===id);
+  if(!a) return;
+  const res = avalCompResultado(a);
+  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${a.colaborador}</strong> — Área: ${a.area}<br>Período: ${fmtDate(a.inicio)} a ${fmtDate(a.fim)} | Avaliador: ${a.avaliador}<br>Data da avaliação: ${fmtDate(a.data_avaliacao)} | Resultado: <strong>${res}</strong></div>`;
+  (a.respostas||[]).forEach((r,i)=>{
+    let cls = r.resposta==='Atende'?'ok':r.resposta==='Não Atende'?'danger':'warn';
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
+      <span style="font-size:13px">${i+1}. ${r.pergunta}</span>
+      <span class="badge ${cls}">${r.resposta}</span>
+    </div>`;
   });
-  persist(); closeModal(); renderCapacitacao();
-  notifyColaborador(op, 'Avaliação em Campo Agendada — '+(proc?proc.numero:procId), 'Olá '+op+',\n\nVocê tem uma avaliação prática em campo agendada:\n\nProcedimento: '+(proc?proc.numero+' — '+proc.descricao:procId)+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
+  document.getElementById('avalcomp-ver-body').innerHTML = html;
+  openModal('avalcomp-ver');
 }
 
-function deleteCapacitacao(id){
-  if(!confirm('Excluir esta avaliação em campo?')) return;
-  capacitacoes = capacitacoes.filter(c=>c.id!==id);
-  persist(); renderCapacitacao();
-}
-
-let capacRegId = null;
-function openCapacReg(id){
-  const c = capacitacoes.find(x=>x.id===id);
-  if(!c) return;
-  capacRegId = id;
-  document.getElementById('capac-reg-info').innerHTML = `<strong>${c.operador}</strong> — ${c.proc} (${c.revisao||'—'})`;
-  document.getElementById('fcap-reg-data').value = c.data || new Date().toISOString().slice(0,10);
-  document.getElementById('fcap-reg-resultado').value = c.resultado || 'Aprovado';
-  document.getElementById('fcap-reg-resp').value = c.responsavel || '';
-  document.getElementById('fcap-reg-obs').value = c.obs || '';
-  openModal('capac-reg');
-}
-
-function saveCapacReg(){
-  const c = capacitacoes.find(x=>x.id===capacRegId);
-  if(!c) return;
-  const data = document.getElementById('fcap-reg-data').value;
-  if(!data){ alert('Informe a data da avaliação.'); return; }
-  const resultado = document.getElementById('fcap-reg-resultado').value;
-  const resp = document.getElementById('fcap-reg-resp').value || c.responsavel;
-  const obs = document.getElementById('fcap-reg-obs').value.trim();
-  // Register in training log (approved or reproved)
-  treinamentos.push({id:genId(), data:data, operador:c.operador, proc:c.proc, revisao:c.revisao, setor:c.setor, tipo:'Avaliação em Campo', resultado:resultado, instrutor:resp||'—', obs: obs || 'Capacitação assistida — avaliação prática em campo'});
-  // Move out of Capacitação (now lives in Registros de Treinamento)
-  const opNome = c.operador, procNome = c.proc;
-  capacitacoes = capacitacoes.filter(x=>x.id!==capacRegId);
-  persist(); closeModal(); renderCapacitacao(); renderDashboard();
-  notifyColaborador(opNome, 'Avaliação em Campo Concluída — '+procNome, 'Olá '+opNome+',\n\nSua avaliação prática em campo foi registrada:\n\nProcedimento: '+procNome+'\nData: '+fmtDate(data)+'\nResultado: '+resultado+'\n\nAtenciosamente,\nGestorPRO');
-}
-
-function printCapacitacao(){
-  const search = (document.getElementById('search-capac')||{}).value?.toLowerCase()||'';
-  const rows = capacitacoes.filter(c=>!search||(c.operador+c.proc).toLowerCase().includes(search));
+function printAvalComp(){
+  const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
+  const rows = avaliacoesComp.filter(a=>!fop||a.colaborador===fop);
   if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
   const win = window.open('', '_blank');
-  let html = '<html><head><title>Avaliação em Campo</title><meta charset="UTF-8"><style>'+
+  let html = '<html><head><title>Avaliação Comportamental</title><meta charset="UTF-8"><style>'+
     'body{font-family:Arial,sans-serif;padding:24px;color:#1a2332}'+
     'h1{font-size:18px;border-bottom:2px solid #2563eb;padding-bottom:8px}'+
+    'h2{font-size:14px;margin:18px 0 6px}'+
     '.sub{font-size:12px;color:#666;margin-bottom:16px}'+
-    'table{width:100%;border-collapse:collapse;font-size:12px}'+
-    'th{background:#2563eb;color:#fff;text-align:left;padding:8px;border:1px solid #1d4ed8}'+
-    'td{padding:7px 8px;border:1px solid #ddd}'+
-    'tr:nth-child(even){background:#f4f6f9}'+
-    '.sign{margin-top:40px;font-size:12px}.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
+    '.meta{font-size:12px;background:#f4f6f9;padding:10px;border-radius:6px;margin-bottom:8px}'+
+    'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}'+
+    'th{background:#2563eb;color:#fff;text-align:left;padding:7px;border:1px solid #1d4ed8}'+
+    'td{padding:6px 7px;border:1px solid #ddd}'+
+    '.sign{margin-top:30px;font-size:12px}.sign-line{margin-top:42px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}</style></head><body>';
-  html += '<h1>⚙ GestorPRO — Avaliações em Campo Pendentes</h1>';
-  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' registro(s)</div>';
-  html += '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Rev.</th><th>Responsável</th><th>Status</th></tr></thead><tbody>';
-  rows.forEach(c=>{
-    html += '<tr><td>'+c.operador+'</td><td>'+c.proc+'</td><td>'+(c.revisao||'—')+'</td><td>'+(c.responsavel||'—')+'</td><td>Aguardando avaliação</td></tr>';
+  html += '<h1>⚙ GestorPRO — Avaliação Comportamental</h1>';
+  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
+  rows.forEach(a=>{
+    const res = avalCompResultado(a);
+    html += '<h2>'+a.colaborador+' — '+(a.area||'—')+'</h2>';
+    html += '<div class="meta">Período observado: '+fmtDate(a.inicio)+' a '+fmtDate(a.fim)+' &nbsp;|&nbsp; Avaliador: '+(a.avaliador||'—')+' &nbsp;|&nbsp; Resultado: <strong>'+res+'</strong></div>';
+    if(a.status==='Concluída' && a.respostas && a.respostas.length){
+      html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
+      a.respostas.forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
+      html += '</tbody></table>';
+    } else {
+      html += '<div style="font-size:12px;color:#999;margin-bottom:10px">Aguardando avaliação.</div>';
+    }
   });
-  html += '</tbody></table>';
-  html += '<div class="sign"><div class="sign-line">Responsável pela Avaliação</div></div>';
+  html += '<div class="sign"><div class="sign-line">Assinatura do Avaliador</div></div>';
   html += '</body></html>';
   win.document.write(html); win.document.close(); win.focus(); setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
 }
