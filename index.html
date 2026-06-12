@@ -439,11 +439,13 @@ textarea{resize:vertical;min-height:70px}
           <div class="table-header">
             <h3>Avaliações Comportamentais</h3>
             <select id="filter-avalcomp-op" onchange="renderAvalComp()"><option value="">Todos os colaboradores</option></select>
-            <button class="btn" onclick="printAvalComp()">🖨️ Imprimir</button>
+            <select id="filter-avalcomp-mes" onchange="renderAvalComp()"><option value="">Todos os meses</option></select>
+            <select id="filter-avalcomp-status" onchange="renderAvalComp()"><option value="">Todos os status</option><option value="Pendente">Pendentes</option><option value="Concluída">Concluídas</option></select>
+            <button class="btn" onclick="printAvalCompLista()">🖨️ Imprimir Lista</button>
           </div>
           <table>
             <thead><tr>
-              <th>Colaborador</th><th>Área</th><th>Período Observado</th><th>Avaliador</th><th>Resultado</th><th>Ações</th>
+              <th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th><th>Ações</th>
             </tr></thead>
             <tbody id="avalcomp-tbody"></tbody>
           </table>
@@ -457,6 +459,10 @@ textarea{resize:vertical;min-height:70px}
           <div style="padding:20px">
             <div id="avalcomp-runner-info" class="alert info" style="margin-bottom:20px"></div>
             <div id="avalcomp-questions"></div>
+            <div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:4px">
+              <label class="lbl" style="display:block;margin-bottom:8px">Observações (opcional)</label>
+              <textarea id="avalcomp-obs" placeholder="Registre observações gerais, pontos de atenção, planos de ação, etc." style="min-height:90px;width:100%"></textarea>
+            </div>
             <div style="margin-top:20px;display:flex;gap:12px">
               <button class="btn primary" onclick="saveAvalComp()">✓ Concluir Avaliação</button>
               <button class="btn" onclick="cancelAvalComp()">Cancelar</button>
@@ -885,8 +891,8 @@ textarea{resize:vertical;min-height:70px}
       <div class="form-row full"><div class="form-group"><label class="lbl">Colaborador *</label><select class="form-sel" id="fac-colaborador"></select></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Área do Colaborador *</label><input type="text" id="fac-area" placeholder="Ex: Forno, Utilidades, Logística..."></div></div>
       <div class="form-row">
-        <div class="form-group"><label class="lbl">Período observado — Início *</label><input type="date" id="fac-inicio"></div>
-        <div class="form-group"><label class="lbl">Período observado — Fim *</label><input type="date" id="fac-fim"></div>
+        <div class="form-group"><label class="lbl">Mês/Ano observado *</label><input type="month" id="fac-mes"></div>
+        <div class="form-group"></div>
       </div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Responsável (avaliador) *</label><input type="text" id="fac-avaliador" placeholder="Nome do gestor/avaliador"></div></div>
     </div>
@@ -953,6 +959,7 @@ const in90 = new Date(today); in90.setDate(in90.getDate()+90);
 function parseDate(s){ if(!s||s==='Em aprovação'||s==='NaT') return null; return new Date(s); }
 function fmtDate(s){ const d=parseDate(s); if(!d) return s||'—'; return d.toLocaleDateString('pt-BR'); }
 function daysUntil(s){ const d=parseDate(s); if(!d) return null; return Math.round((d-today)/(1000*86400)); }
+function fmtMesAno(s){ if(!s) return '—'; const m=String(s).split('-'); if(m.length<2) return s; const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; return (meses[parseInt(m[1])-1]||m[1])+'/'+m[0]; }
 
 function procStatus(p){
   const d = parseDate(p.data_fim);
@@ -1934,11 +1941,16 @@ function renderAvalComp(){
   // Show list view, hide runner
   document.getElementById('avalcomp-list').classList.remove('hidden');
   document.getElementById('avalcomp-runner').classList.add('hidden');
-  // Populate operator filter
+  // Populate collaborator filter
   const ofEl = document.getElementById('filter-avalcomp-op');
   if(ofEl){ const cur=ofEl.value; const ops=[...new Set(avaliacoesComp.map(a=>a.colaborador))].sort((x,y)=>x.localeCompare(y)); ofEl.innerHTML='<option value="">Todos os colaboradores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  // Populate month filter
+  const mfEl = document.getElementById('filter-avalcomp-mes');
+  if(mfEl){ const cur=mfEl.value; const ms=[...new Set(avaliacoesComp.map(a=>a.mesAno).filter(Boolean))].sort().reverse(); mfEl.innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${fmtMesAno(m)}</option>`).join(''); mfEl.value=cur; }
   const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
-  const filtered = avaliacoesComp.filter(a=>!fop||a.colaborador===fop);
+  const fmes=(document.getElementById('filter-avalcomp-mes')||{}).value||'';
+  const fstatus=(document.getElementById('filter-avalcomp-status')||{}).value||'';
+  const filtered = avaliacoesComp.filter(a=>(!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes)&&(!fstatus||a.status===fstatus));
   const empty = document.getElementById('avalcomp-empty');
   const tbl = document.querySelector('#avalcomp-list table');
   if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
@@ -1948,17 +1960,17 @@ function renderAvalComp(){
     let resBadge, acoes;
     if(a.status!=='Concluída'){
       resBadge='<span class="badge warn">⏳ Aguardando</span>';
-      acoes=`<button class="btn sm primary" onclick="iniciarAvalComp(${a.id})">▶ Iniciar Avaliação</button> `;
+      acoes=`<button class="btn sm primary" onclick="iniciarAvalComp(${a.id})">▶ Iniciar</button> <button class="btn sm" onclick="printProgramadoAvalComp(${a.id})">🖨️ Programado</button> `;
     } else {
       resBadge = res==='Aprovado' ? '<span class="badge ok">✅ Aprovado</span>' : '<span class="badge danger">⚠ Requer Ação</span>';
-      acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver Avaliação</button> `;
+      acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver</button> <button class="btn sm" onclick="printResultadoAvalComp(${a.id})">🖨️ Resultado</button> `;
     }
     acoes += `<button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAvalComp(${a.id})">Excluir</button>`;
-    const periodo = (a.inicio?fmtDate(a.inicio):'—')+' a '+(a.fim?fmtDate(a.fim):'—');
+    const mesTxt = a.mesAno ? fmtMesAno(a.mesAno) : ((a.inicio?fmtDate(a.inicio):'—')+(a.fim?' a '+fmtDate(a.fim):''));
     return `<tr>
       <td><strong>${a.colaborador}</strong></td>
       <td>${a.area||'—'}</td>
-      <td>${periodo}</td>
+      <td>${mesTxt}</td>
       <td>${a.avaliador||'—'}</td>
       <td>${resBadge}</td>
       <td style="white-space:nowrap">${acoes}</td>
@@ -1969,8 +1981,7 @@ function renderAvalComp(){
 function openNovaAvalComp(){
   populateOperadoresSelect('fac-colaborador');
   document.getElementById('fac-area').value='';
-  document.getElementById('fac-inicio').value='';
-  document.getElementById('fac-fim').value='';
+  document.getElementById('fac-mes').value=new Date().toISOString().slice(0,7);
   document.getElementById('fac-avaliador').value='';
   openModal('avalcomp-nova');
 }
@@ -1978,14 +1989,13 @@ function openNovaAvalComp(){
 function saveNovaAvalComp(){
   const colaborador = document.getElementById('fac-colaborador').value;
   const area = document.getElementById('fac-area').value.trim();
-  const inicio = document.getElementById('fac-inicio').value;
-  const fim = document.getElementById('fac-fim').value;
+  const mesAno = document.getElementById('fac-mes').value;
   const avaliador = document.getElementById('fac-avaliador').value.trim();
   if(!colaborador){ alert('Selecione o colaborador.'); return; }
   if(!area){ alert('Informe a área do colaborador.'); return; }
-  if(!inicio||!fim){ alert('Informe o período observado (início e fim).'); return; }
+  if(!mesAno){ alert('Informe o mês/ano observado.'); return; }
   if(!avaliador){ alert('Informe o responsável (avaliador).'); return; }
-  avaliacoesComp.push({id:genId(), colaborador, area, inicio, fim, avaliador, status:'Pendente', respostas:[], data_avaliacao:''});
+  avaliacoesComp.push({id:genId(), colaborador, area, mesAno, avaliador, status:'Pendente', respostas:[], data_avaliacao:''});
   persist(); closeModal(); renderAvalComp();
 }
 
@@ -2002,7 +2012,8 @@ function iniciarAvalComp(id){
   avalCompRunId = id;
   document.getElementById('avalcomp-list').classList.add('hidden');
   document.getElementById('avalcomp-runner').classList.remove('hidden');
-  document.getElementById('avalcomp-runner-info').innerHTML = `<strong>${a.colaborador}</strong> — Área: ${a.area}<br>Período observado: ${fmtDate(a.inicio)} a ${fmtDate(a.fim)} | Avaliador: ${a.avaliador}`;
+  document.getElementById('avalcomp-runner-info').innerHTML = `<strong>${a.colaborador}</strong> — Área: ${a.area}<br>Mês/Ano observado: ${fmtMesAno(a.mesAno)} | Avaliador: ${a.avaliador}`;
+  document.getElementById('avalcomp-obs').value = a.observacoes || '';
   document.getElementById('avalcomp-questions').innerHTML = AVAL_COMP_PERGUNTAS.map((p,i)=>`
     <div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
       <div style="font-size:14px;font-weight:600;margin-bottom:10px">${i+1}. ${p}</div>
@@ -2029,6 +2040,7 @@ function saveAvalComp(){
     respostas.push({pergunta:AVAL_COMP_PERGUNTAS[i], resposta:sel.value});
   }
   a.respostas = respostas;
+  a.observacoes = document.getElementById('avalcomp-obs').value.trim();
   a.status = 'Concluída';
   a.data_avaliacao = new Date().toISOString().slice(0,10);
   persist();
@@ -2042,7 +2054,7 @@ function verAvalComp(id){
   const a = avaliacoesComp.find(x=>x.id===id);
   if(!a) return;
   const res = avalCompResultado(a);
-  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${a.colaborador}</strong> — Área: ${a.area}<br>Período: ${fmtDate(a.inicio)} a ${fmtDate(a.fim)} | Avaliador: ${a.avaliador}<br>Data da avaliação: ${fmtDate(a.data_avaliacao)} | Resultado: <strong>${res}</strong></div>`;
+  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${a.colaborador}</strong> — Área: ${a.area}<br>Mês/Ano observado: ${fmtMesAno(a.mesAno)} | Avaliador: ${a.avaliador}<br>Data da avaliação: ${fmtDate(a.data_avaliacao)} | Resultado: <strong>${res}</strong></div>`;
   (a.respostas||[]).forEach((r,i)=>{
     let cls = r.resposta==='Atende'?'ok':r.resposta==='Não Atende'?'danger':'warn';
     html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
@@ -2050,16 +2062,14 @@ function verAvalComp(id){
       <span class="badge ${cls}">${r.resposta}</span>
     </div>`;
   });
+  if(a.observacoes){ html += `<div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:10px"><strong style="font-size:13px">Observações:</strong><div style="font-size:13px;margin-top:6px;white-space:pre-wrap">${a.observacoes}</div></div>`; }
   document.getElementById('avalcomp-ver-body').innerHTML = html;
   openModal('avalcomp-ver');
 }
 
-function printAvalComp(){
-  const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
-  const rows = avaliacoesComp.filter(a=>!fop||a.colaborador===fop);
-  if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
-  const win = window.open('', '_blank');
-  let html = '<html><head><title>Avaliação Comportamental</title><meta charset="UTF-8"><style>'+
+// Shared print head/style
+function _avalCompPrintHead(titulo){
+  return '<html><head><title>'+titulo+'</title><meta charset="UTF-8"><style>'+
     'body{font-family:Arial,sans-serif;padding:24px;color:#1a2332}'+
     'h1{font-size:18px;border-bottom:2px solid #2563eb;padding-bottom:8px}'+
     'h2{font-size:14px;margin:18px 0 6px}'+
@@ -2067,27 +2077,69 @@ function printAvalComp(){
     '.meta{font-size:12px;background:#f4f6f9;padding:10px;border-radius:6px;margin-bottom:8px}'+
     'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}'+
     'th{background:#2563eb;color:#fff;text-align:left;padding:7px;border:1px solid #1d4ed8}'+
-    'td{padding:6px 7px;border:1px solid #ddd}'+
+    'td{padding:7px;border:1px solid #ddd}'+
+    '.box{display:inline-block;width:14px;height:14px;border:1px solid #333;margin-right:5px;vertical-align:middle}'+
     '.sign{margin-top:30px;font-size:12px}.sign-line{margin-top:42px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}</style></head><body>';
+}
+
+function _avalCompPrintWindow(html){
+  const win = window.open('', '_blank');
+  win.document.write(html); win.document.close(); win.focus();
+  setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
+}
+
+// Print blank form (Programado) for one assessment
+function printProgramadoAvalComp(id){
+  const a = avaliacoesComp.find(x=>x.id===id);
+  if(!a) return;
+  let html = _avalCompPrintHead('Avaliação Comportamental — Formulário');
   html += '<h1>⚙ GestorPRO — Avaliação Comportamental</h1>';
-  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
-  rows.forEach(a=>{
-    const res = avalCompResultado(a);
-    html += '<h2>'+a.colaborador+' — '+(a.area||'—')+'</h2>';
-    html += '<div class="meta">Período observado: '+fmtDate(a.inicio)+' a '+fmtDate(a.fim)+' &nbsp;|&nbsp; Avaliador: '+(a.avaliador||'—')+' &nbsp;|&nbsp; Resultado: <strong>'+res+'</strong></div>';
-    if(a.status==='Concluída' && a.respostas && a.respostas.length){
-      html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
-      a.respostas.forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
-      html += '</tbody></table>';
-    } else {
-      html += '<div style="font-size:12px;color:#999;margin-bottom:10px">Aguardando avaliação.</div>';
-    }
-  });
+  html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'</div>';
+  html += '<table><thead><tr><th>Item Avaliado</th><th style="width:120px">Atende</th><th style="width:120px">Não Atende</th><th style="width:170px">Oport. de Melhoria</th></tr></thead><tbody>';
+  AVAL_COMP_PERGUNTAS.forEach(p=>{ html += '<tr><td>'+p+'</td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td></tr>'; });
+  html += '</tbody></table>';
+  html += '<h2>Observações</h2><div style="border:1px solid #ddd;border-radius:6px;height:90px"></div>';
   html += '<div class="sign"><div class="sign-line">Assinatura do Avaliador</div></div>';
   html += '</body></html>';
-  win.document.write(html); win.document.close(); win.focus(); setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
+  _avalCompPrintWindow(html);
 }
+
+// Print result (Resultado) for one completed assessment
+function printResultadoAvalComp(id){
+  const a = avaliacoesComp.find(x=>x.id===id);
+  if(!a) return;
+  const res = avalCompResultado(a);
+  let html = _avalCompPrintHead('Avaliação Comportamental — Resultado');
+  html += '<h1>⚙ GestorPRO — Avaliação Comportamental (Resultado)</h1>';
+  html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'<br><strong>Data da avaliação:</strong> '+fmtDate(a.data_avaliacao)+' &nbsp;|&nbsp; <strong>Resultado:</strong> '+res+'</div>';
+  html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
+  (a.respostas||[]).forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
+  html += '</tbody></table>';
+  if(a.observacoes){ html += '<h2>Observações</h2><div style="font-size:12px;border:1px solid #ddd;border-radius:6px;padding:10px;white-space:pre-wrap">'+a.observacoes+'</div>'; }
+  html += '<div class="sign"><div class="sign-line">Assinatura do Avaliador</div></div>';
+  html += '</body></html>';
+  _avalCompPrintWindow(html);
+}
+
+// Print summary list of all filtered assessments
+function printAvalCompLista(){
+  const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
+  const fmes=(document.getElementById('filter-avalcomp-mes')||{}).value||'';
+  const fstatus=(document.getElementById('filter-avalcomp-status')||{}).value||'';
+  const rows = avaliacoesComp.filter(a=>(!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes)&&(!fstatus||a.status===fstatus));
+  if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
+  let html = _avalCompPrintHead('Avaliações Comportamentais');
+  html += '<h1>⚙ GestorPRO — Avaliações Comportamentais</h1>';
+  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
+  html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th></tr></thead><tbody>';
+  rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+(a.status==='Concluída'?avalCompResultado(a):'Pendente')+'</td></tr>'; });
+  html += '</tbody></table>';
+  html += '<div class="sign"><div class="sign-line">Responsável</div></div>';
+  html += '</body></html>';
+  _avalCompPrintWindow(html);
+}
+
 
 // ═══════════════════════════════════════════════════════
 // VISUALIZAR PROVA
