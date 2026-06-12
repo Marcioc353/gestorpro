@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GestorPRO — Gestão de Procedimentos Operacionais</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2040%2044%22%3E%3Cpath%20d%3D%22M20%203%20L34%209%20L34%2023%20Q34%2034%2020%2041%20Q6%2034%206%2023%20L6%209%20Z%22%20fill%3D%22%231E3A8A%22/%3E%3Cpath%20d%3D%22M13%2022%20L18%2028%20L28%2015%22%20stroke%3D%22%23E8B84B%22%20stroke-width%3D%223.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -42,9 +43,9 @@ a{color:var(--blue);text-decoration:none}
 /* SIDEBAR */
 .sidebar-logo{padding:0;border-bottom:1px solid var(--border)}
 .sidebar-logo .logo-header{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 16px 18px;display:flex;align-items:center;gap:10px}
-.sidebar-logo .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-logo .logo-icon{width:36px;height:36px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .sidebar-logo h1{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.sidebar-logo p{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px}
 .nav-group{margin:2px 8px}
 .nav-section{display:flex;align-items:center;gap:7px;padding:9px 10px;font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);border-radius:var(--radius);cursor:pointer;user-select:none;transition:filter .15s}
 .nav-section:hover{filter:brightness(1.1)}
@@ -193,8 +194,8 @@ textarea{resize:vertical;min-height:70px}
 <nav id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-header">
-      <div class="logo-icon">⚙</div>
-      <div><h1>GestorPRO</h1><p>Procedimentos Operacionais</p></div>
+      <div class="logo-icon"><svg viewBox="0 0 40 44" width="22" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 3 L34 9 L34 23 Q34 34 20 41 Q6 34 6 23 L6 9 Z" fill="#1E3A8A"/><path d="M13 22 L18 28 L28 15" stroke="#E8B84B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><h1>Gestor<span style="color:#E8B84B">PRO</span></h1><p>Gestão Operacional</p></div>
     </div>
   </div>
   <div class="nav-group">
@@ -283,6 +284,7 @@ textarea{resize:vertical;min-height:70px}
           <div class="form-group" style="flex:1;min-width:180px"><label class="lbl">Colaborador</label><select class="form-sel" id="pq-operador" onchange="renderPesquisa()"></select></div>
           <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Área</label><select class="form-sel" id="pq-area" onchange="renderPesquisa()"></select></div>
           <div class="form-group" style="flex:1;min-width:200px"><label class="lbl">Procedimento</label><select class="form-sel" id="pq-proc" onchange="renderPesquisa()"></select></div>
+          <div class="form-group" style="flex:1;min-width:180px"><label class="lbl">Capacitação</label><select class="form-sel" id="pq-cap" onchange="renderPesquisa()"></select></div>
           <button class="btn" onclick="limparPesquisa()">Limpar</button>
         </div>
       </div>
@@ -1384,7 +1386,7 @@ function printSelectedTrein(){
     '.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}'+
     '</style></head><body>';
-  html += '<h1>⚙ GestorPRO — Registros de Treinamento</h1>';
+  html += '<h1>🛡️ GestorPRO — Registros de Treinamento</h1>';
   html += '<div class="sub">'+title+' &nbsp;|&nbsp; Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' registro(s)</div>';
   html += '<table><thead><tr><th>Data</th><th>Operador</th><th>Procedimento</th><th>Revisão</th><th>Setor</th><th>Tipo</th><th>Resultado</th><th>Responsável</th></tr></thead><tbody>';
   rows.forEach(t=>{
@@ -2249,7 +2251,7 @@ function printProgramadoAvalComp(id){
   const a = avaliacoesComp.find(x=>x.id===id);
   if(!a) return;
   let html = _avalCompPrintHead('Avaliação Comportamental — Formulário');
-  html += '<h1>⚙ GestorPRO — Avaliação Comportamental</h1>';
+  html += '<h1>🛡️ GestorPRO — Avaliação Comportamental</h1>';
   html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'</div>';
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:120px">Atende</th><th style="width:120px">Não Atende</th><th style="width:170px">Oport. de Melhoria</th></tr></thead><tbody>';
   AVAL_COMP_PERGUNTAS.forEach(p=>{ html += '<tr><td>'+p+'</td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td></tr>'; });
@@ -2266,7 +2268,7 @@ function printResultadoAvalComp(id){
   if(!a) return;
   const res = avalCompResultado(a);
   let html = _avalCompPrintHead('Avaliação Comportamental — Resultado');
-  html += '<h1>⚙ GestorPRO — Avaliação Comportamental (Resultado)</h1>';
+  html += '<h1>🛡️ GestorPRO — Avaliação Comportamental (Resultado)</h1>';
   html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'<br><strong>Data da avaliação:</strong> '+fmtDate(a.data_avaliacao)+' &nbsp;|&nbsp; <strong>Resultado:</strong> '+res+'</div>';
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
   (a.respostas||[]).forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
@@ -2285,7 +2287,7 @@ function printAvalCompLista(){
   const rows = avaliacoesComp.filter(a=>(!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes)&&(!fstatus||a.status===fstatus));
   if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
   let html = _avalCompPrintHead('Avaliações Comportamentais');
-  html += '<h1>⚙ GestorPRO — Avaliações Comportamentais</h1>';
+  html += '<h1>🛡️ GestorPRO — Avaliações Comportamentais</h1>';
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
   html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th></tr></thead><tbody>';
   rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+(a.status==='Concluída'?avalCompResultado(a):'Pendente')+'</td></tr>'; });
@@ -2339,7 +2341,7 @@ function printGenerico(titulo, colunas, linhas){
     'tr:nth-child(even){background:#f4f6f9}'+
     '.sign{margin-top:40px;font-size:12px}.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}</style></head><body>';
-  html += '<h1>⚙ GestorPRO — '+titulo+'</h1>';
+  html += '<h1>🛡️ GestorPRO — '+titulo+'</h1>';
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+linhas.length+' registro(s)</div>';
   html += '<table><thead><tr>'+colunas.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
   linhas.forEach(linha=>{ html += '<tr>'+linha.map(c=>'<td>'+(c||'—')+'</td>').join('')+'</tr>'; });
@@ -2373,6 +2375,7 @@ function renderPesquisa(){
   const opSel=document.getElementById('pq-operador');
   const arSel=document.getElementById('pq-area');
   const prSel=document.getElementById('pq-proc');
+  const cpSel=document.getElementById('pq-cap');
   if(opSel && !opSel.dataset.init){
     opSel.innerHTML='<option value="">Todos os colaboradores</option>'+operadores.map(o=>o.nome).sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${n}">${n}</option>`).join('');
     const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort();
@@ -2380,7 +2383,10 @@ function renderPesquisa(){
     prSel.innerHTML='<option value="">Todos os procedimentos</option>'+procs.map(p=>p.numero).sort().map(n=>`<option value="${n}">${n}</option>`).join('');
     opSel.dataset.init='1';
   }
-  const fop=opSel.value, far=arSel.value, fpr=prSel.value;
+  // Capacitação filter is rebuilt each time (catalog can change)
+  if(cpSel){ const cur=cpSel.value; const caps=[...new Set([...capacTipos.map(c=>c.nome), ...capacRegistros.map(r=>r.capacitacao)])].filter(Boolean).sort(); cpSel.innerHTML='<option value="">Todas as capacitações</option>'+caps.map(c=>`<option value="${c}">${c}</option>`).join(''); cpSel.value=cur; }
+
+  const fop=opSel.value, far=arSel.value, fpr=prSel.value, fcap=(cpSel||{}).value||'';
 
   // Helper: does an operador belong to area?
   const opInArea = (nome)=> !far || getColaboradorArea(nome)===far;
@@ -2391,10 +2397,11 @@ function renderPesquisa(){
   const progF = programados.filter(p=>match(p.operadores, p.proc));
   const retreF = retreinamentos.filter(r=>match(r.operador, r.proc));
   const compF = avaliacoesComp.filter(a=> (!fop||a.colaborador===fop) && (!far||a.area===far||getColaboradorArea(a.colaborador)===far) );
+  const capF = capacRegistros.filter(r=> (!fop||r.operador===fop) && (!far||getColaboradorArea(r.operador)===far) && (!fcap||r.capacitacao===fcap) );
 
   const out = document.getElementById('pq-resultado');
-  if(!fop && !far && !fpr){
-    out.innerHTML = '<div class="empty"><p>Selecione um colaborador, área ou procedimento para ver o panorama.</p></div>';
+  if(!fop && !far && !fpr && !fcap){
+    out.innerHTML = '<div class="empty"><p>Selecione um colaborador, área, procedimento ou capacitação para ver o panorama.</p></div>';
     return;
   }
 
@@ -2403,10 +2410,11 @@ function renderPesquisa(){
   if(fop) escopo.push('Colaborador: <strong>'+fop+'</strong>');
   if(far) escopo.push('Área: <strong>'+far+'</strong>');
   if(fpr) escopo.push('Procedimento: <strong>'+fpr+'</strong>');
+  if(fcap) escopo.push('Capacitação: <strong>'+fcap+'</strong>');
 
   let html = '<div class="alert info" style="margin-bottom:16px">'+escopo.join(' &nbsp;|&nbsp; ')+'</div>';
 
-  // Cards
+  // Cards - treinamentos
   const aprovados = treinF.filter(t=>t.resultado==='Aprovado').length;
   const reprovados = treinF.filter(t=>t.resultado==='Reprovado').length;
   html += '<div class="stat-grid" style="margin-bottom:16px">'+
@@ -2416,9 +2424,21 @@ function renderPesquisa(){
     cardMini('Avaliações Comportamentais', compF.length)+
   '</div>';
 
+  // Capacitações: status cards (Válidos / Alerta 90d / Vencidos)
+  const capValidos = capF.filter(r=>capVencStatus(r.vencimento)==='valido').length;
+  const capAlerta = capF.filter(r=>capVencStatus(r.vencimento)==='vencendo').length;
+  const capVencidos = capF.filter(r=>capVencStatus(r.vencimento)==='vencido').length;
+  html += '<h3 style="margin:18px 0 10px;font-size:15px">🎓 Capacitações</h3>';
+  html += '<div class="stat-grid" style="margin-bottom:16px">'+
+    cardMiniColor('Capacitações Realizadas', capF.length, 'var(--blue)')+
+    cardMiniColor('✅ Válidas', capValidos, 'var(--green)')+
+    cardMiniColor('🟡 Alerta (90 dias)', capAlerta, 'var(--amber)')+
+    cardMiniColor('🔴 Vencidos', capVencidos, 'var(--red)')+
+  '</div>';
+
   // Chart: treinamentos por tipo
   const tipos = {};
-  treinF.forEach(t=>{ const k=(t.tipo||'Outro').replace(/ \\(.*\\)/,''); tipos[k]=(tipos[k]||0)+1; });
+  treinF.forEach(t=>{ const k=(t.tipo||'Outro').replace(/ \(.*\)/,''); tipos[k]=(tipos[k]||0)+1; });
   const tiposArr = Object.keys(tipos).map(k=>({label:k, value:tipos[k]}));
   if(tiposArr.length) html += barChart('Treinamentos Realizados por Tipo', tiposArr, 'var(--blue)');
 
@@ -2429,6 +2449,15 @@ function renderPesquisa(){
     {label:'Concluído', value:treinF.filter(t=>t.resultado==='Concluído').length}
   ], 'var(--green)');
 
+  // Chart: capacitações por status
+  if(capF.length){
+    html += barChart('Capacitações por Status de Validade', [
+      {label:'Válidos', value:capValidos},
+      {label:'Alerta (90d)', value:capAlerta},
+      {label:'Vencidos', value:capVencidos}
+    ], 'var(--amber)');
+  }
+
   // If area selected: chart by collaborator
   if(far && !fop){
     const porColab={};
@@ -2437,7 +2466,7 @@ function renderPesquisa(){
     if(arr.length) html += barChart('Treinamentos por Colaborador', arr, 'var(--blue)');
   }
 
-  // Detail table
+  // Detail table - treinamentos
   html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento dos Treinamentos</h3></div>';
   if(treinF.length){
     html += '<table><thead><tr><th>Data</th><th>Colaborador</th><th>Procedimento</th><th>Tipo</th><th>Resultado</th></tr></thead><tbody>';
@@ -2449,6 +2478,16 @@ function renderPesquisa(){
     html += '<div class="empty"><p>Nenhum treinamento realizado para este filtro.</p></div>';
   }
   html += '</div>';
+
+  // Detail table - capacitações
+  if(capF.length){
+    html += '<div class="table-wrap" style="margin-top:16px"><div class="table-header"><h3>Detalhamento das Capacitações</h3></div>';
+    html += '<table><thead><tr><th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>';
+    capF.slice().sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||'')).forEach(r=>{
+      html += '<tr><td>'+r.operador+'</td><td>'+r.capacitacao+'</td><td>'+(r.funcao||'—')+'</td><td>'+fmtDate(r.dataRealizada)+'</td><td>'+fmtDate(r.vencimento)+'</td><td>'+capVencBadge(r.vencimento)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
 
   // Pending/scheduled detail
   if(progF.length || retreF.length){
@@ -2464,11 +2503,15 @@ function renderPesquisa(){
 function cardMini(titulo, valor){
   return '<div class="stat-card"><div class="stat-label">'+titulo+'</div><div class="stat-val">'+valor+'</div></div>';
 }
+function cardMiniColor(titulo, valor, cor){
+  return '<div class="stat-card"><div class="stat-label">'+titulo+'</div><div class="stat-val" style="color:'+cor+'">'+valor+'</div></div>';
+}
 
 function limparPesquisa(){
   document.getElementById('pq-operador').value='';
   document.getElementById('pq-area').value='';
   document.getElementById('pq-proc').value='';
+  document.getElementById('pq-cap').value='';
   renderPesquisa();
 }
 
