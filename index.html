@@ -1230,10 +1230,11 @@ function printSelectedTrein(){
   });
   html += '</tbody></table>';
   html += '<div class="sign"><div class="sign-line">Responsável pelo Treinamento</div></div>';
-  html += '<script>window.onload=function(){window.print();}<\/script>';
   html += '</body></html>';
   win.document.write(html);
   win.document.close();
+  win.focus();
+  setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2005,8 +2006,8 @@ function printCapacitacao(){
   });
   html += '</tbody></table>';
   html += '<div class="sign"><div class="sign-line">Responsável pela Avaliação</div></div>';
-  html += '<script>window.onload=function(){window.print();}<\\/script></body></html>';
-  win.document.write(html); win.document.close();
+  html += '</body></html>';
+  win.document.write(html); win.document.close(); win.focus(); setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2058,8 +2059,8 @@ function printGenerico(titulo, colunas, linhas){
   linhas.forEach(linha=>{ html += '<tr>'+linha.map(c=>'<td>'+(c||'—')+'</td>').join('')+'</tr>'; });
   html += '</tbody></table>';
   html += '<div class="sign"><div class="sign-line">Responsável</div></div>';
-  html += '<script>window.onload=function(){window.print();}<\\/script></body></html>';
-  win.document.write(html); win.document.close();
+  html += '</body></html>';
+  win.document.write(html); win.document.close(); win.focus(); setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
 }
 
 // ═══════════════════════════════════════════════════════
