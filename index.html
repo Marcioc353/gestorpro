@@ -332,7 +332,7 @@ textarea{resize:vertical;min-height:70px}
         <table>
           <thead><tr>
             <th style="width:36px"><input type="checkbox" id="trein-check-all" onclick="toggleAllTrein(this)"></th>
-            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Revisão</th><th>Setor</th><th>Tipo</th><th>Resultado</th><th>Assinatura</th>
+            <th>Data</th><th>Operador</th><th>Procedimento</th><th>Revisão</th><th>Setor</th><th>Tipo</th><th>Resultado</th><th>Assinatura</th><th>Prova</th>
           </tr></thead>
           <tbody id="trein-tbody"></tbody>
         </table>
@@ -349,9 +349,16 @@ textarea{resize:vertical;min-height:70px}
         <button class="btn primary" onclick="openNovoRetreino()">+ Registrar Retreinamento</button>
       </div>
       <div class="table-wrap">
-        <div class="table-header"><h3>Retreinamentos por Falha Operacional</h3></div>
+        <div class="table-header">
+          <h3>Retreinamentos por Falha Operacional</h3>
+          <select id="filter-retrein-op" onchange="renderRetreinamentos()"><option value="">Todos os operadores</option></select>
+          <select id="filter-retrein-proc" onchange="renderRetreinamentos()"><option value="">Todos os procedimentos</option></select>
+          <button class="btn" onclick="printSelectedRetrein()">🖨️ Imprimir selecionados</button>
+          <button class="btn danger" onclick="deleteSelectedRetrein()">Excluir selecionados</button>
+        </div>
         <table>
           <thead><tr>
+            <th style="width:36px"><input type="checkbox" id="retrein-check-all" onclick="toggleAllRetrein(this)"></th>
             <th>Data</th><th>Operador</th><th>Procedimento</th><th>Motivo</th><th>Responsável</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="retrein-tbody"></tbody>
@@ -369,9 +376,16 @@ textarea{resize:vertical;min-height:70px}
         <button class="btn primary" onclick="openNovoProg()">+ Agendar Treinamento</button>
       </div>
       <div class="table-wrap">
-        <div class="table-header"><h3>Treinamentos Periódicos (Equipamentos Hibernados)</h3></div>
+        <div class="table-header">
+          <h3>Treinamentos Periódicos (Equipamentos Hibernados)</h3>
+          <select id="filter-prog-op" onchange="renderProgramados()"><option value="">Todos os operadores</option></select>
+          <select id="filter-prog-proc" onchange="renderProgramados()"><option value="">Todos os procedimentos</option></select>
+          <button class="btn" onclick="printSelectedProg()">🖨️ Imprimir selecionados</button>
+          <button class="btn danger" onclick="deleteSelectedProg()">Excluir selecionados</button>
+        </div>
         <table>
           <thead><tr>
+            <th style="width:36px"><input type="checkbox" id="prog-check-all" onclick="toggleAllProg(this)"></th>
             <th>Procedimento</th><th>Operador</th><th>Responsável</th><th>Frequência</th><th>Próxima Data</th><th>Último Realizado</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="prog-tbody"></tbody>
@@ -837,7 +851,10 @@ textarea{resize:vertical;min-height:70px}
         <div class="form-group"><label class="lbl">Procedimento *</label><select class="form-sel" id="fag-proc"></select></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label class="lbl">Motivo da prova *</label><select class="form-sel" id="fag-motivo"><option value="Capacitação Assistida">Capacitação Assistida</option><option value="Retreinamento">Retreinamento</option><option value="Revisão de Procedimento">Revisão de Procedimento</option><option value="Reciclagem Periódica">Reciclagem Periódica</option><option value="Outro">Outro</option></select></div>
         <div class="form-group"><label class="lbl">Data prevista</label><input type="date" id="fag-data"></div>
+      </div>
+      <div class="form-row full">
         <div class="form-group"><label class="lbl">Observação</label><input type="text" id="fag-obs" placeholder="Opcional"></div>
       </div>
     </div>
@@ -869,6 +886,13 @@ textarea{resize:vertical;min-height:70px}
       <div class="form-row full"><div class="form-group"><label class="lbl">Observação</label><textarea id="fcap-reg-obs" placeholder="Opcional"></textarea></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapacReg()">Registrar</button></div>
+  </div>
+
+  <!-- Visualizar Prova -->
+  <div class="modal hidden" id="modal-verprova">
+    <div class="modal-head"><h3>Visualização da Prova Online</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="verprova-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal()">Fechar</button></div>
   </div>
 
 </div>
@@ -1137,6 +1161,7 @@ function renderTreinamentos(){
       : t.resultado==='Reprovado'?'<span class="badge danger">Reprovado</span>'
       : t.resultado==='Concluído'?'<span class="badge ok">Concluído</span>'
       : '<span class="badge neutral">'+(t.resultado||'—')+'</span>';
+    const verProva = (t.quizDetail && t.quizDetail.length) ? `<button class="btn sm" onclick="verProva(${t.id})">Ver Prova</button>` : '';
     return `<tr>
     <td><input type="checkbox" class="trein-check" value="${t.id}"></td>
     <td>${fmtDate(t.data)}</td>
@@ -1144,9 +1169,10 @@ function renderTreinamentos(){
     <td>${t.proc}</td>
     <td><span class="badge neutral">${rev}</span></td>
     <td>${t.setor||'—'}</td>
-    <td>${t.tipo||'Treinamento'}</td>
+    <td>${t.tipo||'Treinamento'}${t.motivo?'<br><span style=\"font-size:10px;color:var(--text3)\">'+t.motivo+'</span>':''}</td>
     <td>${resBadge}</td>
     <td>${t.instrutor||'—'}</td>
+    <td>${verProva}</td>
   </tr>`;}).join('');
   const ca = document.getElementById('trein-check-all');
   if(ca) ca.checked = false;
@@ -1214,11 +1240,20 @@ function printSelectedTrein(){
 // RETREINAMENTOS
 // ═══════════════════════════════════════════════════════
 function renderRetreinamentos(){
+  // Populate filters
+  const ofEl = document.getElementById('filter-retrein-op');
+  if(ofEl){ const cur=ofEl.value; const ops=[...new Set(retreinamentos.map(r=>r.operador))].sort((a,b)=>a.localeCompare(b)); ofEl.innerHTML='<option value="">Todos os operadores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  const pfEl = document.getElementById('filter-retrein-proc');
+  if(pfEl){ const cur=pfEl.value; const ps=[...new Set(retreinamentos.map(r=>r.proc))].sort(); pfEl.innerHTML='<option value="">Todos os procedimentos</option>'+ps.map(p=>`<option value="${p}">${p}</option>`).join(''); pfEl.value=cur; }
+  const fop=(document.getElementById('filter-retrein-op')||{}).value||'';
+  const fproc=(document.getElementById('filter-retrein-proc')||{}).value||'';
+  const filtered = retreinamentos.filter(r=>(!fop||r.operador===fop)&&(!fproc||r.proc===fproc));
   const empty = document.getElementById('retrein-empty');
-  if(!retreinamentos.length){ empty.classList.remove('hidden'); document.querySelector('#page-retreinamentos table').style.display='none'; return; }
+  if(!filtered.length){ empty.classList.remove('hidden'); document.querySelector('#page-retreinamentos table').style.display='none'; document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || ''; return; }
   empty.classList.add('hidden');
   document.querySelector('#page-retreinamentos table').style.display='';
-  document.getElementById('retrein-tbody').innerHTML = retreinamentos.map(r=>`<tr>
+  document.getElementById('retrein-tbody').innerHTML = filtered.map(r=>`<tr>
+    <td><input type="checkbox" class="retrein-check" value="${r.id}"></td>
     <td>${fmtDate(r.data)}</td>
     <td>${r.operador}</td>
     <td>${r.proc}</td>
@@ -1228,10 +1263,28 @@ function renderRetreinamentos(){
     <td style="white-space:nowrap">
       ${r.status==='Pendente'?`<button class="btn sm" onclick="concluirRetreino(${r.id})">Concluir</button> `:''}
       <button class="btn sm" onclick="openEditRetreino(${r.id})">Editar</button>
-      <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRetreino(${r.id})">Excluir</button>
     </td>
   </tr>`).join('');
+  const ca=document.getElementById('retrein-check-all'); if(ca) ca.checked=false;
   document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
+}
+
+function toggleAllRetrein(el){ document.querySelectorAll('.retrein-check').forEach(c=>c.checked=el.checked); }
+function getSelectedRetrein(){ return [...document.querySelectorAll('.retrein-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedRetrein(){
+  const ids=getSelectedRetrein();
+  if(!ids.length){ alert('Selecione pelo menos um retreinamento.'); return; }
+  if(!confirm('Excluir '+ids.length+' retreinamento(s) selecionado(s)?')) return;
+  retreinamentos = retreinamentos.filter(r=>!ids.includes(r.id));
+  persist(); renderRetreinamentos(); renderDashboard();
+}
+function printSelectedRetrein(){
+  let ids=getSelectedRetrein();
+  const fop=(document.getElementById('filter-retrein-op')||{}).value||'';
+  const fproc=(document.getElementById('filter-retrein-proc')||{}).value||'';
+  let rows = ids.length ? retreinamentos.filter(r=>ids.includes(r.id)) : retreinamentos.filter(r=>(!fop||r.operador===fop)&&(!fproc||r.proc===fproc));
+  if(!rows.length){ alert('Não há retreinamentos para imprimir.'); return; }
+  printGenerico('Retreinamentos', ['Data','Operador','Procedimento','Motivo','Responsável','Status'], rows.map(r=>[fmtDate(r.data),r.operador,r.proc,r.motivo,r.responsavel,r.status]));
 }
 
 function concluirRetreino(id){
@@ -1251,16 +1304,25 @@ function concluirRetreino(id){
 // PROGRAMADOS
 // ═══════════════════════════════════════════════════════
 function renderProgramados(){
+  // Populate filters
+  const ofEl = document.getElementById('filter-prog-op');
+  if(ofEl){ const cur=ofEl.value; const ops=[...new Set(programados.map(p=>p.operadores))].sort((a,b)=>a.localeCompare(b)); ofEl.innerHTML='<option value="">Todos os operadores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  const pfEl = document.getElementById('filter-prog-proc');
+  if(pfEl){ const cur=pfEl.value; const ps=[...new Set(programados.map(p=>p.proc))].sort(); pfEl.innerHTML='<option value="">Todos os procedimentos</option>'+ps.map(p=>`<option value="${p}">${p}</option>`).join(''); pfEl.value=cur; }
+  const fop=(document.getElementById('filter-prog-op')||{}).value||'';
+  const fproc=(document.getElementById('filter-prog-proc')||{}).value||'';
+  const filtered = programados.filter(p=>(!fop||p.operadores===fop)&&(!fproc||p.proc===fproc));
   const empty = document.getElementById('prog-empty');
-  if(!programados.length){ empty.classList.remove('hidden'); document.querySelector('#page-programados table').style.display='none'; return; }
+  if(!filtered.length){ empty.classList.remove('hidden'); document.querySelector('#page-programados table').style.display='none'; return; }
   empty.classList.add('hidden');
   document.querySelector('#page-programados table').style.display='';
-  document.getElementById('prog-tbody').innerHTML = programados.map(p=>{
+  document.getElementById('prog-tbody').innerHTML = filtered.map(p=>{
     const nd = parseDate(p.proxima_data);
     const late = nd && nd < today;
     const soon = nd && !late && nd <= in90;
     const stBadge = late ? '<span class="badge danger">Atrasado</span>' : soon ? '<span class="badge warn">Em breve</span>' : '<span class="badge ok">Agendado</span>';
     return `<tr>
+      <td><input type="checkbox" class="prog-check" value="${p.id}"></td>
       <td>${p.proc}</td>
       <td>${p.operadores}</td>
       <td>${p.responsavel||'—'}</td>
@@ -1271,10 +1333,28 @@ function renderProgramados(){
       <td style="white-space:nowrap">
         <button class="btn sm" onclick="realizarTreinProg(${p.id})">Realizar</button>
         <button class="btn sm" onclick="openEditProg(${p.id})">Editar</button>
-        <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProg(${p.id})">Excluir</button>
       </td>
     </tr>`;
   }).join('');
+  const ca=document.getElementById('prog-check-all'); if(ca) ca.checked=false;
+}
+
+function toggleAllProg(el){ document.querySelectorAll('.prog-check').forEach(c=>c.checked=el.checked); }
+function getSelectedProg(){ return [...document.querySelectorAll('.prog-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedProg(){
+  const ids=getSelectedProg();
+  if(!ids.length){ alert('Selecione pelo menos um treinamento programado.'); return; }
+  if(!confirm('Excluir '+ids.length+' treinamento(s) selecionado(s)?')) return;
+  programados = programados.filter(p=>!ids.includes(p.id));
+  persist(); renderProgramados();
+}
+function printSelectedProg(){
+  let ids=getSelectedProg();
+  const fop=(document.getElementById('filter-prog-op')||{}).value||'';
+  const fproc=(document.getElementById('filter-prog-proc')||{}).value||'';
+  let rows = ids.length ? programados.filter(p=>ids.includes(p.id)) : programados.filter(p=>(!fop||p.operadores===fop)&&(!fproc||p.proc===fproc));
+  if(!rows.length){ alert('Não há treinamentos para imprimir.'); return; }
+  printGenerico('Treinamentos Programados', ['Procedimento','Operador','Responsável','Frequência','Próxima Data','Último Realizado'], rows.map(p=>[p.proc,p.operadores,p.responsavel,p.frequencia,fmtDate(p.proxima_data),p.ultimo?fmtDate(p.ultimo):'—']));
 }
 
 function realizarTreinProg(id){
@@ -1350,15 +1430,21 @@ function renderQuizQuestion(){
   document.getElementById('qpbar').style.width = ((idx+1)/qs.length*100)+'%';
   document.getElementById('quiz-counter').textContent = `Questão ${idx+1} de ${qs.length}`;
   document.getElementById('quiz-question-text').textContent = q.pergunta;
+  const sel = quizState.answers[idx];
   const opts = document.getElementById('quiz-options');
   opts.innerHTML = q.opcoes.map((o,i)=>`
-    <div class="quiz-opt" onclick="selectOpt(${i})" data-idx="${i}">
+    <div class="quiz-opt ${sel===i?'selected':''}" onclick="selectOpt(${i})" data-idx="${i}">
       <span style="font-weight:600;min-width:20px">${['A','B','C','D'][i]})</span> ${o}
     </div>`).join('');
   const nav = document.getElementById('quiz-nav');
-  nav.innerHTML = `<button class="btn primary" id="quiz-next-btn" onclick="nextQuestion()" disabled>
-    ${idx===qs.length-1?'Ver Resultado →':'Próxima →'}
-  </button>`;
+  const answered = (sel!==undefined && sel!==null);
+  nav.innerHTML = `
+    <button class="btn" id="quiz-prev-btn" onclick="prevQuestion()" ${idx===0?'disabled':''}>← Anterior</button>
+    <button class="btn primary" id="quiz-next-btn" onclick="nextQuestion()" ${answered?'':'disabled'}>${idx===qs.length-1?'Ver Resultado →':'Próxima →'}</button>`;
+}
+
+function prevQuestion(){
+  if(quizState.idx > 0){ quizState.idx--; renderQuizQuestion(); }
 }
 
 function selectOpt(i){
@@ -1403,7 +1489,10 @@ function showQuizResult(){
     const ag = agendaAvaliacoes.find(x=>x.id===quizState.agendaId);
     if(ag){ ag.status='Realizado'; ag.resultado=pass?'Aprovado':'Reprovado'; saveState('agendaAvaliacoes',agendaAvaliacoes); }
   }
-  treinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, revisao:proc?.revisao||'', setor:proc?.setor||'', tipo:'Avaliação Online', resultado: pass?'Aprovado':'Reprovado', instrutor:'Sistema GestorPRO', obs:`Quiz: ${pct}% (${correct}/${qs.length})`});
+  const motivoProva = quizState.motivo || 'Avaliação Online';
+  // Store quiz detail for later review
+  const quizDetail = qs.map((q,i)=>({pergunta:q.pergunta, opcoes:q.opcoes, correta:q.correta, resposta:answers[i]}));
+  treinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, revisao:proc?.revisao||'', setor:proc?.setor||'', tipo:'Avaliação Online', motivo:motivoProva, resultado: pass?'Aprovado':'Reprovado', instrutor:'Sistema GestorPRO', obs:`Quiz: ${pct}% (${correct}/${qs.length}) — Motivo: ${motivoProva}`, quizDetail:quizDetail, quizPct:pct});
   if(!pass){
     retreinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, motivo:`Reprovado na avaliação online (${pct}% — abaixo de 70%)`, responsavel:'A definir', status:'Pendente', data_treino:''});
   }
@@ -1711,7 +1800,8 @@ function saveAgendarAvaliacao(){
   const proc = procs.find(x=>String(x.id)===String(procId));
   const data = document.getElementById('fag-data').value;
   const obs = document.getElementById('fag-obs').value.trim();
-  agendaAvaliacoes.push({id:genId(), operador:op, proc:proc?proc.numero:procId, procId:procId, data, obs, status:'Pendente'});
+  const motivo = document.getElementById('fag-motivo').value;
+  agendaAvaliacoes.push({id:genId(), operador:op, proc:proc?proc.numero:procId, procId:procId, data, obs, motivo, status:'Pendente'});
   saveState('agendaAvaliacoes', agendaAvaliacoes);
   persist();
   closeModal();
@@ -1730,7 +1820,7 @@ function iniciarAvaliacaoAgenda(id){
   if(!ag) return;
   const qs = questions[ag.procId]||[];
   if(!qs.length){ alert('Este procedimento não possui questões cadastradas. Adicione questões primeiro na seção abaixo.'); return; }
-  quizState = {questions:qs, idx:0, answers:[], procId:ag.procId, operador:ag.operador, agendaId:id};
+  quizState = {questions:qs, idx:0, answers:[], procId:ag.procId, operador:ag.operador, agendaId:id, motivo:ag.motivo||''};
   document.getElementById('quiz-selector').classList.add('hidden');
   document.getElementById('quiz-runner').classList.remove('hidden');
   renderQuizQuestion();
@@ -1915,6 +2005,59 @@ function printCapacitacao(){
   });
   html += '</tbody></table>';
   html += '<div class="sign"><div class="sign-line">Responsável pela Avaliação</div></div>';
+  html += '<script>window.onload=function(){window.print();}<\\/script></body></html>';
+  win.document.write(html); win.document.close();
+}
+
+// ═══════════════════════════════════════════════════════
+// VISUALIZAR PROVA
+// ═══════════════════════════════════════════════════════
+function verProva(treinId){
+  const t = treinamentos.find(x=>x.id===treinId);
+  if(!t || !t.quizDetail) return;
+  const letras = ['A','B','C','D'];
+  let acertos = t.quizDetail.filter(q=>q.resposta===q.correta).length;
+  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${t.operador}</strong> — ${t.proc} (${t.revisao||'—'})<br>Data: ${fmtDate(t.data)} | Motivo: ${t.motivo||'—'} | Resultado: <strong>${t.resultado}</strong> (${t.quizPct!=null?t.quizPct+'%':''} — ${acertos}/${t.quizDetail.length})</div>`;
+  t.quizDetail.forEach((q,i)=>{
+    const acertou = q.resposta===q.correta;
+    html += `<div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">${i+1}. ${q.pergunta} ${acertou?'<span class="badge ok">✓ Correta</span>':'<span class="badge danger">✗ Errada</span>'}</div>`;
+    q.opcoes.forEach((o,j)=>{
+      let style = 'padding:5px 10px;border-radius:6px;font-size:13px;margin-bottom:3px;';
+      let tag = '';
+      if(j===q.correta){ style+='background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);'; tag=' ✓ (gabarito)'; }
+      if(j===q.resposta && j!==q.correta){ style+='background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);'; tag=' ← resposta do operador'; }
+      if(j===q.resposta && j===q.correta){ tag=' ← resposta do operador'; }
+      html += `<div style="${style}">${letras[j]}) ${o}${tag}</div>`;
+    });
+    if(q.resposta===undefined||q.resposta===null){ html += '<div style="font-size:12px;color:var(--red);margin-top:4px">Não respondida</div>'; }
+    html += `</div>`;
+  });
+  document.getElementById('verprova-body').innerHTML = html;
+  openModal('verprova');
+}
+
+// ═══════════════════════════════════════════════════════
+// IMPRESSÃO GENÉRICA
+// ═══════════════════════════════════════════════════════
+function printGenerico(titulo, colunas, linhas){
+  const win = window.open('', '_blank');
+  let html = '<html><head><title>'+titulo+'</title><meta charset="UTF-8"><style>'+
+    'body{font-family:Arial,sans-serif;padding:24px;color:#1a2332}'+
+    'h1{font-size:18px;border-bottom:2px solid #2563eb;padding-bottom:8px}'+
+    '.sub{font-size:12px;color:#666;margin-bottom:16px}'+
+    'table{width:100%;border-collapse:collapse;font-size:12px}'+
+    'th{background:#2563eb;color:#fff;text-align:left;padding:8px;border:1px solid #1d4ed8}'+
+    'td{padding:7px 8px;border:1px solid #ddd}'+
+    'tr:nth-child(even){background:#f4f6f9}'+
+    '.sign{margin-top:40px;font-size:12px}.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
+    '@media print{button{display:none}}</style></head><body>';
+  html += '<h1>⚙ GestorPRO — '+titulo+'</h1>';
+  html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+linhas.length+' registro(s)</div>';
+  html += '<table><thead><tr>'+colunas.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
+  linhas.forEach(linha=>{ html += '<tr>'+linha.map(c=>'<td>'+(c||'—')+'</td>').join('')+'</tr>'; });
+  html += '</tbody></table>';
+  html += '<div class="sign"><div class="sign-line">Responsável</div></div>';
   html += '<script>window.onload=function(){window.print();}<\\/script></body></html>';
   win.document.write(html); win.document.close();
 }
