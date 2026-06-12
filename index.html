@@ -45,10 +45,16 @@ a{color:var(--blue);text-decoration:none}
 .sidebar-logo .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .sidebar-logo h1{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
 .sidebar-logo p{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
-.nav-section{padding:12px 8px 4px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);margin:1px 8px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s}
-.nav-item:hover{background:var(--bg);color:var(--text)}
-.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
+.nav-group{margin:2px 8px}
+.nav-section{display:flex;align-items:center;gap:7px;padding:9px 10px;font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);border-radius:var(--radius);cursor:pointer;user-select:none;transition:filter .15s}
+.nav-section:hover{filter:brightness(1.1)}
+.nav-section .nav-chevron{width:13px;height:13px;transition:transform .2s;transform:rotate(90deg)}
+.nav-section.closed .nav-chevron{transform:rotate(0deg)}
+.nav-items{display:flex;flex-direction:column;gap:1px;padding:4px 0 8px;overflow:hidden}
+.nav-items.collapsed{display:none}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s}
+.nav-item:hover{background:var(--blue-bg);color:var(--blue)}
+.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600;border-left:3px solid var(--blue);padding-left:9px}
 .nav-item svg{width:16px;height:16px;flex-shrink:0}
 .badge-count{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;font-weight:600}
 
@@ -191,51 +197,43 @@ textarea{resize:vertical;min-height:70px}
       <div><h1>GestorPRO</h1><p>Procedimentos Operacionais</p></div>
     </div>
   </div>
-  <div class="nav-section">Principal</div>
-  <div class="nav-item active" data-page="dashboard" onclick="navTo('dashboard',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-    Dashboard
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Principal</span></div>
+    <div class="nav-items">
+    <div class="nav-item active" data-page="dashboard" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="nav-item" data-page="pesquisa" onclick="navTo('pesquisa',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Pesquisa</div>
+    </div>
   </div>
-  <div class="nav-section">Procedimentos</div>
-  <div class="nav-item" data-page="procedimentos" onclick="navTo('procedimentos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    Lista de Procedimentos
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Procedimentos</span></div>
+    <div class="nav-items collapsed">
+    <div class="nav-item" data-page="procedimentos" onclick="navTo('procedimentos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lista de Procedimentos</div>
+    <div class="nav-item" data-page="revisoes" onclick="navTo('revisoes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>Controle de Revisões</div>
+    </div>
   </div>
-  <div class="nav-item" data-page="revisoes" onclick="navTo('revisoes',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-    Controle de Revisões
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Treinamentos</span></div>
+    <div class="nav-items collapsed">
+    <div class="nav-item" data-page="programados" onclick="navTo('programados',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Trein. Programados</div>
+    <div class="nav-item" data-page="retreinamentos" onclick="navTo('retreinamentos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Retreinamentos</div>
+    <div class="nav-item" data-page="quiz" onclick="navTo('quiz',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Avaliação Online</div>
+    <div class="nav-item" data-page="treinamentos" onclick="navTo('treinamentos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Registros de Treinamento</div>
+    </div>
   </div>
-  <div class="nav-section">Treinamentos</div>
-  <div class="nav-item" data-page="treinamentos" onclick="navTo('treinamentos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Registros de Treinamento
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Avaliação</span></div>
+    <div class="nav-items collapsed">
+    <div class="nav-item" data-page="capacitacao" onclick="navTo('capacitacao',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Avaliação Comportamental</div>
+    </div>
   </div>
-  <div class="nav-item" data-page="retreinamentos" onclick="navTo('retreinamentos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Retreinamentos
-    <span class="badge-count" id="badge-retrein">0</span>
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Cadastros</span></div>
+    <div class="nav-items collapsed">
+    <div class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Colaboradores</div>
+    <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Banco de Questões</div>
+    </div>
   </div>
-  <div class="nav-item" data-page="programados" onclick="navTo('programados',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Trein. Programados
-  </div>
-  <div class="nav-item" data-page="quiz" onclick="navTo('quiz',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    Avaliação Online
-  </div>
-  <div class="nav-item" data-page="capacitacao" onclick="navTo('capacitacao',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    Avaliação Comportamental
-  </div>
-  <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    Banco de Questões
-  </div>
-  <div class="nav-section">Cadastros</div>
-  <div class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Colaboradores
-  </div></nav>
+</nav>
 
 <!-- MAIN -->
 <div id="main">
@@ -267,6 +265,20 @@ textarea{resize:vertical;min-height:70px}
         <div class="table-header"><h3>📋 Últimos Retreinamentos Registrados</h3></div>
         <div id="dash-retrein-list"></div>
       </div>
+    </div>
+
+    <!-- PESQUISA -->
+    <div class="page" id="page-pesquisa">
+      <div class="alert info" style="margin-bottom:16px">🔎 Pesquise por colaborador, área e/ou procedimento para ver o panorama de treinamentos realizados, programados e pendentes, com gráficos.</div>
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="flex:1;min-width:180px"><label class="lbl">Colaborador</label><select class="form-sel" id="pq-operador" onchange="renderPesquisa()"></select></div>
+          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Área</label><select class="form-sel" id="pq-area" onchange="renderPesquisa()"></select></div>
+          <div class="form-group" style="flex:1;min-width:200px"><label class="lbl">Procedimento</label><select class="form-sel" id="pq-proc" onchange="renderPesquisa()"></select></div>
+          <button class="btn" onclick="limparPesquisa()">Limpar</button>
+        </div>
+      </div>
+      <div id="pq-resultado"></div>
     </div>
 
     <!-- PROCEDIMENTOS -->
@@ -477,12 +489,13 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap">
         <div class="table-header">
           <h3>Cadastro de Colaboradores</h3>
-          <input type="text" id="novo-colaborador" placeholder="Nome do colaborador..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:200px">
-          <input type="email" id="novo-colaborador-email" placeholder="E-mail (opcional)" style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:200px">
+          <input type="text" id="novo-colaborador" placeholder="Nome..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:160px">
+          <input type="text" id="novo-colaborador-area" placeholder="Área..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:130px">
+          <input type="email" id="novo-colaborador-email" placeholder="E-mail (opcional)" style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:170px">
           <button class="btn primary" onclick="addColaborador()">+ Adicionar</button>
         </div>
         <table>
-          <thead><tr><th>Nome</th><th>E-mail</th><th style="width:120px">Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Área</th><th>E-mail</th><th style="width:120px">Ações</th></tr></thead>
           <tbody id="colab-tbody"></tbody>
         </table>
         <div id="colab-empty" class="empty hidden"><p>Nenhum colaborador cadastrado ainda.</p></div>
@@ -932,7 +945,7 @@ let retreinamentos = loadState('retreinamentos', []);
 let programados = loadState('programados', []);
 let questions = loadState('questions', {});
 let operadores = loadState('operadores', []);
-operadores = operadores.map(o=> typeof o==='string' ? {nome:o, email:''} : o);
+operadores = operadores.map(o=> typeof o==='string' ? {nome:o, email:'', area:''} : {area:'', ...o});
 let avaliacoesComp = loadState('avaliacoesComp', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
@@ -985,11 +998,18 @@ function genId(){ return ++nextId; }
 // NAVIGATION
 // ═══════════════════════════════════════════════════════
 const pageTitles = {
-  dashboard:'Dashboard', procedimentos:'Lista de Procedimentos',
+  dashboard:'Dashboard', pesquisa:'Pesquisa', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
   quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental'
 };
+
+function toggleSection(headerEl){
+  const items = headerEl.nextElementSibling;
+  if(!items) return;
+  const isCollapsed = items.classList.toggle('collapsed');
+  headerEl.classList.toggle('closed', isCollapsed);
+}
 
 function navTo(page, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1001,6 +1021,7 @@ function navTo(page, el){
   const btnNP = document.getElementById('btn-novo-proc');
   if(btnNP) btnNP.style.display = (page==='treinamentos') ? 'none' : '';
   if(page==='dashboard') renderDashboard();
+  if(page==='pesquisa') renderPesquisa();
   if(page==='procedimentos') renderProcs();
   if(page==='revisoes') renderRevisoes();
   if(page==='treinamentos') renderTreinamentos();
@@ -1068,7 +1089,7 @@ function renderDashboard(){
       `</tbody></table>`;
   }
 
-  document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
+  /* badge removed */
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1269,7 +1290,7 @@ function renderRetreinamentos(){
   const fproc=(document.getElementById('filter-retrein-proc')||{}).value||'';
   const filtered = retreinamentos.filter(r=>(!fop||r.operador===fop)&&(!fproc||r.proc===fproc));
   const empty = document.getElementById('retrein-empty');
-  if(!filtered.length){ empty.classList.remove('hidden'); document.querySelector('#page-retreinamentos table').style.display='none'; document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || ''; return; }
+  if(!filtered.length){ empty.classList.remove('hidden'); document.querySelector('#page-retreinamentos table').style.display='none'; /* badge removed */ return; }
   empty.classList.add('hidden');
   document.querySelector('#page-retreinamentos table').style.display='';
   document.getElementById('retrein-tbody').innerHTML = filtered.map(r=>`<tr>
@@ -1286,7 +1307,7 @@ function renderRetreinamentos(){
     </td>
   </tr>`).join('');
   const ca=document.getElementById('retrein-check-all'); if(ca) ca.checked=false;
-  document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
+  /* badge removed */
 }
 
 function toggleAllRetrein(el){ document.querySelectorAll('.retrein-check').forEach(c=>c.checked=el.checked); }
@@ -1626,7 +1647,7 @@ function saveRetreino(){
   if(!op||!motivo||!resp){ alert('Operador, motivo e responsável são obrigatórios.'); return; }
   retreinamentos.push({id:genId(),data:document.getElementById('frt-data').value,operador:op,proc:p?.numero||procId,motivo,responsavel:resp,data_treino:document.getElementById('frt-data-treino').value,status:'Pendente'});
   persist(); closeModal(); renderRetreinamentos();
-  document.getElementById('badge-retrein').textContent = retreinamentos.filter(r=>r.status==='Pendente').length || '';
+  /* badge removed */
   notifyColaborador(op, 'Retreinamento Agendado — '+(p?p.numero:procId), 'Olá '+op+',\n\nVocê foi agendado para um retreinamento:\n\nProcedimento: '+(p?p.numero+' — '+p.descricao:procId)+'\nMotivo: '+motivo+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
 }
 
@@ -1857,6 +1878,7 @@ function renderColaboradores(){
   const sorted = [...operadores].sort((a,b)=>a.nome.localeCompare(b.nome));
   document.getElementById('colab-tbody').innerHTML = sorted.map(o=>`<tr>
     <td>${o.nome}</td>
+    <td>${o.area||'<span style="color:var(--text3)">—</span>'}</td>
     <td>${o.email||'<span style="color:var(--text3)">—</span>'}</td>
     <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${o.nome.replace(/'/g,"\\'")}')">Excluir</button></td>
   </tr>`).join('');
@@ -1864,14 +1886,16 @@ function renderColaboradores(){
 
 function addColaborador(){
   const inp = document.getElementById('novo-colaborador');
+  const inpArea = document.getElementById('novo-colaborador-area');
   const inpEmail = document.getElementById('novo-colaborador-email');
   const nome = inp.value.trim();
+  const area = inpArea.value.trim();
   const email = inpEmail.value.trim();
   if(!nome){ alert('Digite o nome do colaborador.'); return; }
   if(operadores.some(o=>o.nome.toLowerCase()===nome.toLowerCase())){ alert('Este colaborador já está cadastrado.'); return; }
-  operadores.push({nome:nome, email:email});
+  operadores.push({nome:nome, email:email, area:area});
   persist();
-  inp.value=''; inpEmail.value='';
+  inp.value=''; inpArea.value=''; inpEmail.value='';
   renderColaboradores();
 }
 
@@ -1885,6 +1909,11 @@ function deleteColaborador(nome){
 function getColaboradorEmail(nome){
   const o = operadores.find(x=>x.nome===nome);
   return o ? (o.email||'') : '';
+}
+
+function getColaboradorArea(nome){
+  const o = operadores.find(x=>x.nome===nome);
+  return o ? (o.area||'') : '';
 }
 
 function notifyColaborador(nome, assunto, corpo){
@@ -1915,6 +1944,8 @@ document.addEventListener('DOMContentLoaded', function(){
   if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
   const inpE = document.getElementById('novo-colaborador-email');
   if(inpE) inpE.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
+  const inpA = document.getElementById('novo-colaborador-area');
+  if(inpA) inpA.addEventListener('keydown', function(e){ if(e.key==='Enter') addColaborador(); });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -2195,10 +2226,135 @@ function printGenerico(titulo, colunas, linhas){
 }
 
 // ═══════════════════════════════════════════════════════
+// PESQUISA (SEGUNDA DASHBOARD)
+// ═══════════════════════════════════════════════════════
+function barChart(titulo, dados, cor){
+  // dados: array of {label, value}
+  const max = Math.max(1, ...dados.map(d=>d.value));
+  let rows = dados.map(d=>{
+    const w = Math.round(d.value/max*100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:200px;font-size:12px;text-align:right;color:var(--text2);flex-shrink:0">${d.label}</div>
+      <div style="flex:1;background:var(--bg);border-radius:6px;height:24px;position:relative">
+        <div style="width:${w}%;background:${cor};height:100%;border-radius:6px;min-width:${d.value>0?'24px':'0'};transition:width .3s"></div>
+        <span style="position:absolute;left:8px;top:0;line-height:24px;font-size:12px;font-weight:600;color:${w>15?'#fff':'var(--text)'}">${d.value}</span>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="table-wrap" style="margin-bottom:16px"><div class="table-header"><h3>${titulo}</h3></div><div style="padding:16px">${rows}</div></div>`;
+}
+
+function renderPesquisa(){
+  // Populate filters
+  const opSel=document.getElementById('pq-operador');
+  const arSel=document.getElementById('pq-area');
+  const prSel=document.getElementById('pq-proc');
+  if(opSel && !opSel.dataset.init){
+    opSel.innerHTML='<option value="">Todos os colaboradores</option>'+operadores.map(o=>o.nome).sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${n}">${n}</option>`).join('');
+    const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort();
+    arSel.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+    prSel.innerHTML='<option value="">Todos os procedimentos</option>'+procs.map(p=>p.numero).sort().map(n=>`<option value="${n}">${n}</option>`).join('');
+    opSel.dataset.init='1';
+  }
+  const fop=opSel.value, far=arSel.value, fpr=prSel.value;
+
+  // Helper: does an operador belong to area?
+  const opInArea = (nome)=> !far || getColaboradorArea(nome)===far;
+  const match = (operador, proc)=> (!fop||operador===fop) && opInArea(operador) && (!fpr||proc===fpr);
+
+  // Filter datasets
+  const treinF = treinamentos.filter(t=>match(t.operador, t.proc));
+  const progF = programados.filter(p=>match(p.operadores, p.proc));
+  const retreF = retreinamentos.filter(r=>match(r.operador, r.proc));
+  const compF = avaliacoesComp.filter(a=> (!fop||a.colaborador===fop) && (!far||a.area===far||getColaboradorArea(a.colaborador)===far) );
+
+  const out = document.getElementById('pq-resultado');
+  if(!fop && !far && !fpr){
+    out.innerHTML = '<div class="empty"><p>Selecione um colaborador, área ou procedimento para ver o panorama.</p></div>';
+    return;
+  }
+
+  // Descriptive summary
+  let escopo = [];
+  if(fop) escopo.push('Colaborador: <strong>'+fop+'</strong>');
+  if(far) escopo.push('Área: <strong>'+far+'</strong>');
+  if(fpr) escopo.push('Procedimento: <strong>'+fpr+'</strong>');
+
+  let html = '<div class="alert info" style="margin-bottom:16px">'+escopo.join(' &nbsp;|&nbsp; ')+'</div>';
+
+  // Cards
+  const aprovados = treinF.filter(t=>t.resultado==='Aprovado').length;
+  const reprovados = treinF.filter(t=>t.resultado==='Reprovado').length;
+  html += '<div class="stat-grid" style="margin-bottom:16px">'+
+    cardMini('Treinamentos Realizados', treinF.length)+
+    cardMini('Programados (em aberto)', progF.length)+
+    cardMini('Retreinamentos Pendentes', retreF.length)+
+    cardMini('Avaliações Comportamentais', compF.length)+
+  '</div>';
+
+  // Chart: treinamentos por tipo
+  const tipos = {};
+  treinF.forEach(t=>{ const k=(t.tipo||'Outro').replace(/ \\(.*\\)/,''); tipos[k]=(tipos[k]||0)+1; });
+  const tiposArr = Object.keys(tipos).map(k=>({label:k, value:tipos[k]}));
+  if(tiposArr.length) html += barChart('Treinamentos Realizados por Tipo', tiposArr, 'var(--blue)');
+
+  // Chart: resultados
+  html += barChart('Resultados dos Treinamentos', [
+    {label:'Aprovado', value:aprovados},
+    {label:'Reprovado', value:reprovados},
+    {label:'Concluído', value:treinF.filter(t=>t.resultado==='Concluído').length}
+  ], 'var(--green)');
+
+  // If area selected: chart by collaborator
+  if(far && !fop){
+    const porColab={};
+    treinF.forEach(t=>{ porColab[t.operador]=(porColab[t.operador]||0)+1; });
+    const arr=Object.keys(porColab).map(k=>({label:k,value:porColab[k]})).sort((a,b)=>b.value-a.value);
+    if(arr.length) html += barChart('Treinamentos por Colaborador', arr, 'var(--blue)');
+  }
+
+  // Detail table
+  html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento dos Treinamentos</h3></div>';
+  if(treinF.length){
+    html += '<table><thead><tr><th>Data</th><th>Colaborador</th><th>Procedimento</th><th>Tipo</th><th>Resultado</th></tr></thead><tbody>';
+    treinF.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).forEach(t=>{
+      html += '<tr><td>'+fmtDate(t.data)+'</td><td>'+t.operador+'</td><td>'+t.proc+'</td><td>'+(t.tipo||'—')+'</td><td>'+(t.resultado||'—')+'</td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<div class="empty"><p>Nenhum treinamento realizado para este filtro.</p></div>';
+  }
+  html += '</div>';
+
+  // Pending/scheduled detail
+  if(progF.length || retreF.length){
+    html += '<div class="table-wrap" style="margin-top:16px"><div class="table-header"><h3>Pendências e Programações</h3></div><table><thead><tr><th>Tipo</th><th>Colaborador</th><th>Procedimento</th><th>Detalhe</th></tr></thead><tbody>';
+    progF.forEach(p=>{ html += '<tr><td>Programado</td><td>'+p.operadores+'</td><td>'+p.proc+'</td><td>Próxima: '+fmtDate(p.proxima_data)+'</td></tr>'; });
+    retreF.forEach(r=>{ html += '<tr><td>Retreinamento</td><td>'+r.operador+'</td><td>'+r.proc+'</td><td>'+(r.status||'Pendente')+'</td></tr>'; });
+    html += '</tbody></table></div>';
+  }
+
+  out.innerHTML = html;
+}
+
+function cardMini(titulo, valor){
+  return '<div class="stat-card"><div class="stat-label">'+titulo+'</div><div class="stat-val">'+valor+'</div></div>';
+}
+
+function limparPesquisa(){
+  document.getElementById('pq-operador').value='';
+  document.getElementById('pq-area').value='';
+  document.getElementById('pq-proc').value='';
+  renderPesquisa();
+}
+
+// ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 document.getElementById('today-date').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+// Set initial chevron state for collapsed sections
+document.querySelectorAll('.nav-items.collapsed').forEach(items=>{ const h=items.previousElementSibling; if(h) h.classList.add('closed'); });
 renderDashboard();
 </script>
 </body>
