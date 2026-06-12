@@ -198,7 +198,7 @@ textarea{resize:vertical;min-height:70px}
     </div>
   </div>
   <div class="nav-group">
-    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Principal</span></div>
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Gestão</span></div>
     <div class="nav-items">
     <div class="nav-item active" data-page="dashboard" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
     <div class="nav-item" data-page="pesquisa" onclick="navTo('pesquisa',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Pesquisa</div>
@@ -221,7 +221,15 @@ textarea{resize:vertical;min-height:70px}
     </div>
   </div>
   <div class="nav-group">
-    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Avaliação</span></div>
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Capacitações</span></div>
+    <div class="nav-items collapsed">
+    <div class="nav-item" data-page="caplista" onclick="navTo('caplista',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lista de Capacitações</div>
+    <div class="nav-item" data-page="capprog" onclick="navTo('capprog',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Capacit. Programadas</div>
+    <div class="nav-item" data-page="capreg" onclick="navTo('capreg',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>Registros de Capacitação</div>
+    </div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Competências</span></div>
     <div class="nav-items collapsed">
     <div class="nav-item" data-page="capacitacao" onclick="navTo('capacitacao',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Avaliação Comportamental</div>
     </div>
@@ -481,6 +489,64 @@ textarea{resize:vertical;min-height:70px}
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- CAPACITAÇÕES: LISTA (CATÁLOGO) -->
+    <div class="page" id="page-caplista">
+      <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovoCapTipo()">+ Nova Capacitação</button></div>
+      <div class="alert info" style="margin-bottom:16px">📚 Cadastre os tipos de capacitação (ex: NR-11, NR-33, Brigada de Emergência) e a <strong>validade em meses</strong>. A validade define o vencimento da capacitação de cada operador.</div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Lista de Capacitações</h3></div>
+        <table>
+          <thead><tr><th>Capacitação</th><th>Descrição</th><th>Validade</th><th style="width:140px">Ações</th></tr></thead>
+          <tbody id="caplista-tbody"></tbody>
+        </table>
+        <div id="caplista-empty" class="empty hidden"><p>Nenhuma capacitação cadastrada ainda.</p></div>
+      </div>
+    </div>
+
+    <!-- CAPACITAÇÕES: PROGRAMADAS -->
+    <div class="page" id="page-capprog">
+      <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaCapProg()">+ Agendar Capacitação</button></div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Capacitações Programadas</h3>
+          <select id="filter-capprog-op" onchange="renderCapProg()"><option value="">Todos os operadores</option></select>
+          <select id="filter-capprog-cap" onchange="renderCapProg()"><option value="">Todas as capacitações</option></select>
+          <button class="btn" onclick="printSelectedCapProg()">🖨️ Imprimir selecionados</button>
+          <button class="btn danger" onclick="deleteSelectedCapProg()">Excluir selecionados</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:36px"><input type="checkbox" id="capprog-check-all" onclick="toggleAllCapProg(this)"></th>
+            <th>Operador</th><th>Capacitação</th><th>Data Prevista</th><th>Responsável</th><th>Status</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="capprog-tbody"></tbody>
+        </table>
+        <div id="capprog-empty" class="empty hidden"><p>Nenhuma capacitação programada.</p></div>
+      </div>
+    </div>
+
+    <!-- CAPACITAÇÕES: REGISTROS -->
+    <div class="page" id="page-capreg">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Registros de Capacitação</h3>
+          <select id="filter-capreg-op" onchange="renderCapReg()"><option value="">Todos os operadores</option></select>
+          <select id="filter-capreg-cap" onchange="renderCapReg()"><option value="">Todas as capacitações</option></select>
+          <select id="filter-capreg-status" onchange="renderCapReg()"><option value="">Todos os status</option><option value="vencido">Vencidos</option><option value="vencendo">Vencendo (90d)</option><option value="valido">Válidos</option></select>
+          <button class="btn" onclick="printSelectedCapReg()">🖨️ Imprimir selecionados</button>
+          <button class="btn danger" onclick="deleteSelectedCapReg()">Excluir selecionados</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:36px"><input type="checkbox" id="capreg-check-all" onclick="toggleAllCapReg(this)"></th>
+            <th>Operador</th><th>Capacitação</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th><th>Responsável</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="capreg-tbody"></tbody>
+        </table>
+        <div id="capreg-empty" class="empty hidden"><p>Nenhum registro de capacitação ainda.</p></div>
       </div>
     </div>
 
@@ -926,6 +992,51 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-foot"><button class="btn primary" onclick="closeModal()">Fechar</button></div>
   </div>
 
+  <!-- Nova/Editar Tipo de Capacitação -->
+  <div class="modal hidden" id="modal-captipo">
+    <div class="modal-head"><h3 id="captipo-title">Nova Capacitação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="form-group"><label class="lbl">Nome da Capacitação *</label><input type="text" id="fct-nome" placeholder="Ex: NR-33 Espaço Confinado"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Descrição</label><input type="text" id="fct-desc" placeholder="Opcional"></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Validade (meses) *</label><input type="number" id="fct-validade" placeholder="Ex: 12" min="1"></div><div class="form-group"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapTipo()">Salvar</button></div>
+  </div>
+
+  <!-- Agendar/Editar Capacitação Programada -->
+  <div class="modal hidden" id="modal-capprog">
+    <div class="modal-head"><h3 id="capprog-title">Agendar Capacitação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="form-group"><label class="lbl">Operador *</label><select class="form-sel" id="fcp-operador"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Capacitação *</label><select class="form-sel" id="fcp-capacitacao"></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Data prevista *</label><input type="date" id="fcp-data"></div><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fcp-resp" placeholder="Nome do responsável"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapProg()">Salvar</button></div>
+  </div>
+
+  <!-- Realizar Capacitação -->
+  <div class="modal hidden" id="modal-caprealizar">
+    <div class="modal-head"><h3>Realizar Capacitação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="caprealizar-info" class="alert info" style="margin-bottom:14px"></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Data realizada *</label><input type="date" id="fcr-data" onchange="updateCapVenc()"></div><div class="form-group"><label class="lbl">Vencimento (calculado)</label><input type="date" id="fcr-venc"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fcr-resp" placeholder="Nome do responsável"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapRealizar()">Registrar</button></div>
+  </div>
+
+  <!-- Editar Registro de Capacitação -->
+  <div class="modal hidden" id="modal-capreg-edit">
+    <div class="modal-head"><h3>Editar Registro de Capacitação</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="form-group"><label class="lbl">Operador</label><select class="form-sel" id="fce-operador"></select></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Capacitação</label><select class="form-sel" id="fce-capacitacao"></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Data realizada *</label><input type="date" id="fce-data"></div><div class="form-group"><label class="lbl">Vencimento *</label><input type="date" id="fce-venc"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fce-resp"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapRegEdit()">Salvar</button></div>
+  </div>
+
 </div>
 
 <script>
@@ -947,6 +1058,9 @@ let questions = loadState('questions', {});
 let operadores = loadState('operadores', []);
 operadores = operadores.map(o=> typeof o==='string' ? {nome:o, email:'', area:''} : {area:'', ...o});
 let avaliacoesComp = loadState('avaliacoesComp', []);
+let capacTipos = loadState('capacTipos', []);
+let capacProgramadas = loadState('capacProgramadas', []);
+let capacRegistros = loadState('capacRegistros', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -960,6 +1074,9 @@ function persist(){
   saveState('questions', questions);
   saveState('operadores', operadores);
   saveState('avaliacoesComp', avaliacoesComp);
+  saveState('capacTipos', capacTipos);
+  saveState('capacProgramadas', capacProgramadas);
+  saveState('capacRegistros', capacRegistros);
   saveState('nextId', nextId);
 }
 
@@ -1001,7 +1118,7 @@ const pageTitles = {
   dashboard:'Dashboard', pesquisa:'Pesquisa', procedimentos:'Lista de Procedimentos',
   revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registros de Capacitação'
 };
 
 function toggleSection(headerEl){
@@ -1031,6 +1148,9 @@ function navTo(page, el){
   if(page==='questoes') renderBancoQuestoes();
   if(page==='colaboradores') renderColaboradores();
   if(page==='capacitacao') renderAvalComp();
+  if(page==='caplista') renderCapLista();
+  if(page==='capprog') renderCapProg();
+  if(page==='capreg') renderCapReg();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2346,6 +2466,278 @@ function limparPesquisa(){
   document.getElementById('pq-area').value='';
   document.getElementById('pq-proc').value='';
   renderPesquisa();
+}
+
+// ═══════════════════════════════════════════════════════
+// CAPACITAÇÕES
+// ═══════════════════════════════════════════════════════
+function populateCapTiposSelect(id, selectedVal){
+  const sel = document.getElementById(id);
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Selecione —</option>' + capacTipos.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  if(selectedVal) sel.value = selectedVal;
+}
+
+function capVencStatus(venc){
+  const d = parseDate(venc);
+  if(!d) return 'valido';
+  const dias = Math.round((d-today)/(1000*86400));
+  if(dias < 0) return 'vencido';
+  if(dias <= 90) return 'vencendo';
+  return 'valido';
+}
+function capVencBadge(venc){
+  const s = capVencStatus(venc);
+  if(s==='vencido') return '<span class="badge danger">Vencido</span>';
+  if(s==='vencendo') return '<span class="badge warn">Vencendo</span>';
+  return '<span class="badge ok">Válido</span>';
+}
+
+// ---- LISTA (CATÁLOGO) ----
+let editCapTipoId = null;
+function renderCapLista(){
+  const empty = document.getElementById('caplista-empty');
+  const tbl = document.querySelector('#page-caplista table');
+  if(!capacTipos.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('caplista-tbody').innerHTML = capacTipos.map(c=>`<tr>
+    <td><strong>${c.nome}</strong></td>
+    <td>${c.descricao||'—'}</td>
+    <td><span class="badge neutral">${c.validadeMeses} meses</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn sm" onclick="openEditCapTipo(${c.id})">Editar</button>
+      <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapTipo(${c.id})">Excluir</button>
+    </td>
+  </tr>`).join('');
+}
+function openNovoCapTipo(){
+  editCapTipoId = null;
+  document.getElementById('captipo-title').textContent='Nova Capacitação';
+  document.getElementById('fct-nome').value='';
+  document.getElementById('fct-desc').value='';
+  document.getElementById('fct-validade').value='';
+  openModal('captipo');
+}
+function openEditCapTipo(id){
+  const c = capacTipos.find(x=>x.id===id); if(!c) return;
+  editCapTipoId = id;
+  document.getElementById('captipo-title').textContent='Editar Capacitação';
+  document.getElementById('fct-nome').value=c.nome;
+  document.getElementById('fct-desc').value=c.descricao||'';
+  document.getElementById('fct-validade').value=c.validadeMeses;
+  openModal('captipo');
+}
+function saveCapTipo(){
+  const nome = document.getElementById('fct-nome').value.trim();
+  const desc = document.getElementById('fct-desc').value.trim();
+  const validade = parseInt(document.getElementById('fct-validade').value);
+  if(!nome){ alert('Informe o nome da capacitação.'); return; }
+  if(!validade||validade<1){ alert('Informe a validade em meses (número válido).'); return; }
+  if(editCapTipoId){
+    const c = capacTipos.find(x=>x.id===editCapTipoId);
+    c.nome=nome; c.descricao=desc; c.validadeMeses=validade;
+  } else {
+    capacTipos.push({id:genId(), nome, descricao:desc, validadeMeses:validade});
+  }
+  persist(); closeModal(); renderCapLista();
+}
+function deleteCapTipo(id){
+  if(!confirm('Excluir esta capacitação do catálogo?')) return;
+  capacTipos = capacTipos.filter(c=>c.id!==id);
+  persist(); renderCapLista();
+}
+
+// ---- PROGRAMADAS ----
+let editCapProgId = null;
+function addMeses(dateStr, meses){
+  const d = parseDate(dateStr); if(!d) return '';
+  d.setMonth(d.getMonth()+parseInt(meses));
+  return d.toISOString().slice(0,10);
+}
+function renderCapProg(){
+  // Filters
+  const ofEl=document.getElementById('filter-capprog-op');
+  if(ofEl){ const cur=ofEl.value; const ops=[...new Set(capacProgramadas.map(p=>p.operador))].sort((a,b)=>a.localeCompare(b)); ofEl.innerHTML='<option value="">Todos os operadores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  const cfEl=document.getElementById('filter-capprog-cap');
+  if(cfEl){ const cur=cfEl.value; const cs=[...new Set(capacProgramadas.map(p=>p.capacitacao))].sort(); cfEl.innerHTML='<option value="">Todas as capacitações</option>'+cs.map(c=>`<option value="${c}">${c}</option>`).join(''); cfEl.value=cur; }
+  const fop=(document.getElementById('filter-capprog-op')||{}).value||'';
+  const fcap=(document.getElementById('filter-capprog-cap')||{}).value||'';
+  const filtered = capacProgramadas.filter(p=>(!fop||p.operador===fop)&&(!fcap||p.capacitacao===fcap));
+  const empty=document.getElementById('capprog-empty');
+  const tbl=document.querySelector('#page-capprog table');
+  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('capprog-tbody').innerHTML = filtered.map(p=>{
+    const nd=parseDate(p.dataPrevista); const late=nd&&nd<today; const soon=nd&&!late&&nd<=in90;
+    const st = late?'<span class="badge danger">Atrasado</span>':soon?'<span class="badge warn">Em breve</span>':'<span class="badge ok">Agendado</span>';
+    return `<tr>
+      <td><input type="checkbox" class="capprog-check" value="${p.id}"></td>
+      <td>${p.operador}</td>
+      <td>${p.capacitacao}</td>
+      <td>${fmtDate(p.dataPrevista)}</td>
+      <td>${p.responsavel||'—'}</td>
+      <td>${st}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm primary" onclick="openCapRealizar(${p.id})">Realizar</button>
+        <button class="btn sm" onclick="openEditCapProg(${p.id})">Editar</button>
+      </td>
+    </tr>`;
+  }).join('');
+  const ca=document.getElementById('capprog-check-all'); if(ca) ca.checked=false;
+}
+function openNovaCapProg(){
+  if(!capacTipos.length){ alert('Cadastre primeiro as capacitações em "Lista de Capacitações".'); return; }
+  editCapProgId=null;
+  document.getElementById('capprog-title').textContent='Agendar Capacitação';
+  populateOperadoresSelect('fcp-operador');
+  populateCapTiposSelect('fcp-capacitacao');
+  document.getElementById('fcp-data').value=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+  document.getElementById('fcp-resp').value='';
+  openModal('capprog');
+}
+function openEditCapProg(id){
+  const p=capacProgramadas.find(x=>x.id===id); if(!p) return;
+  editCapProgId=id;
+  document.getElementById('capprog-title').textContent='Editar Capacitação Programada';
+  populateOperadoresSelect('fcp-operador', p.operador);
+  populateCapTiposSelect('fcp-capacitacao', p.tipoId);
+  document.getElementById('fcp-data').value=p.dataPrevista;
+  document.getElementById('fcp-resp').value=p.responsavel||'';
+  openModal('capprog');
+}
+function saveCapProg(){
+  const op=document.getElementById('fcp-operador').value;
+  const tipoId=parseInt(document.getElementById('fcp-capacitacao').value);
+  const data=document.getElementById('fcp-data').value;
+  const resp=document.getElementById('fcp-resp').value.trim();
+  if(!op){ alert('Selecione o operador.'); return; }
+  if(!tipoId){ alert('Selecione a capacitação.'); return; }
+  if(!data){ alert('Informe a data prevista.'); return; }
+  const tipo=capacTipos.find(t=>t.id===tipoId);
+  if(editCapProgId){
+    const p=capacProgramadas.find(x=>x.id===editCapProgId);
+    p.operador=op; p.tipoId=tipoId; p.capacitacao=tipo?tipo.nome:''; p.dataPrevista=data; p.responsavel=resp;
+  } else {
+    capacProgramadas.push({id:genId(), operador:op, tipoId, capacitacao:tipo?tipo.nome:'', dataPrevista:data, responsavel:resp, status:'Pendente'});
+  }
+  persist(); closeModal(); renderCapProg();
+  if(!editCapProgId) notifyColaborador(op, 'Nova Capacitação Agendada — '+(tipo?tipo.nome:''), 'Olá '+op+',\\n\\nVocê foi agendado para uma capacitação:\\n\\nCapacitação: '+(tipo?tipo.nome:'')+'\\nData prevista: '+fmtDate(data)+'\\nResponsável: '+resp+'\\n\\nAtenciosamente,\\nGestorPRO');
+}
+function toggleAllCapProg(el){ document.querySelectorAll('.capprog-check').forEach(c=>c.checked=el.checked); }
+function getSelectedCapProg(){ return [...document.querySelectorAll('.capprog-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedCapProg(){
+  const ids=getSelectedCapProg();
+  if(!ids.length){ alert('Selecione pelo menos uma capacitação.'); return; }
+  if(!confirm('Excluir '+ids.length+' capacitação(ões) programada(s)?')) return;
+  capacProgramadas=capacProgramadas.filter(p=>!ids.includes(p.id));
+  persist(); renderCapProg();
+}
+function printSelectedCapProg(){
+  let ids=getSelectedCapProg();
+  const fop=(document.getElementById('filter-capprog-op')||{}).value||'';
+  const fcap=(document.getElementById('filter-capprog-cap')||{}).value||'';
+  let rows = ids.length ? capacProgramadas.filter(p=>ids.includes(p.id)) : capacProgramadas.filter(p=>(!fop||p.operador===fop)&&(!fcap||p.capacitacao===fcap));
+  if(!rows.length){ alert('Não há capacitações para imprimir.'); return; }
+  printGenerico('Capacitações Programadas', ['Operador','Capacitação','Data Prevista','Responsável'], rows.map(p=>[p.operador,p.capacitacao,fmtDate(p.dataPrevista),p.responsavel]));
+}
+
+// ---- REALIZAR (move para registros) ----
+let capRealizarId = null;
+function openCapRealizar(id){
+  const p=capacProgramadas.find(x=>x.id===id); if(!p) return;
+  capRealizarId=id;
+  const tipo=capacTipos.find(t=>t.id===p.tipoId);
+  document.getElementById('caprealizar-info').innerHTML = `<strong>${p.operador}</strong> — ${p.capacitacao}${tipo?' (validade: '+tipo.validadeMeses+' meses)':''}`;
+  const hoje=new Date().toISOString().slice(0,10);
+  document.getElementById('fcr-data').value=hoje;
+  document.getElementById('fcr-venc').value = tipo ? addMeses(hoje, tipo.validadeMeses) : '';
+  document.getElementById('fcr-resp').value=p.responsavel||'';
+  openModal('caprealizar');
+}
+function updateCapVenc(){
+  const p=capacProgramadas.find(x=>x.id===capRealizarId); if(!p) return;
+  const tipo=capacTipos.find(t=>t.id===p.tipoId);
+  const data=document.getElementById('fcr-data').value;
+  if(tipo&&data) document.getElementById('fcr-venc').value=addMeses(data, tipo.validadeMeses);
+}
+function saveCapRealizar(){
+  const p=capacProgramadas.find(x=>x.id===capRealizarId); if(!p) return;
+  const data=document.getElementById('fcr-data').value;
+  const venc=document.getElementById('fcr-venc').value;
+  const resp=document.getElementById('fcr-resp').value.trim();
+  if(!data){ alert('Informe a data realizada.'); return; }
+  capacRegistros.push({id:genId(), operador:p.operador, tipoId:p.tipoId, capacitacao:p.capacitacao, dataRealizada:data, vencimento:venc, responsavel:resp});
+  capacProgramadas=capacProgramadas.filter(x=>x.id!==capRealizarId);
+  persist(); closeModal(); renderCapProg(); renderCapReg();
+  notifyColaborador(p.operador, 'Capacitação Concluída — '+p.capacitacao, 'Olá '+p.operador+',\\n\\nSua capacitação foi registrada:\\n\\nCapacitação: '+p.capacitacao+'\\nData realizada: '+fmtDate(data)+'\\nVálida até: '+fmtDate(venc)+'\\n\\nAtenciosamente,\\nGestorPRO');
+}
+
+// ---- REGISTROS ----
+let editCapRegId = null;
+function renderCapReg(){
+  const ofEl=document.getElementById('filter-capreg-op');
+  if(ofEl){ const cur=ofEl.value; const ops=[...new Set(capacRegistros.map(r=>r.operador))].sort((a,b)=>a.localeCompare(b)); ofEl.innerHTML='<option value="">Todos os operadores</option>'+ops.map(o=>`<option value="${o}">${o}</option>`).join(''); ofEl.value=cur; }
+  const cfEl=document.getElementById('filter-capreg-cap');
+  if(cfEl){ const cur=cfEl.value; const cs=[...new Set(capacRegistros.map(r=>r.capacitacao))].sort(); cfEl.innerHTML='<option value="">Todas as capacitações</option>'+cs.map(c=>`<option value="${c}">${c}</option>`).join(''); cfEl.value=cur; }
+  const fop=(document.getElementById('filter-capreg-op')||{}).value||'';
+  const fcap=(document.getElementById('filter-capreg-cap')||{}).value||'';
+  const fst=(document.getElementById('filter-capreg-status')||{}).value||'';
+  const filtered = capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap)&&(!fst||capVencStatus(r.vencimento)===fst));
+  const empty=document.getElementById('capreg-empty');
+  const tbl=document.querySelector('#page-capreg table');
+  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('capreg-tbody').innerHTML = filtered.map(r=>`<tr>
+    <td><input type="checkbox" class="capreg-check" value="${r.id}"></td>
+    <td>${r.operador}</td>
+    <td>${r.capacitacao}</td>
+    <td>${fmtDate(r.dataRealizada)}</td>
+    <td>${fmtDate(r.vencimento)}</td>
+    <td>${capVencBadge(r.vencimento)}</td>
+    <td>${r.responsavel||'—'}</td>
+    <td style="white-space:nowrap"><button class="btn sm" onclick="openEditCapReg(${r.id})">Editar</button></td>
+  </tr>`).join('');
+  const ca=document.getElementById('capreg-check-all'); if(ca) ca.checked=false;
+}
+function openEditCapReg(id){
+  const r=capacRegistros.find(x=>x.id===id); if(!r) return;
+  editCapRegId=id;
+  populateOperadoresSelect('fce-operador', r.operador);
+  populateCapTiposSelect('fce-capacitacao', r.tipoId);
+  document.getElementById('fce-data').value=r.dataRealizada;
+  document.getElementById('fce-venc').value=r.vencimento;
+  document.getElementById('fce-resp').value=r.responsavel||'';
+  openModal('capreg-edit');
+}
+function saveCapRegEdit(){
+  const r=capacRegistros.find(x=>x.id===editCapRegId); if(!r) return;
+  const tipoId=parseInt(document.getElementById('fce-capacitacao').value);
+  const tipo=capacTipos.find(t=>t.id===tipoId);
+  r.operador=document.getElementById('fce-operador').value;
+  r.tipoId=tipoId; r.capacitacao=tipo?tipo.nome:r.capacitacao;
+  r.dataRealizada=document.getElementById('fce-data').value;
+  r.vencimento=document.getElementById('fce-venc').value;
+  r.responsavel=document.getElementById('fce-resp').value.trim();
+  persist(); closeModal(); renderCapReg();
+}
+function toggleAllCapReg(el){ document.querySelectorAll('.capreg-check').forEach(c=>c.checked=el.checked); }
+function getSelectedCapReg(){ return [...document.querySelectorAll('.capreg-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedCapReg(){
+  const ids=getSelectedCapReg();
+  if(!ids.length){ alert('Selecione pelo menos um registro.'); return; }
+  if(!confirm('Excluir '+ids.length+' registro(s) de capacitação?')) return;
+  capacRegistros=capacRegistros.filter(r=>!ids.includes(r.id));
+  persist(); renderCapReg();
+}
+function printSelectedCapReg(){
+  let ids=getSelectedCapReg();
+  const fop=(document.getElementById('filter-capreg-op')||{}).value||'';
+  const fcap=(document.getElementById('filter-capreg-cap')||{}).value||'';
+  const fst=(document.getElementById('filter-capreg-status')||{}).value||'';
+  let rows = ids.length ? capacRegistros.filter(r=>ids.includes(r.id)) : capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap)&&(!fst||capVencStatus(r.vencimento)===fst));
+  if(!rows.length){ alert('Não há registros para imprimir.'); return; }
+  const statusTxt = v=>{ const s=capVencStatus(v); return s==='vencido'?'Vencido':s==='vencendo'?'Vencendo':'Válido'; };
+  printGenerico('Registros de Capacitação', ['Operador','Capacitação','Data Realizada','Vencimento','Status','Responsável'], rows.map(r=>[r.operador,r.capacitacao,fmtDate(r.dataRealizada),fmtDate(r.vencimento),statusTxt(r.vencimento),r.responsavel]));
 }
 
 // ═══════════════════════════════════════════════════════
