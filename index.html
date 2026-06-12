@@ -521,7 +521,7 @@ textarea{resize:vertical;min-height:70px}
         <table>
           <thead><tr>
             <th style="width:36px"><input type="checkbox" id="capprog-check-all" onclick="toggleAllCapProg(this)"></th>
-            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Prevista</th><th>Responsável</th><th>Status</th><th>Ações</th>
+            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Frequência</th><th>Última</th><th>Próxima</th><th>Responsável</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="capprog-tbody"></tbody>
         </table>
@@ -1012,7 +1012,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="form-row full"><div class="form-group"><label class="lbl">Operador *</label><select class="form-sel" id="fcp-operador"></select></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">Capacitação *</label><select class="form-sel" id="fcp-capacitacao"></select></div></div>
       <div class="form-row"><div class="form-group"><label class="lbl">Função *</label><select class="form-sel" id="fcp-funcao"><option value="Não se aplica">Não se aplica</option><option value="Vigia">Vigia</option><option value="Supervisor">Supervisor</option></select></div><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="fcp-resp" placeholder="Nome do responsável"></div></div>
-      <div class="form-row"><div class="form-group"><label class="lbl">Data prevista *</label><input type="date" id="fcp-data"></div><div class="form-group"></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Frequência *</label><select class="form-sel" id="fcp-freq"><option value="Semestral">Semestral</option><option value="Anual">Anual</option><option value="Bianual">Bianual</option></select></div><div class="form-group"><label class="lbl">Data da última capacitação</label><input type="date" id="fcp-ultima"></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapProg()">Salvar</button></div>
   </div>
@@ -2553,6 +2553,7 @@ function deleteCapTipo(id){
 
 // ---- PROGRAMADAS ----
 let editCapProgId = null;
+function capFreqMeses(f){ return f==='Semestral'?6:f==='Bianual'?24:12; }
 function addMeses2(dateStr, meses){
   const d = parseDate(dateStr); if(!d) return '';
   d.setMonth(d.getMonth()+parseInt(meses));
@@ -2571,14 +2572,16 @@ function renderCapProg(){
   if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   document.getElementById('capprog-tbody').innerHTML = filtered.map(p=>{
-    const nd=parseDate(p.dataPrevista); const late=nd&&nd<today; const soon=nd&&!late&&nd<=in90;
+    const nd=parseDate(p.proxima); const late=nd&&nd<today; const soon=nd&&!late&&nd<=in90;
     const st=late?'<span class="badge danger">Atrasado</span>':soon?'<span class="badge warn">Em breve</span>':'<span class="badge ok">Agendado</span>';
     return `<tr>
       <td><input type="checkbox" class="capprog-check" value="${p.id}"></td>
       <td>${p.operador}</td>
       <td>${p.capacitacao}</td>
       <td>${p.funcao||'—'}</td>
-      <td>${fmtDate(p.dataPrevista)}</td>
+      <td><span class="badge neutral">${p.frequencia||'—'}</span></td>
+      <td>${p.ultima?fmtDate(p.ultima):'—'}</td>
+      <td>${p.proxima?fmtDate(p.proxima):'—'}</td>
       <td>${p.responsavel||'—'}</td>
       <td>${st}</td>
       <td style="white-space:nowrap">
@@ -2597,7 +2600,8 @@ function openNovaCapProg(){
   populateCapTiposSelect('fcp-capacitacao');
   document.getElementById('fcp-funcao').value='Não se aplica';
   document.getElementById('fcp-resp').value='';
-  document.getElementById('fcp-data').value=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+  document.getElementById('fcp-freq').value='Anual';
+  document.getElementById('fcp-ultima').value='';
   openModal('capprog');
 }
 function openEditCapProg(id){
@@ -2608,7 +2612,8 @@ function openEditCapProg(id){
   populateCapTiposSelect('fcp-capacitacao', p.tipoId);
   document.getElementById('fcp-funcao').value=p.funcao||'Não se aplica';
   document.getElementById('fcp-resp').value=p.responsavel||'';
-  document.getElementById('fcp-data').value=p.dataPrevista;
+  document.getElementById('fcp-freq').value=p.frequencia||'Anual';
+  document.getElementById('fcp-ultima').value=p.ultima||'';
   openModal('capprog');
 }
 function saveCapProg(){
@@ -2616,19 +2621,20 @@ function saveCapProg(){
   const tipoId=parseInt(document.getElementById('fcp-capacitacao').value);
   const funcao=document.getElementById('fcp-funcao').value;
   const resp=document.getElementById('fcp-resp').value.trim();
-  const data=document.getElementById('fcp-data').value;
+  const freq=document.getElementById('fcp-freq').value;
+  const ultima=document.getElementById('fcp-ultima').value;
   if(!op){ alert('Selecione o operador.'); return; }
   if(!tipoId){ alert('Selecione a capacitação.'); return; }
-  if(!data){ alert('Informe a data prevista.'); return; }
   const tipo=capacTipos.find(t=>t.id===tipoId);
+  const proxima = ultima ? addMeses2(ultima, capFreqMeses(freq)) : '';
   if(editCapProgId){
     const p=capacProgramadas.find(x=>x.id===editCapProgId);
-    p.operador=op; p.tipoId=tipoId; p.capacitacao=tipo?tipo.nome:''; p.funcao=funcao; p.responsavel=resp; p.dataPrevista=data;
+    p.operador=op; p.tipoId=tipoId; p.capacitacao=tipo?tipo.nome:''; p.funcao=funcao; p.responsavel=resp; p.frequencia=freq; p.ultima=ultima; p.proxima=proxima;
   } else {
-    capacProgramadas.push({id:genId(), operador:op, tipoId, capacitacao:tipo?tipo.nome:'', funcao, responsavel:resp, dataPrevista:data, status:'Pendente'});
+    capacProgramadas.push({id:genId(), operador:op, tipoId, capacitacao:tipo?tipo.nome:'', funcao, responsavel:resp, frequencia:freq, ultima, proxima, status:'Pendente'});
   }
   persist(); closeModal(); renderCapProg();
-  if(!editCapProgId) notifyColaborador(op, 'Capacitação Programada — '+(tipo?tipo.nome:''), 'Olá '+op+',\n\nVocê foi programado para uma capacitação:\n\nCapacitação: '+(tipo?tipo.nome:'')+'\nFunção: '+funcao+'\nData prevista: '+fmtDate(data)+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
+  if(!editCapProgId) notifyColaborador(op, 'Capacitação Programada — '+(tipo?tipo.nome:''), 'Olá '+op+',\n\nVocê foi programado para uma capacitação:\n\nCapacitação: '+(tipo?tipo.nome:'')+'\nFunção: '+funcao+'\nFrequência: '+freq+'\nPróxima prevista: '+(proxima?fmtDate(proxima):'a definir')+'\nResponsável: '+resp+'\n\nAtenciosamente,\nGestorPRO');
 }
 function toggleAllCapProg(el){ document.querySelectorAll('.capprog-check').forEach(c=>c.checked=el.checked); }
 function getSelectedCapProg(){ return [...document.querySelectorAll('.capprog-check:checked')].map(c=>parseInt(c.value)); }
@@ -2645,7 +2651,7 @@ function printSelectedCapProg(){
   const fcap=(document.getElementById('filter-capprog-cap')||{}).value||'';
   let rows=ids.length?capacProgramadas.filter(p=>ids.includes(p.id)):capacProgramadas.filter(p=>(!fop||p.operador===fop)&&(!fcap||p.capacitacao===fcap));
   if(!rows.length){ alert('Não há capacitações para imprimir.'); return; }
-  printGenerico('Capacitações Programadas', ['Operador','Capacitação','Função','Data Prevista','Responsável'], rows.map(p=>[p.operador,p.capacitacao,p.funcao||'—',fmtDate(p.dataPrevista),p.responsavel]));
+  printGenerico('Capacitações Programadas', ['Operador','Capacitação','Função','Frequência','Última','Próxima','Responsável'], rows.map(p=>[p.operador,p.capacitacao,p.funcao||'—',p.frequencia||'—',p.ultima?fmtDate(p.ultima):'—',p.proxima?fmtDate(p.proxima):'—',p.responsavel]));
 }
 
 // ---- REALIZAR (move para Registro de Capacitações) ----
@@ -2673,10 +2679,14 @@ function saveCapRealizar(){
   const venc=document.getElementById('fcr-venc').value;
   const resp=document.getElementById('fcr-resp').value.trim();
   if(!data){ alert('Informe a data realizada.'); return; }
-  capacRegistros.push({id:genId(), operador:p.operador, tipoId:p.tipoId, capacitacao:p.capacitacao, funcao:p.funcao, dataRealizada:data, vencimento:venc, responsavel:resp});
-  capacProgramadas=capacProgramadas.filter(x=>x.id!==capRealizarId);
+  // Sobe um novo registro para o Registro de Capacitações
+  capacRegistros.push({id:genId(), operador:p.operador, tipoId:p.tipoId, capacitacao:p.capacitacao, funcao:p.funcao, frequencia:p.frequencia, dataRealizada:data, vencimento:venc, responsavel:resp});
+  // Recorrência: atualiza a programação (última = realizada, próxima = realizada + frequência) e mantém na lista
+  p.ultima = data;
+  p.proxima = addMeses2(data, capFreqMeses(p.frequencia));
+  if(resp) p.responsavel = resp;
   persist(); closeModal(); renderCapProg(); renderCapReg();
-  notifyColaborador(p.operador, 'Capacitação Concluída — '+p.capacitacao, 'Olá '+p.operador+',\n\nSua capacitação foi registrada:\n\nCapacitação: '+p.capacitacao+'\nFunção: '+(p.funcao||'—')+'\nData realizada: '+fmtDate(data)+'\nVálida até: '+fmtDate(venc)+'\n\nAtenciosamente,\nGestorPRO');
+  notifyColaborador(p.operador, 'Capacitação Concluída — '+p.capacitacao, 'Olá '+p.operador+',\n\nSua capacitação foi registrada:\n\nCapacitação: '+p.capacitacao+'\nFunção: '+(p.funcao||'—')+'\nData realizada: '+fmtDate(data)+'\nVálida até: '+fmtDate(venc)+'\nPróxima capacitação prevista: '+fmtDate(p.proxima)+'\n\nAtenciosamente,\nGestorPRO');
 }
 
 // ---- REGISTROS ----
