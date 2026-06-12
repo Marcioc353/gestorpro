@@ -2442,11 +2442,19 @@ function renderPesquisa(){
       {label:'Concluído', value:treinF.filter(t=>t.resultado==='Concluído').length}
     ], 'var(--green)');
 
-    if(far && !fop){
+    // Panorama por colaborador (quando não há um colaborador específico)
+    if(!fop){
       const porColab={};
       treinF.forEach(t=>{ porColab[t.operador]=(porColab[t.operador]||0)+1; });
       const arr=Object.keys(porColab).map(k=>({label:k,value:porColab[k]})).sort((a,b)=>b.value-a.value);
       if(arr.length) html += barChart('Treinamentos por Colaborador', arr, 'var(--blue)');
+    }
+    // Panorama por área (quando não há uma área específica)
+    if(!far){
+      const porArea={};
+      treinF.forEach(t=>{ const a=getColaboradorArea(t.operador)||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
+      const arr=Object.keys(porArea).map(k=>({label:k,value:porArea[k]})).sort((a,b)=>b.value-a.value);
+      if(arr.length>1 || (arr.length===1 && arr[0].label!=='Sem área')) html += barChart('Treinamentos por Área', arr, 'var(--blue)');
     }
 
     html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento dos Treinamentos</h3></div>';
@@ -2488,6 +2496,20 @@ function renderPesquisa(){
         {label:'Alerta (90d)', value:capAlerta},
         {label:'Vencidos', value:capVencidos}
       ], 'var(--amber)');
+    }
+    // Panorama por colaborador (quando não há um colaborador específico)
+    if(!fop && capF.length){
+      const porColab={};
+      capF.forEach(r=>{ porColab[r.operador]=(porColab[r.operador]||0)+1; });
+      const arr=Object.keys(porColab).map(k=>({label:k,value:porColab[k]})).sort((a,b)=>b.value-a.value);
+      if(arr.length) html += barChart('Capacitações por Colaborador', arr, 'var(--blue)');
+    }
+    // Panorama por área (quando não há uma área específica)
+    if(!far && capF.length){
+      const porArea={};
+      capF.forEach(r=>{ const a=getColaboradorArea(r.operador)||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
+      const arr=Object.keys(porArea).map(k=>({label:k,value:porArea[k]})).sort((a,b)=>b.value-a.value);
+      if(arr.length>1 || (arr.length===1 && arr[0].label!=='Sem área')) html += barChart('Capacitações por Área', arr, 'var(--blue)');
     }
 
     html += '<div class="table-wrap"><div class="table-header"><h3>Detalhamento das Capacitações</h3></div>';
