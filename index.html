@@ -250,7 +250,7 @@ textarea{resize:vertical;min-height:70px}
     <h2 id="page-title">Dashboard</h2>
     <div class="topbar-right">
       <span class="today-badge" id="today-date"></span>
-      <button class="btn primary" id="btn-novo-proc" onclick="openNewProc()">+ Novo Procedimento</button>
+      <button class="btn primary" id="btn-novo-proc" style="display:none" onclick="openNewProc()">+ Novo Procedimento</button>
     </div>
   </div>
 
@@ -1140,9 +1140,9 @@ function navTo(page, el){
   document.getElementById('page-'+page).classList.add('active');
   el.classList.add('active');
   document.getElementById('page-title').textContent = pageTitles[page]||page;
-  // Hide "Novo Procedimento" on the training records page
+  // "Novo Procedimento" só aparece na Lista de Procedimentos
   const btnNP = document.getElementById('btn-novo-proc');
-  if(btnNP) btnNP.style.display = (page==='treinamentos') ? 'none' : '';
+  if(btnNP) btnNP.style.display = (page==='procedimentos') ? '' : 'none';
   if(page==='dashboard') renderDashboard();
   if(page==='pesquisa') renderPesquisa();
   if(page==='procedimentos') renderProcs();
@@ -2394,12 +2394,13 @@ function renderPesquisa(){
     return;
   }
 
-  // Foco da pesquisa:
-  // - Treinamentos aparecem quando há Colaborador, Área ou Procedimento
-  // - Capacitações aparecem quando há Colaborador, Área ou Capacitação
-  // Assim, filtrar só por Capacitação não traz treinamentos, e vice-versa.
-  const showTraining = !!(fop || far || fpr);
-  const showCapac = !!(fop || far || fcap);
+  // Foco da pesquisa — Procedimento e Capacitação são independentes:
+  // - Procedimento controla a seção de Treinamentos
+  // - Capacitação controla a seção de Capacitações
+  // - Colaborador/Área refinam e, sozinhos, mostram o panorama das duas seções
+  // O "Todos os Procedimentos"/"Todas as Capacitações" (vazio) não influencia a outra seção.
+  const showTraining = !!fpr || (!!(fop || far) && !fcap);
+  const showCapac = !!fcap || (!!(fop || far) && !fpr);
 
   const opInArea = (nome)=> !far || getColaboradorArea(nome)===far;
   const match = (operador, proc)=> (!fop||operador===fop) && opInArea(operador) && (!fpr||proc===fpr);
