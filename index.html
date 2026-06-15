@@ -242,7 +242,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Procedimentos</span></div>
     <div class="nav-items collapsed">
     <div class="nav-item" data-page="procedimentos" onclick="navTo('procedimentos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lista de Procedimentos</div>
-    <div class="nav-item" data-page="revisoes" onclick="navTo('revisoes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>Controle de Revisões</div>
+    <div class="nav-item" data-page="revisoes" onclick="navTo('revisoes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>Capacitação por Procedimento</div>
     </div>
   </div>
   <div class="nav-group">
@@ -292,20 +292,20 @@ textarea{resize:vertical;min-height:70px}
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="stat-grid" id="stats-grid"></div>
+      <div style="height:4px"></div>
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div class="table-header"><h3>📁 Documentos por Área</h3></div>
+        <div id="dash-por-area" style="padding:16px"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="table-wrap">
-          <div class="table-header"><h3>🔴 Vencidos / Em Aprovação</h3></div>
+          <div class="table-header"><h3>🔴 Colaboradores com capacitação vencida</h3></div>
           <div id="dash-vencidos"></div>
         </div>
         <div class="table-wrap">
           <div class="table-header"><h3>🟡 Vencem em 90 dias</h3></div>
           <div id="dash-proximos"></div>
         </div>
-      </div>
-      <div style="height:20px"></div>
-      <div class="table-wrap">
-        <div class="table-header"><h3>📋 Últimos Retreinamentos Registrados</h3></div>
-        <div id="dash-retrein-list"></div>
       </div>
     </div>
 
@@ -333,7 +333,7 @@ textarea{resize:vertical;min-height:70px}
             <input type="text" id="search-proc" placeholder="Buscar por número, descrição..." oninput="renderProcs()">
           </div>
           <select id="filter-setor" onchange="renderProcs()">
-            <option value="">Todos os setores</option>
+            <option value="">Todas as áreas</option>
           </select>
           <select id="filter-status" onchange="renderProcs()">
             <option value="">Todos os status</option>
@@ -344,7 +344,7 @@ textarea{resize:vertical;min-height:70px}
         </div>
         <table>
           <thead><tr>
-            <th>Número</th><th>Revisão</th><th>Descrição</th><th>Setor</th>
+            <th>Número</th><th>Revisão</th><th>Descrição</th><th>Área</th>
             <th>Vigência Início</th><th>Vigência Fim</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody id="proc-tbody"></tbody>
@@ -353,24 +353,36 @@ textarea{resize:vertical;min-height:70px}
       </div>
     </div>
 
-    <!-- REVISÕES -->
+    <!-- REGISTRO DE CAPACITAÇÃO POR PROCEDIMENTO -->
     <div class="page" id="page-revisoes">
-      <div style="display:flex;gap:16px;margin-bottom:20px">
-        <button class="btn primary" onclick="openNovaRevisao()">+ Registrar Nova Revisão</button>
+      <div class="alert info" style="margin-bottom:16px">📒 Registro permanente de quais colaboradores estão capacitados em cada procedimento. Selecione o procedimento, escolha o colaborador (pode filtrar por área), informe a data e o vencimento — o status (Vigente/Alerta/Vencido) é calculado automaticamente.</div>
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="rcp-proc" onchange="renderCapProcList()"></select></div>
+          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar colaboradores por Área</label><select class="form-sel" id="rcp-area" onchange="populateRcpColab()"></select></div>
+        </div>
+      </div>
+      <div class="table-wrap" id="rcp-addwrap" style="margin-bottom:16px">
+        <div class="table-header"><h3>Registrar colaborador capacitado</h3></div>
+        <div style="padding:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="flex:2;min-width:200px"><label class="lbl">Colaborador *</label><select class="form-sel" id="rcp-colab"></select></div>
+          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Data da capacitação *</label><input type="date" id="rcp-data"></div>
+          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Vencimento *</label><input type="date" id="rcp-venc"></div>
+          <button class="btn primary" onclick="addCapProc()">+ Adicionar</button>
+        </div>
       </div>
       <div class="table-wrap">
         <div class="table-header">
-          <h3>Histórico de Revisões</h3>
-          <div class="search-bar">
-            <input type="text" id="search-rev" placeholder="Buscar revisão..." oninput="renderRevisoes()">
-          </div>
+          <h3 id="rcp-title">Colaboradores Capacitados</h3>
+          <button class="btn" onclick="printCapProc()">🖨️ Imprimir</button>
         </div>
         <table>
           <thead><tr>
-            <th>Procedimento</th><th>Versão Anterior</th><th>Versão Nova</th><th>Data Revisão</th><th>Responsável</th><th>Motivo</th>
+            <th>Procedimento</th><th>Revisão</th><th>Colaborador</th><th>Status</th><th>Data</th><th>Vencimento</th><th>Ações</th>
           </tr></thead>
-          <tbody id="rev-tbody"></tbody>
+          <tbody id="rcp-tbody"></tbody>
         </table>
+        <div id="rcp-empty" class="empty hidden"><p>Selecione um procedimento para ver e registrar os colaboradores capacitados.</p></div>
       </div>
     </div>
 
@@ -1113,6 +1125,7 @@ let avaliacoesComp = loadState('avaliacoesComp', []);
 let capacTipos = loadState('capacTipos', []);
 let capacProgramadas = loadState('capacProgramadas', []);
 let capacRegistros = loadState('capacRegistros', []);
+let capacProc = loadState('capacProc', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -1129,6 +1142,7 @@ function persist(){
   saveState('capacTipos', capacTipos);
   saveState('capacProgramadas', capacProgramadas);
   saveState('capacRegistros', capacRegistros);
+  saveState('capacProc', capacProc);
   saveState('nextId', nextId);
 }
 
@@ -1168,7 +1182,7 @@ function genId(){ return ++nextId; }
 // ═══════════════════════════════════════════════════════
 const pageTitles = {
   dashboard:'Dashboard', pesquisa:'Pesquisa', procedimentos:'Lista de Procedimentos',
-  revisoes:'Controle de Revisões', treinamentos:'Registros de Treinamentos',
+  revisoes:'Capacitação por Procedimento', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
   quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
 };
@@ -1212,59 +1226,77 @@ function navTo(page, el){
 // DASHBOARD
 // ═══════════════════════════════════════════════════════
 function renderDashboard(){
-  const vencidos = procs.filter(p=>procStatus(p)==='vencido'||procStatus(p)==='aprovacao');
-  const alertas = procs.filter(p=>procStatus(p)==='alerta');
-  const vigentes = procs.filter(p=>procStatus(p)==='vigente');
+  // ===== CONTROLE DE CAPACITAÇÃO DOS COLABORADORES =====
+  // Junta os vínculos colaborador↔procedimento (capacProc) + capacitações NR (capacRegistros)
+  const recs = [
+    ...capacProc.map(r=>({colab:r.colaborador, venc:r.vencimento, ref:r.procNumero, tipo:'Procedimento'})),
+    ...capacRegistros.map(r=>({colab:r.operador, venc:r.vencimento, ref:r.capacitacao, tipo:'Capacitação'}))
+  ];
+  // Agrupa por colaborador para classificar pelo pior status
+  const byColab = {};
+  recs.forEach(r=>{ (byColab[r.colab] = byColab[r.colab] || []).push(capVencStatus(r.venc)); });
+  let cVig=0, cAle=0, cVen=0;
+  Object.keys(byColab).forEach(c=>{
+    const sts=byColab[c];
+    if(sts.includes('vencido')) cVen++;
+    else if(sts.includes('vencendo')) cAle++;
+    else cVig++;
+  });
+
+  // Documentos por área (setor do procedimento)
+  const porArea = {};
+  procs.forEach(p=>{ const a=p.setor||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
+  const areasCount = Object.keys(porArea).length;
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card info"><div class="stat-label">Total de Procedimentos</div><div class="stat-val">${procs.length}</div><div class="stat-sub">Cadastrados no sistema</div></div>
-    <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${vigentes.length}</div><div class="stat-sub">Dentro da validade</div></div>
-    <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${alertas.length}</div><div class="stat-sub">Vencem em breve</div></div>
-    <div class="stat-card danger"><div class="stat-label">Vencidos / Aprovação</div><div class="stat-val">${vencidos.length}</div><div class="stat-sub">Requerem ação imediata</div></div>
-    <div class="stat-card info"><div class="stat-label">Treinamentos</div><div class="stat-val">${treinamentos.length}</div><div class="stat-sub">Registrados</div></div>
-    <div class="stat-card danger"><div class="stat-label">Retreinamentos</div><div class="stat-val">${retreinamentos.filter(r=>r.status==='Pendente').length}</div><div class="stat-sub">Pendentes</div></div>
+    <div class="stat-card info"><div class="stat-label">Documentos por Área</div><div class="stat-val">${areasCount}</div><div class="stat-sub">Áreas com procedimentos</div></div>
+    <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${cVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
+    <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${cAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
+    <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${cVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
   `;
 
-  // Vencidos list
+  // Documentos por área (barras)
+  const dpa = document.getElementById('dash-por-area');
+  if(dpa){
+    const arr = Object.keys(porArea).map(k=>({label:k, value:porArea[k]})).sort((a,b)=>b.value-a.value);
+    const max = Math.max(1, ...arr.map(d=>d.value));
+    dpa.innerHTML = arr.map(d=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:130px;font-size:12px;text-align:right;color:var(--text2);flex-shrink:0">${d.label}</div>
+      <div style="flex:1;background:var(--bg);border-radius:6px;height:24px;position:relative">
+        <div style="width:${Math.round(d.value/max*100)}%;background:var(--blue);height:100%;border-radius:6px;min-width:24px"></div>
+        <span style="position:absolute;left:8px;top:0;line-height:24px;font-size:12px;font-weight:600;color:#fff">${d.value}</span>
+      </div>
+    </div>`).join('') || '<p style="color:var(--text3);font-size:13px">Nenhum procedimento cadastrado.</p>';
+  }
+
+  // Listas de ação: vencidos e a vencer (por registro, com colaborador)
+  const allRecs = [
+    ...capacProc.map(r=>({colab:r.colaborador, venc:r.vencimento, ref:r.procNumero, tipo:'Procedimento'})),
+    ...capacRegistros.map(r=>({colab:r.operador, venc:r.vencimento, ref:r.capacitacao, tipo:'Capacitação'}))
+  ];
+  const vencidosR = allRecs.filter(r=>capVencStatus(r.venc)==='vencido').sort((a,b)=>(a.venc||'').localeCompare(b.venc||''));
+  const alertaR = allRecs.filter(r=>capVencStatus(r.venc)==='vencendo').sort((a,b)=>(a.venc||'').localeCompare(b.venc||''));
+
   const dv = document.getElementById('dash-vencidos');
-  if(!vencidos.length){ dv.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhum procedimento vencido!</p>'; }
+  if(!vencidosR.length){ dv.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhuma capacitação vencida!</p>'; }
   else{
-    dv.innerHTML = '<div class="timeline" style="padding:0 16px">'+vencidos.slice(0,8).map(p=>`
-      <div class="tl-item">
-        <div class="tl-dot red"></div>
-        <div class="tl-content">
-          <div class="tl-title">${p.numero} — ${p.revisao}</div>
-          <div class="tl-sub">${p.descricao.substring(0,60)}… | Venc: ${fmtDate(p.data_fim)}</div>
-        </div>
-      </div>`).join('')+'</div>';
+    dv.innerHTML='<div class="timeline" style="padding:0 16px">'+vencidosR.slice(0,10).map(r=>`
+      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-content">
+        <div class="tl-title">${r.colab}</div>
+        <div class="tl-sub">${r.tipo}: ${r.ref} | Venceu: ${fmtDate(r.venc)}</div>
+      </div></div>`).join('')+'</div>';
   }
 
-  // Alertas list
   const da = document.getElementById('dash-proximos');
-  if(!alertas.length){ da.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhum vencendo em 90 dias!</p>'; }
+  if(!alertaR.length){ da.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhuma capacitação vencendo em 90 dias!</p>'; }
   else{
-    const sorted = alertas.sort((a,b)=>daysUntil(a.data_fim)-daysUntil(b.data_fim));
-    da.innerHTML = '<div class="timeline" style="padding:0 16px">'+sorted.slice(0,8).map(p=>`
-      <div class="tl-item">
-        <div class="tl-dot amber"></div>
-        <div class="tl-content">
-          <div class="tl-title">${p.numero} — <strong>${daysUntil(p.data_fim)}d</strong></div>
-          <div class="tl-sub">${p.descricao.substring(0,60)}… | Venc: ${fmtDate(p.data_fim)}</div>
-        </div>
-      </div>`).join('')+'</div>';
+    da.innerHTML='<div class="timeline" style="padding:0 16px">'+alertaR.slice(0,10).map(r=>`
+      <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-content">
+        <div class="tl-title">${r.colab}</div>
+        <div class="tl-sub">${r.tipo}: ${r.ref} | Vence: ${fmtDate(r.venc)}</div>
+      </div></div>`).join('')+'</div>';
   }
-
-  // Retreinamentos recentes
-  const dr = document.getElementById('dash-retrein-list');
-  if(!retreinamentos.length){ dr.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhum retreinamento registrado.</p>'; }
-  else{
-    const rec = [...retreinamentos].reverse().slice(0,5);
-    dr.innerHTML = `<table><thead><tr><th>Data</th><th>Operador</th><th>Procedimento</th><th>Motivo</th><th>Status</th></tr></thead><tbody>`+
-      rec.map(r=>`<tr><td>${fmtDate(r.data)}</td><td>${r.operador}</td><td>${r.proc}</td><td>${r.motivo.substring(0,50)}…</td><td>${r.status==='Concluído'?'<span class="badge ok">Concluído</span>':'<span class="badge warn">Pendente</span>'}</td></tr>`).join('')+
-      `</tbody></table>`;
-  }
-
-  /* badge removed */
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1310,7 +1342,7 @@ function renderProcs(){
       <td>${statusBadge(p)}</td>
       <td style="white-space:nowrap">
         <button class="btn sm" onclick="openEditProc(${p.id})">Editar</button>
-        <button class="btn sm" onclick="openRevFromProc('${p.numero}')">Revisar</button>
+        <button class="btn sm" onclick="openRevFromProc('${p.numero}')">Capacitados</button>
       </td>
     </tr>`).join('');
 
@@ -1321,21 +1353,95 @@ function renderProcs(){
 }
 
 // ═══════════════════════════════════════════════════════
-// REVISÕES
+// CAPACITAÇÃO POR PROCEDIMENTO (registro permanente)
 // ═══════════════════════════════════════════════════════
 function renderRevisoes(){
-  const search = (document.getElementById('search-rev')||{}).value?.toLowerCase()||'';
-  const filtered = revisoes.filter(r=>!search||(r.proc+r.responsavel+r.motivo).toLowerCase().includes(search));
-  document.getElementById('rev-tbody').innerHTML = filtered.length
-    ? filtered.map(r=>`<tr>
-        <td><strong>${r.proc}</strong></td>
-        <td><span class="badge neutral">${r.versao_ant}</span></td>
-        <td><span class="badge info">${r.versao_nova}</span></td>
-        <td>${fmtDate(r.data)}</td>
-        <td>${r.responsavel}</td>
-        <td>${r.motivo||'—'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Nenhuma revisão registrada ainda.</td></tr>';
+  // Popula filtro de procedimento
+  const ps = document.getElementById('rcp-proc');
+  if(ps){ const cur=ps.value; ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+procs.slice().sort((a,b)=>a.numero.localeCompare(b.numero)).map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join(''); ps.value=cur; }
+  // Popula filtro de área (áreas dos colaboradores)
+  const as = document.getElementById('rcp-area');
+  if(as){ const cur=as.value; const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
+  populateRcpColab();
+  renderCapProcList();
+}
+
+function populateRcpColab(){
+  const area=(document.getElementById('rcp-area')||{}).value||'';
+  const sel=document.getElementById('rcp-colab');
+  if(!sel) return;
+  const cur=sel.value;
+  const lista=operadores.filter(o=>!area||o.area===area).map(o=>o.nome).sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">— Selecione —</option>'+lista.map(n=>`<option value="${n}">${n}</option>`).join('');
+  sel.value=cur;
+}
+
+function addCapProc(){
+  const pid=(document.getElementById('rcp-proc')||{}).value||'';
+  if(!pid){ alert('Selecione um procedimento primeiro.'); return; }
+  const colab=(document.getElementById('rcp-colab')||{}).value||'';
+  const data=document.getElementById('rcp-data').value;
+  const venc=document.getElementById('rcp-venc').value;
+  if(!colab){ alert('Selecione o colaborador.'); return; }
+  if(!data){ alert('Informe a data da capacitação.'); return; }
+  if(!venc){ alert('Informe o vencimento.'); return; }
+  const proc=procs.find(p=>String(p.id)===String(pid));
+  // Evita duplicidade do mesmo colaborador no mesmo procedimento (atualiza se já existir)
+  const existente=capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
+  if(existente){
+    if(!confirm(colab+' já tem registro neste procedimento. Deseja atualizar a data e o vencimento?')) return;
+    existente.data=data; existente.vencimento=venc; existente.revisao=proc?proc.revisao:existente.revisao;
+  } else {
+    capacProc.push({id:genId(), procId:pid, procNumero:proc?proc.numero:pid, revisao:proc?proc.revisao:'', colaborador:colab, data, vencimento:venc});
+  }
+  persist();
+  document.getElementById('rcp-data').value='';
+  document.getElementById('rcp-venc').value='';
+  document.getElementById('rcp-colab').value='';
+  renderCapProcList();
+}
+
+function renderCapProcList(){
+  const pid=(document.getElementById('rcp-proc')||{}).value||'';
+  const empty=document.getElementById('rcp-empty');
+  const tbl=document.querySelector('#page-revisoes table');
+  const title=document.getElementById('rcp-title');
+  if(!pid){
+    empty.classList.remove('hidden'); empty.querySelector('p').textContent='Selecione um procedimento para ver e registrar os colaboradores capacitados.';
+    tbl.style.display='none';
+    if(title) title.textContent='Colaboradores Capacitados';
+    return;
+  }
+  const proc=procs.find(p=>String(p.id)===String(pid));
+  if(title) title.textContent='Colaboradores Capacitados — '+(proc?proc.numero:'');
+  const rows=capacProc.filter(r=>String(r.procId)===String(pid)).sort((a,b)=>a.colaborador.localeCompare(b.colaborador));
+  if(!rows.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Nenhum colaborador capacitado neste procedimento ainda.'; tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('rcp-tbody').innerHTML=rows.map(r=>`<tr>
+    <td><strong>${r.procNumero}</strong></td>
+    <td><span class="badge neutral">${r.revisao||'—'}</span></td>
+    <td>${r.colaborador}</td>
+    <td>${capVencBadge(r.vencimento)}</td>
+    <td>${fmtDate(r.data)}</td>
+    <td>${fmtDate(r.vencimento)}</td>
+    <td style="white-space:nowrap"><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapProc(${r.id})">Excluir</button></td>
+  </tr>`).join('');
+}
+
+function deleteCapProc(id){
+  if(!confirm('Excluir este registro de capacitação?')) return;
+  capacProc=capacProc.filter(r=>r.id!==id);
+  persist(); renderCapProcList();
+}
+
+function printCapProc(){
+  const pid=(document.getElementById('rcp-proc')||{}).value||'';
+  if(!pid){ alert('Selecione um procedimento.'); return; }
+  const proc=procs.find(p=>String(p.id)===String(pid));
+  const rows=capacProc.filter(r=>String(r.procId)===String(pid)).sort((a,b)=>a.colaborador.localeCompare(b.colaborador));
+  if(!rows.length){ alert('Nenhum colaborador capacitado neste procedimento.'); return; }
+  const stTxt=v=>{ const s=capVencStatus(v); return s==='vencido'?'Vencido':s==='vencendo'?'Vencendo':'Válido'; };
+  printGenerico('Capacitação — '+(proc?proc.numero:''), ['Procedimento','Revisão','Colaborador','Status','Data','Vencimento'], rows.map(r=>[r.procNumero, r.revisao||'—', r.colaborador, stTxt(r.vencimento), fmtDate(r.data), fmtDate(r.vencimento)]));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1769,7 +1875,7 @@ function saveProc(){
 function openNovaRevisao(){ populateProcsSelect('fr-proc'); openModal('rev'); }
 function openRevFromProc(numero){
   navTo('revisoes', document.querySelector('[data-page="revisoes"]'));
-  setTimeout(()=>{ populateProcsSelect('fr-proc'); const sel=document.getElementById('fr-proc'); sel.value=procs.find(p=>p.numero===numero)?.id||''; updateVerAnt(); openModal('rev'); },100);
+  setTimeout(()=>{ const sel=document.getElementById('rcp-proc'); if(sel){ sel.value=procs.find(p=>p.numero===numero)?.id||''; renderCapProcList(); } },100);
 }
 function populateProcsSelect(id){
   const sel=document.getElementById(id);
