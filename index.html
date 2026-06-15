@@ -272,6 +272,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="nav-section" onclick="toggleSection(this)"><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg><span>Cadastros</span></div>
     <div class="nav-items collapsed">
     <div class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Colaboradores</div>
+    <div class="nav-item" data-page="indicados" onclick="navTo('indicados',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Indicados por Procedimento</div>
     <div class="nav-item" data-page="questoes" onclick="navTo('questoes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Banco de Questões</div>
     </div>
   </div>
@@ -353,36 +354,28 @@ textarea{resize:vertical;min-height:70px}
       </div>
     </div>
 
-    <!-- REGISTRO DE CAPACITAÇÃO POR PROCEDIMENTO -->
+    <!-- CAPACITAÇÃO POR PROCEDIMENTO -->
     <div class="page" id="page-revisoes">
-      <div class="alert info" style="margin-bottom:16px">📒 Registro permanente de quais colaboradores estão capacitados em cada procedimento. Selecione o procedimento, escolha o colaborador (pode filtrar por área), informe a data e o vencimento — o status (Vigente/Alerta/Vencido) é calculado automaticamente.</div>
+      <div class="alert info" style="margin-bottom:16px">📒 Selecione o procedimento para ver os colaboradores <strong>indicados</strong>. Marque cada um como <strong>Capacitado</strong> (data + vencimento). Quem ainda não foi capacitado fica <strong>Pendente</strong>. Ao revisar o procedimento, todos voltam a Pendente.</div>
       <div class="table-wrap" style="margin-bottom:16px">
         <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
           <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="rcp-proc" onchange="renderCapProcList()"></select></div>
-          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar colaboradores por Área</label><select class="form-sel" id="rcp-area" onchange="populateRcpColab()"></select></div>
-        </div>
-      </div>
-      <div class="table-wrap" id="rcp-addwrap" style="margin-bottom:16px">
-        <div class="table-header"><h3>Registrar colaborador capacitado</h3></div>
-        <div style="padding:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:end">
-          <div class="form-group" style="flex:2;min-width:200px"><label class="lbl">Colaborador *</label><select class="form-sel" id="rcp-colab"></select></div>
-          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Data da capacitação *</label><input type="date" id="rcp-data"></div>
-          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Vencimento *</label><input type="date" id="rcp-venc"></div>
-          <button class="btn primary" onclick="addCapProc()">+ Adicionar</button>
+          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="rcp-area" onchange="renderCapProcList()"></select></div>
+          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Status</label><select class="form-sel" id="rcp-fstatus" onchange="renderCapProcList()"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="capacitado">Capacitados</option></select></div>
         </div>
       </div>
       <div class="table-wrap">
         <div class="table-header">
-          <h3 id="rcp-title">Colaboradores Capacitados</h3>
+          <h3 id="rcp-title">Capacitação por Procedimento</h3>
           <button class="btn" onclick="printCapProc()">🖨️ Imprimir</button>
         </div>
         <table>
           <thead><tr>
-            <th>Procedimento</th><th>Revisão</th><th>Colaborador</th><th>Status</th><th>Data</th><th>Vencimento</th><th>Ações</th>
+            <th>Revisão</th><th>Colaborador</th><th>Área</th><th>Status</th><th>Data</th><th>Vencimento</th><th>Ações</th>
           </tr></thead>
           <tbody id="rcp-tbody"></tbody>
         </table>
-        <div id="rcp-empty" class="empty hidden"><p>Selecione um procedimento para ver e registrar os colaboradores capacitados.</p></div>
+        <div id="rcp-empty" class="empty hidden"><p>Selecione um procedimento para ver os colaboradores indicados.</p></div>
       </div>
     </div>
 
@@ -598,6 +591,30 @@ textarea{resize:vertical;min-height:70px}
           <tbody id="capreg-tbody"></tbody>
         </table>
         <div id="capreg-empty" class="empty hidden"><p>Nenhum registro de capacitação ainda.</p></div>
+      </div>
+    </div>
+
+    <!-- INDICADOS POR PROCEDIMENTO -->
+    <div class="page" id="page-indicados">
+      <div class="alert info" style="margin-bottom:16px">🎯 Monte a lista de colaboradores <strong>indicados</strong> (que devem ser capacitados) em cada procedimento. Essa lista alimenta a página "Capacitação por Procedimento", onde cada indicado aparece como Pendente até ser marcado como Capacitado.</div>
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="ind-proc" onchange="renderIndicados()"></select></div>
+          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="ind-area" onchange="populateIndColab()"></select></div>
+          <div class="form-group" style="flex:2;min-width:200px"><label class="lbl">Colaborador</label><select class="form-sel" id="ind-colab"></select></div>
+          <button class="btn primary" onclick="addIndicado()">+ Indicar</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3 id="ind-title">Colaboradores Indicados</h3>
+          <button class="btn" onclick="addTodosArea()">+ Indicar todos da área</button>
+        </div>
+        <table>
+          <thead><tr><th>Procedimento</th><th>Colaborador</th><th>Área</th><th>Ações</th></tr></thead>
+          <tbody id="ind-tbody"></tbody>
+        </table>
+        <div id="ind-empty" class="empty hidden"><p>Selecione um procedimento para montar a lista de indicados.</p></div>
       </div>
     </div>
 
@@ -1101,6 +1118,29 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveRevisarColab()">Salvar</button></div>
   </div>
 
+  <!-- Marcar Capacitado (por procedimento) -->
+  <div class="modal hidden" id="modal-marcarcap">
+    <div class="modal-head"><h3>Marcar como Capacitado</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="mc-info" class="alert info" style="margin-bottom:14px"></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Data da capacitação *</label><input type="date" id="mc-data"></div><div class="form-group"><label class="lbl">Vencimento *</label><input type="date" id="mc-venc"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMarcarCap()">Salvar</button></div>
+  </div>
+
+  <!-- Revisar Procedimento (substituição) -->
+  <div class="modal hidden" id="modal-revproc">
+    <div class="modal-head"><h3>Revisar Procedimento</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="rp-info" class="alert info" style="margin-bottom:14px"></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Nova revisão *</label><input type="text" id="rp-rev" placeholder="Ex: rev.1"></div><div class="form-group"><label class="lbl">Responsável</label><input type="text" id="rp-resp" placeholder="Nome do responsável"></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Nova vigência — Início *</label><input type="date" id="rp-inicio"></div><div class="form-group"><label class="lbl">Nova vigência — Fim *</label><input type="date" id="rp-fim"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Motivo da revisão</label><input type="text" id="rp-motivo" placeholder="Opcional"></div></div>
+      <div class="alert" style="background:#fef3c7;border:1px solid #fbbf24;color:#92400e;font-size:13px;margin-top:8px">⚠ Atenção: ao revisar, <strong>todas as capacitações da revisão anterior serão zeradas</strong> e os colaboradores indicados voltarão para o status <strong>Pendente</strong>.</div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveRevisaoProc()">Confirmar Revisão</button></div>
+  </div>
+
 </div>
 
 <script>
@@ -1126,6 +1166,7 @@ let capacTipos = loadState('capacTipos', []);
 let capacProgramadas = loadState('capacProgramadas', []);
 let capacRegistros = loadState('capacRegistros', []);
 let capacProc = loadState('capacProc', []);
+let indicados = loadState('indicados', []);
 let nextId = loadState('nextId', 200);
 let procPage = 1;
 const PAGE_SIZE = 20;
@@ -1143,6 +1184,7 @@ function persist(){
   saveState('capacProgramadas', capacProgramadas);
   saveState('capacRegistros', capacRegistros);
   saveState('capacProc', capacProc);
+  saveState('indicados', indicados);
   saveState('nextId', nextId);
 }
 
@@ -1184,7 +1226,7 @@ const pageTitles = {
   dashboard:'Dashboard', pesquisa:'Pesquisa', procedimentos:'Lista de Procedimentos',
   revisoes:'Capacitação por Procedimento', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', indicados:'Indicados por Procedimento', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
 };
 
 function hideCover(){ const c=document.getElementById('cover-screen'); if(c) c.classList.add('hidden'); }
@@ -1215,6 +1257,7 @@ function navTo(page, el){
   if(page==='programados') renderProgramados();
   if(page==='quiz') renderQuizSelector();
   if(page==='questoes') renderBancoQuestoes();
+  if(page==='indicados') renderIndicadosPage();
   if(page==='colaboradores') renderColaboradores();
   if(page==='capacitacao') renderAvalComp();
   if(page==='caplista') renderCapLista();
@@ -1343,6 +1386,7 @@ function renderProcs(){
       <td style="white-space:nowrap">
         <button class="btn sm" onclick="openEditProc(${p.id})">Editar</button>
         <button class="btn sm" onclick="openRevFromProc('${p.numero}')">Capacitados</button>
+        <button class="btn sm" onclick="openRevisaoProc(${p.id})">Revisar</button>
       </td>
     </tr>`).join('');
 
@@ -1353,84 +1397,167 @@ function renderProcs(){
 }
 
 // ═══════════════════════════════════════════════════════
-// CAPACITAÇÃO POR PROCEDIMENTO (registro permanente)
+// INDICADOS POR PROCEDIMENTO (matriz de treinamento)
 // ═══════════════════════════════════════════════════════
-function renderRevisoes(){
-  // Popula filtro de procedimento
-  const ps = document.getElementById('rcp-proc');
+function renderIndicadosPage(){
+  const ps=document.getElementById('ind-proc');
   if(ps){ const cur=ps.value; ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+procs.slice().sort((a,b)=>a.numero.localeCompare(b.numero)).map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join(''); ps.value=cur; }
-  // Popula filtro de área (áreas dos colaboradores)
-  const as = document.getElementById('rcp-area');
+  const as=document.getElementById('ind-area');
   if(as){ const cur=as.value; const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
-  populateRcpColab();
-  renderCapProcList();
+  populateIndColab();
+  renderIndicados();
 }
-
-function populateRcpColab(){
-  const area=(document.getElementById('rcp-area')||{}).value||'';
-  const sel=document.getElementById('rcp-colab');
+function populateIndColab(){
+  const area=(document.getElementById('ind-area')||{}).value||'';
+  const sel=document.getElementById('ind-colab');
   if(!sel) return;
   const cur=sel.value;
   const lista=operadores.filter(o=>!area||o.area===area).map(o=>o.nome).sort((a,b)=>a.localeCompare(b));
   sel.innerHTML='<option value="">— Selecione —</option>'+lista.map(n=>`<option value="${n}">${n}</option>`).join('');
   sel.value=cur;
 }
-
-function addCapProc(){
-  const pid=(document.getElementById('rcp-proc')||{}).value||'';
-  if(!pid){ alert('Selecione um procedimento primeiro.'); return; }
-  const colab=(document.getElementById('rcp-colab')||{}).value||'';
-  const data=document.getElementById('rcp-data').value;
-  const venc=document.getElementById('rcp-venc').value;
+function addIndicado(){
+  const pid=(document.getElementById('ind-proc')||{}).value||'';
+  if(!pid){ alert('Selecione um procedimento.'); return; }
+  const colab=(document.getElementById('ind-colab')||{}).value||'';
   if(!colab){ alert('Selecione o colaborador.'); return; }
-  if(!data){ alert('Informe a data da capacitação.'); return; }
-  if(!venc){ alert('Informe o vencimento.'); return; }
+  if(indicados.some(i=>String(i.procId)===String(pid) && i.colaborador===colab)){ alert(colab+' já está indicado neste procedimento.'); return; }
+  indicados.push({id:genId(), procId:pid, colaborador:colab});
+  persist(); document.getElementById('ind-colab').value=''; renderIndicados();
+}
+function addTodosArea(){
+  const pid=(document.getElementById('ind-proc')||{}).value||'';
+  if(!pid){ alert('Selecione um procedimento.'); return; }
+  const area=(document.getElementById('ind-area')||{}).value||'';
+  if(!area){ alert('Selecione uma área no filtro para indicar todos dela.'); return; }
+  const nomes=operadores.filter(o=>o.area===area).map(o=>o.nome);
+  if(!nomes.length){ alert('Nenhum colaborador nessa área.'); return; }
+  let add=0;
+  nomes.forEach(n=>{ if(!indicados.some(i=>String(i.procId)===String(pid) && i.colaborador===n)){ indicados.push({id:genId(), procId:pid, colaborador:n}); add++; } });
+  persist(); renderIndicados();
+  alert(add+' colaborador(es) indicado(s).');
+}
+function deleteIndicado(id){
+  if(!confirm('Remover este colaborador da lista de indicados?')) return;
+  indicados=indicados.filter(i=>i.id!==id);
+  persist(); renderIndicados();
+}
+function renderIndicados(){
+  const pid=(document.getElementById('ind-proc')||{}).value||'';
+  const empty=document.getElementById('ind-empty');
+  const tbl=document.querySelector('#page-indicados table');
+  const title=document.getElementById('ind-title');
   const proc=procs.find(p=>String(p.id)===String(pid));
-  // Evita duplicidade do mesmo colaborador no mesmo procedimento (atualiza se já existir)
-  const existente=capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
-  if(existente){
-    if(!confirm(colab+' já tem registro neste procedimento. Deseja atualizar a data e o vencimento?')) return;
-    existente.data=data; existente.vencimento=venc; existente.revisao=proc?proc.revisao:existente.revisao;
-  } else {
-    capacProc.push({id:genId(), procId:pid, procNumero:proc?proc.numero:pid, revisao:proc?proc.revisao:'', colaborador:colab, data, vencimento:venc});
-  }
-  persist();
-  document.getElementById('rcp-data').value='';
-  document.getElementById('rcp-venc').value='';
-  document.getElementById('rcp-colab').value='';
+  if(title) title.textContent = proc ? 'Indicados — '+proc.numero : 'Colaboradores Indicados';
+  if(!pid){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Selecione um procedimento para montar a lista de indicados.'; tbl.style.display='none'; return; }
+  const rows=indicados.filter(i=>String(i.procId)===String(pid)).sort((a,b)=>a.colaborador.localeCompare(b.colaborador));
+  if(!rows.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Nenhum colaborador indicado neste procedimento ainda.'; tbl.style.display='none'; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('ind-tbody').innerHTML=rows.map(i=>`<tr>
+    <td><strong>${proc?proc.numero:''}</strong></td>
+    <td>${i.colaborador}</td>
+    <td>${getColaboradorArea(i.colaborador)||'—'}</td>
+    <td style="white-space:nowrap"><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteIndicado(${i.id})">Remover</button></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// CAPACITAÇÃO POR PROCEDIMENTO (registro permanente)
+// ═══════════════════════════════════════════════════════
+function renderRevisoes(){
+  // Popula filtro de procedimento
+  const ps = document.getElementById('rcp-proc');
+  if(ps){ const cur=ps.value; ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+procs.slice().sort((a,b)=>a.numero.localeCompare(b.numero)).map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join(''); ps.value=cur; }
+  // Popula filtro de área
+  const as = document.getElementById('rcp-area');
+  if(as){ const cur=as.value; const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
   renderCapProcList();
+}
+
+// Status de um indicado: 'pendente' ou o status do vencimento (valido/vencendo/vencido)
+function capProcStatusOf(pid, colab){
+  const rec = capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
+  if(!rec) return {status:'pendente', rec:null};
+  return {status:capVencStatus(rec.vencimento), rec};
+}
+
+function capProcRows(pid){
+  // União: indicados do procedimento + quem tiver capacProc (legado) não indicado
+  const inds = indicados.filter(i=>String(i.procId)===String(pid)).map(i=>i.colaborador);
+  const caps = capacProc.filter(r=>String(r.procId)===String(pid)).map(r=>r.colaborador);
+  const nomes = [...new Set([...inds, ...caps])];
+  return nomes;
 }
 
 function renderCapProcList(){
   const pid=(document.getElementById('rcp-proc')||{}).value||'';
+  const farea=(document.getElementById('rcp-area')||{}).value||'';
+  const fstatus=(document.getElementById('rcp-fstatus')||{}).value||'';
   const empty=document.getElementById('rcp-empty');
   const tbl=document.querySelector('#page-revisoes table');
   const title=document.getElementById('rcp-title');
-  if(!pid){
-    empty.classList.remove('hidden'); empty.querySelector('p').textContent='Selecione um procedimento para ver e registrar os colaboradores capacitados.';
-    tbl.style.display='none';
-    if(title) title.textContent='Colaboradores Capacitados';
-    return;
-  }
   const proc=procs.find(p=>String(p.id)===String(pid));
-  if(title) title.textContent='Colaboradores Capacitados — '+(proc?proc.numero:'');
-  const rows=capacProc.filter(r=>String(r.procId)===String(pid)).sort((a,b)=>a.colaborador.localeCompare(b.colaborador));
-  if(!rows.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Nenhum colaborador capacitado neste procedimento ainda.'; tbl.style.display='none'; return; }
+  if(title) title.textContent = proc ? 'Capacitação — '+proc.numero+' (rev. '+proc.revisao+')' : 'Capacitação por Procedimento';
+  if(!pid){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Selecione um procedimento para ver os colaboradores indicados.'; tbl.style.display='none'; return; }
+  let nomes=capProcRows(pid).filter(n=>!farea||getColaboradorArea(n)===farea);
+  // ordena: pendentes primeiro, depois por nome
+  nomes.sort((a,b)=>a.localeCompare(b));
+  // monta linhas com status
+  let linhas=nomes.map(n=>{ const s=capProcStatusOf(pid,n); return {nome:n, ...s}; });
+  if(fstatus==='pendente') linhas=linhas.filter(l=>l.status==='pendente');
+  if(fstatus==='capacitado') linhas=linhas.filter(l=>l.status!=='pendente');
+  if(!linhas.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent = capProcRows(pid).length? 'Nenhum colaborador para este filtro.' : 'Nenhum colaborador indicado neste procedimento. Cadastre os indicados em "Indicados por Procedimento".'; tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
-  document.getElementById('rcp-tbody').innerHTML=rows.map(r=>`<tr>
-    <td><strong>${r.procNumero}</strong></td>
-    <td><span class="badge neutral">${r.revisao||'—'}</span></td>
-    <td>${r.colaborador}</td>
-    <td>${capVencBadge(r.vencimento)}</td>
-    <td>${fmtDate(r.data)}</td>
-    <td>${fmtDate(r.vencimento)}</td>
-    <td style="white-space:nowrap"><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapProc(${r.id})">Excluir</button></td>
-  </tr>`).join('');
+  const statusBadgeCP = s => s==='pendente' ? '<span class="badge warn">⏳ Pendente</span>' : capVencBadgeFromStatus(s);
+  document.getElementById('rcp-tbody').innerHTML=linhas.map(l=>{
+    const rec=l.rec;
+    const acoes = l.status==='pendente'
+      ? `<button class="btn sm primary" onclick="openMarcarCap('${pid}','${l.nome.replace(/'/g,"\\'")}')">Marcar Capacitado</button>`
+      : `<button class="btn sm" onclick="openMarcarCap('${pid}','${l.nome.replace(/'/g,"\\'")}')">Editar</button> <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="resetCapProc('${pid}','${l.nome.replace(/'/g,"\\'")}')">Tornar Pendente</button>`;
+    return `<tr>
+      <td><span class="badge neutral">${proc?proc.revisao:'—'}</span></td>
+      <td><strong>${l.nome}</strong></td>
+      <td>${getColaboradorArea(l.nome)||'—'}</td>
+      <td>${statusBadgeCP(l.status)}</td>
+      <td>${rec?fmtDate(rec.data):'—'}</td>
+      <td>${rec?fmtDate(rec.vencimento):'—'}</td>
+      <td style="white-space:nowrap">${acoes}</td>
+    </tr>`;
+  }).join('');
 }
 
-function deleteCapProc(id){
-  if(!confirm('Excluir este registro de capacitação?')) return;
-  capacProc=capacProc.filter(r=>r.id!==id);
+function capVencBadgeFromStatus(s){
+  if(s==='vencido') return '<span class="badge danger">🔴 Vencido</span>';
+  if(s==='vencendo') return '<span class="badge warn">🟡 Alerta</span>';
+  return '<span class="badge ok">🟢 Vigente</span>';
+}
+
+let marcarCapCtx = null;
+function openMarcarCap(pid, colab){
+  marcarCapCtx = {pid, colab};
+  const proc=procs.find(p=>String(p.id)===String(pid));
+  const rec=capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
+  document.getElementById('mc-info').innerHTML = `<strong>${colab}</strong> — ${proc?proc.numero+' (rev. '+proc.revisao+')':''}`;
+  document.getElementById('mc-data').value = rec?rec.data:new Date().toISOString().slice(0,10);
+  document.getElementById('mc-venc').value = rec?rec.vencimento:'';
+  openModal('marcarcap');
+}
+function saveMarcarCap(){
+  if(!marcarCapCtx) return;
+  const {pid, colab}=marcarCapCtx;
+  const data=document.getElementById('mc-data').value;
+  const venc=document.getElementById('mc-venc').value;
+  if(!data){ alert('Informe a data da capacitação.'); return; }
+  if(!venc){ alert('Informe o vencimento.'); return; }
+  const proc=procs.find(p=>String(p.id)===String(pid));
+  const rec=capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
+  if(rec){ rec.data=data; rec.vencimento=venc; rec.revisao=proc?proc.revisao:rec.revisao; }
+  else { capacProc.push({id:genId(), procId:pid, procNumero:proc?proc.numero:pid, revisao:proc?proc.revisao:'', colaborador:colab, data, vencimento:venc}); }
+  persist(); closeModal(); renderCapProcList();
+}
+function resetCapProc(pid, colab){
+  if(!confirm('Tornar '+colab+' Pendente neste procedimento? A capacitação atual será removida.')) return;
+  capacProc=capacProc.filter(r=>!(String(r.procId)===String(pid) && r.colaborador===colab));
   persist(); renderCapProcList();
 }
 
@@ -1438,10 +1565,11 @@ function printCapProc(){
   const pid=(document.getElementById('rcp-proc')||{}).value||'';
   if(!pid){ alert('Selecione um procedimento.'); return; }
   const proc=procs.find(p=>String(p.id)===String(pid));
-  const rows=capacProc.filter(r=>String(r.procId)===String(pid)).sort((a,b)=>a.colaborador.localeCompare(b.colaborador));
-  if(!rows.length){ alert('Nenhum colaborador capacitado neste procedimento.'); return; }
-  const stTxt=v=>{ const s=capVencStatus(v); return s==='vencido'?'Vencido':s==='vencendo'?'Vencendo':'Válido'; };
-  printGenerico('Capacitação — '+(proc?proc.numero:''), ['Procedimento','Revisão','Colaborador','Status','Data','Vencimento'], rows.map(r=>[r.procNumero, r.revisao||'—', r.colaborador, stTxt(r.vencimento), fmtDate(r.data), fmtDate(r.vencimento)]));
+  const nomes=capProcRows(pid).sort((a,b)=>a.localeCompare(b));
+  if(!nomes.length){ alert('Nenhum colaborador indicado neste procedimento.'); return; }
+  const stTxt=s=> s==='pendente'?'Pendente':s==='vencido'?'Vencido':s==='vencendo'?'Alerta':'Vigente';
+  const linhas=nomes.map(n=>{ const s=capProcStatusOf(pid,n); return [n, getColaboradorArea(n)||'—', stTxt(s.status), s.rec?fmtDate(s.rec.data):'—', s.rec?fmtDate(s.rec.vencimento):'—']; });
+  printGenerico('Capacitação — '+(proc?proc.numero+' rev.'+proc.revisao:''), ['Colaborador','Área','Status','Data','Vencimento'], linhas);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1876,6 +2004,45 @@ function openNovaRevisao(){ populateProcsSelect('fr-proc'); openModal('rev'); }
 function openRevFromProc(numero){
   navTo('revisoes', document.querySelector('[data-page="revisoes"]'));
   setTimeout(()=>{ const sel=document.getElementById('rcp-proc'); if(sel){ sel.value=procs.find(p=>p.numero===numero)?.id||''; renderCapProcList(); } },100);
+}
+
+let revisaoProcId = null;
+function bumpRevisao(rev){
+  const m = String(rev||'').match(/(\d+)\s*$/);
+  if(m) return String(rev).replace(/\d+\s*$/, String(parseInt(m[1])+1));
+  return rev;
+}
+function openRevisaoProc(id){
+  const p = procs.find(x=>String(x.id)===String(id)); if(!p) return;
+  revisaoProcId = id;
+  const nIndic = indicados.filter(i=>String(i.procId)===String(id)).length;
+  const nCap = capacProc.filter(r=>String(r.procId)===String(id)).length;
+  document.getElementById('rp-info').innerHTML = `<strong>${p.numero}</strong> — revisão atual: <strong>${p.revisao}</strong><br>${nIndic} indicado(s) • ${nCap} capacitação(ões) na revisão atual (serão zeradas)`;
+  document.getElementById('rp-rev').value = bumpRevisao(p.revisao);
+  document.getElementById('rp-resp').value = '';
+  document.getElementById('rp-inicio').value = new Date().toISOString().slice(0,10);
+  document.getElementById('rp-fim').value = '';
+  document.getElementById('rp-motivo').value = '';
+  openModal('revproc');
+}
+function saveRevisaoProc(){
+  const p = procs.find(x=>String(x.id)===String(revisaoProcId)); if(!p) return;
+  const novaRev = document.getElementById('rp-rev').value.trim();
+  const inicio = document.getElementById('rp-inicio').value;
+  const fim = document.getElementById('rp-fim').value;
+  const resp = document.getElementById('rp-resp').value.trim();
+  const motivo = document.getElementById('rp-motivo').value.trim();
+  if(!novaRev){ alert('Informe a nova revisão.'); return; }
+  if(!inicio||!fim){ alert('Informe a nova vigência (início e fim).'); return; }
+  const revAnterior = p.revisao;
+  // Log no histórico de revisões
+  revisoes.push({id:genId(), procId:p.id, numero:p.numero, versaoAnterior:revAnterior, versaoNova:novaRev, data:new Date().toISOString().slice(0,10), responsavel:resp, motivo:motivo});
+  // Substitui (atualiza o procedimento)
+  p.revisao = novaRev; p.data_inicio = inicio; p.data_fim = fim;
+  // Zera as capacitações da revisão anterior (indicados voltam a Pendente)
+  capacProc = capacProc.filter(r=>String(r.procId)!==String(p.id));
+  persist(); closeModal(); renderProcs();
+  alert('Procedimento '+p.numero+' atualizado para '+novaRev+'. As capacitações foram zeradas — os indicados estão Pendentes na nova revisão.');
 }
 function populateProcsSelect(id){
   const sel=document.getElementById(id);
