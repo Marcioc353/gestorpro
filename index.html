@@ -360,7 +360,6 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap" style="margin-bottom:16px">
         <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
           <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="rcp-proc" onchange="renderCapProcList()"></select></div>
-          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="rcp-area" onchange="renderCapProcList()"></select></div>
           <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Status</label><select class="form-sel" id="rcp-fstatus" onchange="renderCapProcList()"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="capacitado">Capacitados</option></select></div>
         </div>
       </div>
@@ -1123,7 +1122,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-head"><h3>Marcar como Capacitado</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div id="mc-info" class="alert info" style="margin-bottom:14px"></div>
-      <div class="form-row"><div class="form-group"><label class="lbl">Data da capacitação *</label><input type="date" id="mc-data"></div><div class="form-group"><label class="lbl">Vencimento *</label><input type="date" id="mc-venc"></div></div>
+      <div class="form-row"><div class="form-group"><label class="lbl">Data da capacitação *</label><input type="date" id="mc-data"></div><div class="form-group"><label class="lbl">Vencimento * <span style="font-weight:400;color:var(--text3)">(Vigência Fim)</span></label><input type="date" id="mc-venc"></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMarcarCap()">Salvar</button></div>
   </div>
@@ -1456,7 +1455,7 @@ function renderIndicados(){
   document.getElementById('ind-tbody').innerHTML=rows.map(i=>`<tr>
     <td><strong>${proc?proc.numero:''}</strong></td>
     <td>${i.colaborador}</td>
-    <td>${getColaboradorArea(i.colaborador)||'—'}</td>
+    <td>${proc?proc.setor:'—'}</td>
     <td style="white-space:nowrap"><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteIndicado(${i.id})">Remover</button></td>
   </tr>`).join('');
 }
@@ -1468,9 +1467,6 @@ function renderRevisoes(){
   // Popula filtro de procedimento
   const ps = document.getElementById('rcp-proc');
   if(ps){ const cur=ps.value; ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+procs.slice().sort((a,b)=>a.numero.localeCompare(b.numero)).map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join(''); ps.value=cur; }
-  // Popula filtro de área
-  const as = document.getElementById('rcp-area');
-  if(as){ const cur=as.value; const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
   renderCapProcList();
 }
 
@@ -1491,7 +1487,6 @@ function capProcRows(pid){
 
 function renderCapProcList(){
   const pid=(document.getElementById('rcp-proc')||{}).value||'';
-  const farea=(document.getElementById('rcp-area')||{}).value||'';
   const fstatus=(document.getElementById('rcp-fstatus')||{}).value||'';
   const empty=document.getElementById('rcp-empty');
   const tbl=document.querySelector('#page-revisoes table');
@@ -1499,7 +1494,7 @@ function renderCapProcList(){
   const proc=procs.find(p=>String(p.id)===String(pid));
   if(title) title.textContent = proc ? 'Capacitação — '+proc.numero+' (rev. '+proc.revisao+')' : 'Capacitação por Procedimento';
   if(!pid){ empty.classList.remove('hidden'); empty.querySelector('p').textContent='Selecione um procedimento para ver os colaboradores indicados.'; tbl.style.display='none'; return; }
-  let nomes=capProcRows(pid).filter(n=>!farea||getColaboradorArea(n)===farea);
+  let nomes=capProcRows(pid);
   // ordena: pendentes primeiro, depois por nome
   nomes.sort((a,b)=>a.localeCompare(b));
   // monta linhas com status
@@ -1517,7 +1512,7 @@ function renderCapProcList(){
     return `<tr>
       <td><span class="badge neutral">${proc?proc.revisao:'—'}</span></td>
       <td><strong>${l.nome}</strong></td>
-      <td>${getColaboradorArea(l.nome)||'—'}</td>
+      <td>${proc?proc.setor:'—'}</td>
       <td>${statusBadgeCP(l.status)}</td>
       <td>${rec?fmtDate(rec.data):'—'}</td>
       <td>${rec?fmtDate(rec.vencimento):'—'}</td>
@@ -1537,9 +1532,10 @@ function openMarcarCap(pid, colab){
   marcarCapCtx = {pid, colab};
   const proc=procs.find(p=>String(p.id)===String(pid));
   const rec=capacProc.find(r=>String(r.procId)===String(pid) && r.colaborador===colab);
-  document.getElementById('mc-info').innerHTML = `<strong>${colab}</strong> — ${proc?proc.numero+' (rev. '+proc.revisao+')':''}`;
+  document.getElementById('mc-info').innerHTML = `<strong>${colab}</strong> — ${proc?proc.numero+' (rev. '+proc.revisao+')':''}${proc&&proc.data_fim?' • Vigência fim: '+fmtDate(proc.data_fim):''}`;
   document.getElementById('mc-data').value = rec?rec.data:new Date().toISOString().slice(0,10);
-  document.getElementById('mc-venc').value = rec?rec.vencimento:'';
+  // Vencimento puxado automaticamente da Vigência Fim do procedimento (pode ser ajustado)
+  document.getElementById('mc-venc').value = rec?rec.vencimento:(proc?proc.data_fim:'');
   openModal('marcarcap');
 }
 function saveMarcarCap(){
@@ -1568,7 +1564,7 @@ function printCapProc(){
   const nomes=capProcRows(pid).sort((a,b)=>a.localeCompare(b));
   if(!nomes.length){ alert('Nenhum colaborador indicado neste procedimento.'); return; }
   const stTxt=s=> s==='pendente'?'Pendente':s==='vencido'?'Vencido':s==='vencendo'?'Alerta':'Vigente';
-  const linhas=nomes.map(n=>{ const s=capProcStatusOf(pid,n); return [n, getColaboradorArea(n)||'—', stTxt(s.status), s.rec?fmtDate(s.rec.data):'—', s.rec?fmtDate(s.rec.vencimento):'—']; });
+  const linhas=nomes.map(n=>{ const s=capProcStatusOf(pid,n); return [n, proc?proc.setor:'—', stTxt(s.status), s.rec?fmtDate(s.rec.data):'—', s.rec?fmtDate(s.rec.vencimento):'—']; });
   printGenerico('Capacitação — '+(proc?proc.numero+' rev.'+proc.revisao:''), ['Colaborador','Área','Status','Data','Vencimento'], linhas);
 }
 
