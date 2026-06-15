@@ -308,6 +308,11 @@ textarea{resize:vertical;min-height:70px}
           <div id="dash-proximos"></div>
         </div>
       </div>
+      <div style="height:16px"></div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>⏳ Treinamentos/Capacitações Pendentes</h3></div>
+        <div id="dash-pendentes"></div>
+      </div>
     </div>
 
     <!-- PESQUISA -->
@@ -1285,6 +1290,15 @@ function renderDashboard(){
     else cVig++;
   });
 
+  // Pendentes: indicados sem capacitação no procedimento (revisão atual) + capacitações NR programadas (não realizadas)
+  let cPend = 0;
+  const pendList = [];
+  indicados.forEach(i=>{
+    const has = capacProc.some(r=>String(r.procId)===String(i.procId) && r.colaborador===i.colaborador);
+    if(!has){ cPend++; const p=procs.find(x=>String(x.id)===String(i.procId)); pendList.push({colab:i.colaborador, ref:(p?p.numero:i.procId), tipo:'Procedimento'}); }
+  });
+  capacProgramadas.forEach(p=>{ cPend++; pendList.push({colab:p.operador, ref:p.capacitacao, tipo:'Capacitação NR'}); });
+
   // Documentos por área (setor do procedimento)
   const porArea = {};
   procs.forEach(p=>{ const a=p.setor||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
@@ -1292,7 +1306,7 @@ function renderDashboard(){
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card info"><div class="stat-label">Total de Procedimentos</div><div class="stat-val">${procs.length}</div><div class="stat-sub">Cadastrados no sistema</div></div>
-    <div class="stat-card info"><div class="stat-label">Documentos por Área</div><div class="stat-val">${areasCount}</div><div class="stat-sub">Áreas com procedimentos</div></div>
+    <div class="stat-card warn"><div class="stat-label">Capacitações Pendentes</div><div class="stat-val">${cPend}</div><div class="stat-sub">Treinamentos/capacit. a realizar</div></div>
     <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${cVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
     <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${cAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
     <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${cVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
@@ -1338,6 +1352,18 @@ function renderDashboard(){
         <div class="tl-title">${r.colab}</div>
         <div class="tl-sub">${r.tipo}: ${r.ref} | Vence: ${fmtDate(r.venc)}</div>
       </div></div>`).join('')+'</div>';
+  }
+
+  // Lista de pendentes
+  const dp = document.getElementById('dash-pendentes');
+  if(dp){
+    if(!pendList.length){ dp.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhum treinamento/capacitação pendente!</p>'; }
+    else{
+      const ord = pendList.slice().sort((a,b)=>a.colab.localeCompare(b.colab));
+      dp.innerHTML='<table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Referência</th></tr></thead><tbody>'+
+        ord.slice(0,30).map(r=>`<tr><td>${r.colab}</td><td>${r.tipo}</td><td>${r.ref}</td></tr>`).join('')+
+        '</tbody></table>'+(ord.length>30?`<p style="padding:10px 16px;color:var(--text3);font-size:12px">Mostrando 30 de ${ord.length} pendências.</p>`:'');
+    }
   }
 }
 
