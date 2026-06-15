@@ -184,16 +184,49 @@ textarea{resize:vertical;min-height:70px}
 .page-btns button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 
 .hidden{display:none!important}
+
+/* CAPA INICIAL */
+#cover-screen{position:fixed;inset:0;z-index:2000;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#3b82f6 100%);display:flex;align-items:center;justify-content:center;padding:24px;animation:coverFade .4s ease}
+#cover-screen.hidden{display:none}
+@keyframes coverFade{from{opacity:0}to{opacity:1}}
+.cover-card{text-align:center;color:#fff;max-width:580px;width:100%}
+.cover-logo{width:104px;height:104px;background:#fff;border-radius:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.cover-card h1{font-size:46px;font-weight:700;letter-spacing:-1px;line-height:1}
+.cover-card h1 span{color:#E8B84B}
+.cover-sub{font-size:18px;color:rgba(255,255,255,.85);margin-top:6px;font-weight:500}
+.cover-desc{font-size:15.5px;line-height:1.65;color:rgba(255,255,255,.92);margin:26px auto 26px;max-width:480px}
+.cover-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+.cover-chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:13px;font-weight:500;padding:8px 16px;border-radius:30px}
+.cover-btn{background:#E8B84B;color:#1e3a8a;border:none;border-radius:12px;padding:15px 46px;font-size:16px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.cover-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
 </style>
 </head>
 <body>
+
+<!-- CAPA INICIAL -->
+<div id="cover-screen">
+  <div class="cover-card">
+    <div class="cover-logo">
+      <svg viewBox="0 0 40 44" width="56" height="60" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 3 L34 9 L34 23 Q34 34 20 41 Q6 34 6 23 L6 9 Z" fill="#1E3A8A"/><path d="M13 22 L18 28 L28 15" stroke="#E8B84B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>Gestor<span>PRO</span></h1>
+    <p class="cover-sub">Gestão Operacional</p>
+    <p class="cover-desc">Ferramenta para auxiliar na <strong>gestão e no controle de treinamentos e capacitações</strong> do time operacional — acompanhe quem está capacitado, o que está pendente e o que está em atraso, com registros e indicadores sempre à mão.</p>
+    <div class="cover-chips">
+      <span class="cover-chip">📋 Treinamentos</span>
+      <span class="cover-chip">🎓 Capacitações</span>
+      <span class="cover-chip">✅ Competências</span>
+    </div>
+    <button class="cover-btn" onclick="hideCover()">Entrar →</button>
+  </div>
+</div>
 
 <div id="app">
 
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-header">
+    <div class="logo-header" onclick="showCover()" style="cursor:pointer" title="Voltar à tela inicial">
       <div class="logo-icon"><svg viewBox="0 0 40 44" width="22" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 3 L34 9 L34 23 Q34 34 20 41 Q6 34 6 23 L6 9 Z" fill="#1E3A8A"/><path d="M13 22 L18 28 L28 15" stroke="#E8B84B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div><h1>Gestor<span style="color:#E8B84B">PRO</span></h1><p>Gestão Operacional</p></div>
     </div>
@@ -463,10 +496,12 @@ textarea{resize:vertical;min-height:70px}
             <select id="filter-avalcomp-op" onchange="renderAvalComp()"><option value="">Todos os colaboradores</option></select>
             <select id="filter-avalcomp-mes" onchange="renderAvalComp()"><option value="">Todos os meses</option></select>
             <select id="filter-avalcomp-status" onchange="renderAvalComp()"><option value="">Todos os status</option><option value="Pendente">Pendentes</option><option value="Concluída">Concluídas</option></select>
-            <button class="btn" onclick="printAvalCompLista()">🖨️ Imprimir Lista</button>
+            <button class="btn" onclick="printSelectedAvalComp()">🖨️ Imprimir selecionados</button>
+            <button class="btn danger" onclick="deleteSelectedAvalComp()">Excluir selecionados</button>
           </div>
           <table>
             <thead><tr>
+              <th style="width:36px"><input type="checkbox" id="avalcomp-check-all" onclick="toggleAllAvalComp(this)"></th>
               <th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th><th>Ações</th>
             </tr></thead>
             <tbody id="avalcomp-tbody"></tbody>
@@ -546,7 +581,7 @@ textarea{resize:vertical;min-height:70px}
         <table>
           <thead><tr>
             <th style="width:36px"><input type="checkbox" id="capreg-check-all" onclick="toggleAllCapReg(this)"></th>
-            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th><th>Responsável</th><th>Ações</th>
+            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th><th>Responsável</th>
           </tr></thead>
           <tbody id="capreg-tbody"></tbody>
         </table>
@@ -1043,6 +1078,17 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCapRegEdit()">Salvar</button></div>
   </div>
 
+  <!-- Revisar Cadastro do Colaborador -->
+  <div class="modal hidden" id="modal-colab-rev">
+    <div class="modal-head"><h3>Revisar Cadastro do Colaborador</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-group"><label class="lbl">Nome *</label><input type="text" id="frc-nome"></div><div class="form-group"><label class="lbl">Área</label><input type="text" id="frc-area" placeholder="Ex: Forno, Utilidades..."></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">E-mail</label><input type="email" id="frc-email" placeholder="E-mail (opcional)"></div></div>
+      <div id="frc-ficha" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveRevisarColab()">Salvar</button></div>
+  </div>
+
 </div>
 
 <script>
@@ -1126,6 +1172,9 @@ const pageTitles = {
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
   quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
 };
+
+function hideCover(){ const c=document.getElementById('cover-screen'); if(c) c.classList.add('hidden'); }
+function showCover(){ const c=document.getElementById('cover-screen'); if(c) c.classList.remove('hidden'); }
 
 function toggleSection(headerEl){
   const items = headerEl.nextElementSibling;
@@ -1554,14 +1603,15 @@ function renderQuizSelector(){
 
 function renderBancoQuestoes(){
   const sel = document.getElementById('quiz-proc-sel');
-  if(sel) sel.innerHTML = procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
+  if(sel){ const cur=sel.value; sel.innerHTML = '<option value="">— Selecione um procedimento —</option>'+procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join(''); sel.value=cur; }
   renderQuestionList();
 }
 
 function renderQuestionList(){
   const pid = document.getElementById('quiz-proc-sel').value;
-  const qs = (questions[pid]||[]);
   const el = document.getElementById('question-list');
+  if(!pid){ el.innerHTML='<p style="color:var(--text3);font-size:13px">Selecione um procedimento acima para ver e cadastrar as questões.</p>'; return; }
+  const qs = (questions[pid]||[]);
   if(!qs.length){ el.innerHTML='<p style="color:var(--text3);font-size:13px">Nenhuma questão cadastrada para este procedimento.</p>'; return; }
   el.innerHTML = qs.map((q,i)=>`
     <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;background:var(--surface)">
@@ -1581,6 +1631,7 @@ function removeQuestion(pid, idx){
 
 function startQuiz(){
   const pid = document.getElementById('quiz-proc-sel').value;
+  if(!pid){ alert('Selecione um procedimento.'); return; }
   const op = document.getElementById('quiz-operador').value.trim();
   if(!op){ alert('Por favor, informe o nome do operador.'); return; }
   const qs = questions[pid]||[];
@@ -1653,8 +1704,9 @@ function showQuizResult(){
   const proc = procs.find(p=>String(p.id)===String(procId));
   // Mark agenda item as done if started from agenda
   if(quizState.agendaId){
-    const ag = agendaAvaliacoes.find(x=>x.id===quizState.agendaId);
-    if(ag){ ag.status='Realizado'; ag.resultado=pass?'Aprovado':'Reprovado'; saveState('agendaAvaliacoes',agendaAvaliacoes); }
+    // Concluída: remove da fila de Avaliações Online (o registro vai para Registro de Treinamento)
+    agendaAvaliacoes = agendaAvaliacoes.filter(x=>x.id!==quizState.agendaId);
+    saveState('agendaAvaliacoes',agendaAvaliacoes);
   }
   const motivoProva = quizState.motivo || 'Avaliação Online';
   // Store quiz detail for later review
@@ -1798,6 +1850,7 @@ function saveProg(){
 
 // QUESTION
 function openAddQuestion(){
+  if(!document.getElementById('quiz-proc-sel').value){ alert('Selecione um procedimento antes de adicionar questões.'); return; }
   document.querySelectorAll('.fq-opt').forEach(i=>i.value='');
   document.getElementById('fq-pergunta').value='';
   document.getElementById('fq-correta').value='0';
@@ -1805,6 +1858,7 @@ function openAddQuestion(){
 }
 function saveQuestion(){
   const pid=document.getElementById('quiz-proc-sel').value;
+  if(!pid){ alert('Selecione um procedimento antes de cadastrar questões.'); return; }
   const perg=document.getElementById('fq-pergunta').value.trim();
   const opts=[...document.querySelectorAll('.fq-opt')].map(i=>i.value.trim()).filter(Boolean);
   const correta=parseInt(document.getElementById('fq-correta').value);
@@ -1931,21 +1985,21 @@ var agendaAvaliacoes = loadState('agendaAvaliacoes', []);
 function renderAgenda(){
   const el = document.getElementById('agenda-lista');
   if(!el) return;
+  // Mantém apenas as pendentes na fila (concluídas vão para Registro de Treinamento)
   const pending = agendaAvaliacoes.filter(a=>a.status==='Pendente');
-  const done = agendaAvaliacoes.filter(a=>a.status!=='Pendente');
-  if(!agendaAvaliacoes.length){
-    el.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma avaliação agendada. Clique em "+ Agendar Avaliação" para criar.</p>';
+  if(!pending.length){
+    el.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma avaliação pendente. Clique em "+ Agendar Avaliação" para criar.</p>';
     return;
   }
   el.innerHTML = '<table><thead><tr><th>Colaborador</th><th>Procedimento</th><th>Data Prevista</th><th>Obs</th><th>Status</th><th>Ações</th></tr></thead><tbody>' +
-    agendaAvaliacoes.map(a=>`<tr>
+    pending.map(a=>`<tr>
       <td><strong>${a.operador}</strong></td>
       <td>${a.proc}</td>
       <td>${fmtDate(a.data)||'—'}</td>
       <td>${a.obs||'—'}</td>
-      <td>${a.status==='Pendente'?'<span class="badge warn">Pendente</span>':'<span class="badge ok">Realizado</span>'}</td>
+      <td><span class="badge warn">Pendente</span></td>
       <td style="white-space:nowrap">
-        ${a.status==='Pendente'?`<button class="btn sm primary" onclick="iniciarAvaliacaoAgenda(${a.id})">▶ Iniciar</button> `:''}
+        <button class="btn sm primary" onclick="iniciarAvaliacaoAgenda(${a.id})">▶ Iniciar</button>
         <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAgenda(${a.id})">Excluir</button>
       </td>
     </tr>`).join('') +
@@ -2006,7 +2060,10 @@ function renderColaboradores(){
     <td>${o.nome}</td>
     <td>${o.area||'<span style="color:var(--text3)">—</span>'}</td>
     <td>${o.email||'<span style="color:var(--text3)">—</span>'}</td>
-    <td><button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${o.nome.replace(/'/g,"\\'")}')">Excluir</button></td>
+    <td style="white-space:nowrap">
+      <button class="btn sm" onclick="openRevisarColab('${o.nome.replace(/'/g,"\\'")}')">Revisar</button>
+      <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${o.nome.replace(/'/g,"\\'")}')">Excluir</button>
+    </td>
   </tr>`).join('');
 }
 
@@ -2030,6 +2087,67 @@ function deleteColaborador(nome){
   operadores = operadores.filter(o=>o.nome!==nome);
   persist();
   renderColaboradores();
+}
+
+let revisarColabNome = null;
+function openRevisarColab(nome){
+  const o = operadores.find(x=>x.nome===nome); if(!o) return;
+  revisarColabNome = nome;
+  document.getElementById('frc-nome').value = o.nome;
+  document.getElementById('frc-area').value = o.area||'';
+  document.getElementById('frc-email').value = o.email||'';
+  // Ficha: treinamentos e capacitações do colaborador
+  const treins = treinamentos.filter(t=>t.operador===nome);
+  const caps = capacRegistros.filter(r=>r.operador===nome);
+  const retre = retreinamentos.filter(r=>r.operador===nome);
+  let ficha = '<div style="border-top:1px solid var(--border);margin-top:6px;padding-top:12px">';
+  ficha += '<div class="stat-grid" style="margin-bottom:14px">'+
+    '<div class="stat-card"><div class="stat-label">Treinamentos</div><div class="stat-val">'+treins.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Capacitações</div><div class="stat-val">'+caps.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Retreinamentos Pendentes</div><div class="stat-val">'+retre.length+'</div></div>'+
+  '</div>';
+  // Capacitações detalhe
+  ficha += '<div style="font-size:13px;font-weight:600;margin:6px 0 6px">Capacitações</div>';
+  if(caps.length){
+    ficha += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px"><thead><tr style="text-align:left;color:var(--text3)"><th style="padding:4px 6px">Capacitação</th><th style="padding:4px 6px">Função</th><th style="padding:4px 6px">Vencimento</th><th style="padding:4px 6px">Status</th></tr></thead><tbody>';
+    caps.slice().sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||'')).forEach(r=>{
+      ficha += '<tr><td style="padding:4px 6px">'+r.capacitacao+'</td><td style="padding:4px 6px">'+(r.funcao||'—')+'</td><td style="padding:4px 6px">'+fmtDate(r.vencimento)+'</td><td style="padding:4px 6px">'+capVencBadge(r.vencimento)+'</td></tr>';
+    });
+    ficha += '</tbody></table>';
+  } else { ficha += '<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Nenhuma capacitação registrada.</div>'; }
+  // Treinamentos detalhe (últimos 8)
+  ficha += '<div style="font-size:13px;font-weight:600;margin:6px 0 6px">Treinamentos recentes</div>';
+  if(treins.length){
+    ficha += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th style="padding:4px 6px">Data</th><th style="padding:4px 6px">Procedimento</th><th style="padding:4px 6px">Tipo</th><th style="padding:4px 6px">Resultado</th></tr></thead><tbody>';
+    treins.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,8).forEach(t=>{
+      ficha += '<tr><td style="padding:4px 6px">'+fmtDate(t.data)+'</td><td style="padding:4px 6px">'+t.proc+'</td><td style="padding:4px 6px">'+(t.tipo||'—')+'</td><td style="padding:4px 6px">'+(t.resultado||'—')+'</td></tr>';
+    });
+    ficha += '</tbody></table>';
+  } else { ficha += '<div style="font-size:12px;color:var(--text3)">Nenhum treinamento registrado.</div>'; }
+  ficha += '</div>';
+  document.getElementById('frc-ficha').innerHTML = ficha;
+  openModal('colab-rev');
+}
+function saveRevisarColab(){
+  const o = operadores.find(x=>x.nome===revisarColabNome); if(!o) return;
+  const novoNome = document.getElementById('frc-nome').value.trim();
+  const area = document.getElementById('frc-area').value.trim();
+  const email = document.getElementById('frc-email').value.trim();
+  if(!novoNome){ alert('Informe o nome.'); return; }
+  if(novoNome.toLowerCase()!==revisarColabNome.toLowerCase() && operadores.some(x=>x.nome.toLowerCase()===novoNome.toLowerCase())){ alert('Já existe um colaborador com este nome.'); return; }
+  // Se o nome mudou, propaga para todos os registros que referenciam o operador
+  if(novoNome!==revisarColabNome){
+    const antigo = revisarColabNome;
+    treinamentos.forEach(t=>{ if(t.operador===antigo) t.operador=novoNome; });
+    retreinamentos.forEach(r=>{ if(r.operador===antigo) r.operador=novoNome; });
+    programados.forEach(p=>{ if(p.operadores===antigo) p.operadores=novoNome; });
+    avaliacoesComp.forEach(a=>{ if(a.colaborador===antigo) a.colaborador=novoNome; });
+    capacProgramadas.forEach(p=>{ if(p.operador===antigo) p.operador=novoNome; });
+    capacRegistros.forEach(r=>{ if(r.operador===antigo) r.operador=novoNome; });
+    if(typeof agendaAvaliacoes!=='undefined') agendaAvaliacoes.forEach(a=>{ if(a.operador===antigo) a.operador=novoNome; });
+  }
+  o.nome=novoNome; o.area=area; o.email=email;
+  persist(); closeModal(); renderColaboradores();
 }
 
 function getColaboradorEmail(nome){
@@ -2122,9 +2240,9 @@ function renderAvalComp(){
       resBadge = res==='Aprovado' ? '<span class="badge ok">✅ Aprovado</span>' : '<span class="badge danger">⚠ Requer Ação</span>';
       acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver</button> <button class="btn sm" onclick="printResultadoAvalComp(${a.id})">🖨️ Resultado</button> `;
     }
-    acoes += `<button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAvalComp(${a.id})">Excluir</button>`;
     const mesTxt = a.mesAno ? fmtMesAno(a.mesAno) : ((a.inicio?fmtDate(a.inicio):'—')+(a.fim?' a '+fmtDate(a.fim):''));
     return `<tr>
+      <td><input type="checkbox" class="avalcomp-check" value="${a.id}"></td>
       <td><strong>${a.colaborador}</strong></td>
       <td>${a.area||'—'}</td>
       <td>${mesTxt}</td>
@@ -2133,6 +2251,7 @@ function renderAvalComp(){
       <td style="white-space:nowrap">${acoes}</td>
     </tr>`;
   }).join('');
+  const ca=document.getElementById('avalcomp-check-all'); if(ca) ca.checked=false;
 }
 
 function openNovaAvalComp(){
@@ -2160,6 +2279,30 @@ function deleteAvalComp(id){
   if(!confirm('Excluir esta avaliação comportamental?')) return;
   avaliacoesComp = avaliacoesComp.filter(a=>a.id!==id);
   persist(); renderAvalComp();
+}
+function toggleAllAvalComp(el){ document.querySelectorAll('.avalcomp-check').forEach(c=>c.checked=el.checked); }
+function getSelectedAvalComp(){ return [...document.querySelectorAll('.avalcomp-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedAvalComp(){
+  const ids=getSelectedAvalComp();
+  if(!ids.length){ alert('Selecione pelo menos uma avaliação.'); return; }
+  if(!confirm('Excluir '+ids.length+' avaliação(ões) comportamental(is)?')) return;
+  avaliacoesComp = avaliacoesComp.filter(a=>!ids.includes(a.id));
+  persist(); renderAvalComp();
+}
+function printSelectedAvalComp(){
+  const ids=getSelectedAvalComp();
+  if(ids.length){
+    const rows = avaliacoesComp.filter(a=>ids.includes(a.id));
+    let html = _avalCompPrintHead('Avaliações Comportamentais');
+    html += '<h1>🛡️ GestorPRO — Avaliações Comportamentais</h1>';
+    html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
+    html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th></tr></thead><tbody>';
+    rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+(a.status==='Concluída'?avalCompResultado(a):'Pendente')+'</td></tr>'; });
+    html += '</tbody></table><div class="sign"><div class="sign-line">Responsável</div></div></body></html>';
+    _avalCompPrintWindow(html);
+  } else {
+    printAvalCompLista();
+  }
 }
 
 let avalCompRunId = null;
@@ -2785,7 +2928,6 @@ function renderCapReg(){
     <td>${fmtDate(r.vencimento)}</td>
     <td>${capVencBadge(r.vencimento)}</td>
     <td>${r.responsavel||'—'}</td>
-    <td style="white-space:nowrap"><button class="btn sm" onclick="openEditCapReg(${r.id})">Editar</button></td>
   </tr>`).join('');
   const ca=document.getElementById('capreg-check-all'); if(ca) ca.checked=false;
 }
