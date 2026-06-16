@@ -576,7 +576,7 @@ textarea{resize:vertical;min-height:70px}
             <h3>Registros de Avaliações</h3>
             <select id="filter-avalreg-op" onchange="renderAvalRegistros()"><option value="">Todos os colaboradores</option></select>
             <select id="filter-avalreg-area" onchange="renderAvalRegistros()"><option value="">Todas as áreas</option></select>
-            <select id="filter-avalreg-res" onchange="renderAvalRegistros()"><option value="">Todos os resultados</option><option value="Aprovado">Aprovado</option><option value="Requer Ação">Requer Ação</option></select>
+            <select id="filter-avalreg-res" onchange="renderAvalRegistros()"><option value="">Todos os resultados</option><option value="Atende">Atende</option><option value="Requer Ação">Requer Ação</option><option value="Ação Imediata">Ação Imediata</option></select>
             <button class="btn" onclick="printSelectedAvalReg()">🖨️ Imprimir selecionados</button>
             <button class="btn danger" onclick="deleteSelectedAvalReg()">Excluir selecionados</button>
           </div>
@@ -2665,8 +2665,28 @@ const AVAL_COMP_OPCOES = ['Atende','Não Atende','Oportunidade de Melhoria'];
 
 function avalCompResultado(a){
   if(a.status!=='Concluída') return 'Pendente';
-  const naoAtende = (a.respostas||[]).filter(r=>r.resposta==='Não Atende').length;
-  return naoAtende>0 ? 'Requer Ação' : 'Aprovado';
+  const r = a.respostas||[];
+  const nao = r.filter(x=>x.resposta==='Não Atende').length;
+  const opp = r.filter(x=>x.resposta==='Oportunidade de Melhoria').length;
+  if(nao>0) return 'Ação Imediata';
+  if(opp>0) return 'Requer Ação';
+  return 'Atende';
+}
+// Pontuação: Atende=100%/n por item, Oportunidade=metade, Não Atende=0
+function avalCompScore(a){
+  const r = a.respostas||[];
+  const total = r.length || AVAL_COMP_PERGUNTAS.length;
+  const atende = r.filter(x=>x.resposta==='Atende').length;
+  const opp = r.filter(x=>x.resposta==='Oportunidade de Melhoria').length;
+  const nao = r.filter(x=>x.resposta==='Não Atende').length;
+  const pct = total ? Math.round((atende + 0.5*opp)/total*1000)/10 : 0;
+  return {pct, atende, opp, nao, total};
+}
+function avalCompResBadge(res){
+  if(res==='Atende') return '<span class="badge ok">🟢 Atende</span>';
+  if(res==='Requer Ação') return '<span class="badge warn">🟡 Requer Ação</span>';
+  if(res==='Ação Imediata') return '<span class="badge danger">🔴 Ação Imediata</span>';
+  return '<span class="badge warn">⏳ Pendente</span>';
 }
 
 function unlockAvalComp(){
@@ -2718,8 +2738,8 @@ function renderAvalComp(){
       resBadge='<span class="badge warn">⏳ Aguardando</span>';
       acoes=`<button class="btn sm primary" onclick="iniciarAvalComp(${a.id})">▶ Iniciar</button> <button class="btn sm" onclick="printProgramadoAvalComp(${a.id})">🖨️ Programado</button> `;
     } else {
-      resBadge = res==='Aprovado' ? '<span class="badge ok">✅ Aprovado</span>' : '<span class="badge danger">⚠ Requer Ação</span>';
-      acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver</button> <button class="btn sm" onclick="printResultadoAvalComp(${a.id})">🖨️ Resultado</button> `;
+      resBadge = avalCompResBadge(res);
+      acoes=`<button class="btn sm" onclick="verAvalComp(${a.id})">Ver Resultado</button> <button class="btn sm" onclick="printResultadoAvalComp(${a.id})">🖨️ Resultado</button> `;
     }
     const mesTxt = a.mesAno ? fmtMesAno(a.mesAno) : ((a.inicio?fmtDate(a.inicio):'—')+(a.fim?' a '+fmtDate(a.fim):''));
     return `<tr>
@@ -2847,7 +2867,25 @@ function verAvalComp(id){
   const a = avaliacoesComp.find(x=>x.id===id);
   if(!a) return;
   const res = avalCompResultado(a);
-  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${a.colaborador}</strong> — Área: ${a.area}<br>Mês/Ano observado: ${fmtMesAno(a.mesAno)} | Avaliador: ${a.avaliador}<br>Data da avaliação: ${fmtDate(a.data_avaliacao)} | Resultado: <strong>${res}</strong></div>`;
+  const sc = avalCompScore(a);
+  let html = `<div class="alert info" style="margin-bottom:16px"><strong>${a.colaborador}</strong> — Área: ${a.area}<br>Mês/Ano observado: ${fmtMesAno(a.mesAno)} | Avaliador: ${a.avaliador}<br>Data da avaliação: ${fmtDate(a.data_avaliacao)}</div>`;
+  // Painel de pontuação
+  html += `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;min-width:150px;text-align:center;border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+      <div style="font-size:34px;font-weight:700;color:var(--blue)">${sc.pct}%</div>
+      <div style="font-size:12px;color:var(--text2)">Pontuação</div>
+    </div>
+    <div style="flex:1;min-width:150px;text-align:center;border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;justify-content:center">
+      <div>${avalCompResBadge(res)}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">Resultado final</div>
+    </div>
+  </div>`;
+  // Contagem por categoria
+  html += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <span class="badge ok">Atende: ${sc.atende}</span>
+    <span class="badge warn">Oportunidade de Melhoria: ${sc.opp}</span>
+    <span class="badge danger">Não Atende: ${sc.nao}</span>
+  </div>`;
   (a.respostas||[]).forEach((r,i)=>{
     let cls = r.resposta==='Atende'?'ok':r.resposta==='Não Atende'?'danger':'warn';
     html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
@@ -2903,9 +2941,11 @@ function printResultadoAvalComp(id){
   const a = avaliacoesComp.find(x=>x.id===id);
   if(!a) return;
   const res = avalCompResultado(a);
+  const sc = avalCompScore(a);
   let html = _avalCompPrintHead('Avaliação Comportamental — Resultado');
   html += '<h1>🛡️ GestorPRO — Avaliação Comportamental (Resultado)</h1>';
-  html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'<br><strong>Data da avaliação:</strong> '+fmtDate(a.data_avaliacao)+' &nbsp;|&nbsp; <strong>Resultado:</strong> '+res+'</div>';
+  html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'<br><strong>Data da avaliação:</strong> '+fmtDate(a.data_avaliacao)+'</div>';
+  html += '<div class="meta"><strong>Pontuação:</strong> '+sc.pct+'% &nbsp;|&nbsp; <strong>Resultado final:</strong> '+res+'<br><strong>Atende:</strong> '+sc.atende+' &nbsp;|&nbsp; <strong>Oportunidade de Melhoria:</strong> '+sc.opp+' &nbsp;|&nbsp; <strong>Não Atende:</strong> '+sc.nao+'</div>';
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
   (a.respostas||[]).forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
   html += '</tbody></table>';
@@ -2963,7 +3003,7 @@ function renderAvalRegistros(){
   const tbl=document.querySelector('#page-avalregistros table');
   if(!rows.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent = concl.length? 'Nenhuma avaliação para este filtro.' : 'Nenhuma avaliação concluída ainda.'; tbl.style.display='none'; const ca=document.getElementById('avalreg-check-all'); if(ca) ca.checked=false; return; }
   empty.classList.add('hidden'); tbl.style.display='';
-  const resBadge=r=> r==='Aprovado' ? '<span class="badge ok">Aprovado</span>' : '<span class="badge warn">Requer Ação</span>';
+  const resBadge=r=> avalCompResBadge(r);
   document.getElementById('avalreg-tbody').innerHTML = rows.map(a=>`<tr>
     <td><input type="checkbox" class="avalreg-check" value="${a.id}"></td>
     <td><strong>${a.colaborador}</strong></td>
@@ -2972,7 +3012,7 @@ function renderAvalRegistros(){
     <td>${a.avaliador||'—'}</td>
     <td>${fmtDate(a.data_avaliacao)}</td>
     <td>${resBadge(avalCompResultado(a))}</td>
-    <td style="white-space:nowrap"><button class="btn sm" onclick="printResultadoAvalComp(${a.id})">Imprimir</button></td>
+    <td style="white-space:nowrap"><button class="btn sm" onclick="verAvalComp(${a.id})">Ver Resultado</button> <button class="btn sm" onclick="printResultadoAvalComp(${a.id})">🖨️ Imprimir</button></td>
   </tr>`).join('');
   const ca=document.getElementById('avalreg-check-all'); if(ca) ca.checked=false;
 }
