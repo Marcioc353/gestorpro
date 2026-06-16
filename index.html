@@ -347,9 +347,11 @@ textarea{resize:vertical;min-height:70px}
             <option value="alerta">Alerta (90 dias)</option>
             <option value="vigente">Vigente</option>
           </select>
+          <button class="btn danger" onclick="deleteSelectedProcs()">Excluir selecionados</button>
         </div>
         <table>
           <thead><tr>
+            <th style="width:36px"><input type="checkbox" id="proc-check-all" onclick="toggleAllProcs(this)"></th>
             <th>Número</th><th>Revisão</th><th>Descrição</th><th>Área</th>
             <th>Vigência Início</th><th>Vigência Fim</th><th>Status</th><th>Ações</th>
           </tr></thead>
@@ -495,9 +497,22 @@ textarea{resize:vertical;min-height:70px}
 
     <!-- AVALIAÇÃO COMPORTAMENTAL -->
     <div class="page" id="page-capacitacao">
+      <!-- LOCK SCREEN -->
+      <div id="avalcomp-lock" class="hidden">
+        <div style="max-width:380px;margin:50px auto;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px 28px">
+          <div style="width:64px;height:64px;margin:0 auto 16px;background:var(--blue-bg);border-radius:50%;display:flex;align-items:center;justify-content:center">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--blue)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3 style="margin-bottom:6px">Acesso Restrito</h3>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Digite a senha de 4 dígitos para acessar a Avaliação Comportamental.</p>
+          <input type="password" id="avalcomp-pin" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;font-size:22px;width:160px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text)" onkeydown="if(event.key==='Enter')unlockAvalComp()">
+          <div id="avalcomp-pin-err" style="color:var(--red);font-size:13px;height:18px;margin:8px 0"></div>
+          <button class="btn primary" style="width:160px" onclick="unlockAvalComp()">Entrar</button>
+        </div>
+      </div>
       <!-- LIST VIEW -->
       <div id="avalcomp-list">
-        <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovaAvalComp()">+ Nova Avaliação Comportamental</button></div>
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" onclick="openNovaAvalComp()">+ Nova Avaliação Comportamental</button><button class="btn" onclick="changeAvalCompPin()">🔑 Alterar senha</button><button class="btn" onclick="lockAvalComp()">🔒 Bloquear</button></div>
         <div class="alert info" style="margin-bottom:16px">📋 O <strong>Gestor</strong> avalia o comportamento do colaborador no período observado. Crie a avaliação e clique em <strong>Iniciar Avaliação</strong> para responder o questionário (Atende / Não Atende / Oportunidade de Melhoria).</div>
         <div class="table-wrap">
           <div class="table-header">
@@ -604,7 +619,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap" style="margin-bottom:16px">
         <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
           <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="ind-proc" onchange="renderIndicados()"></select></div>
-          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="ind-area" onchange="populateIndColab()"></select></div>
+          <div class="form-group" style="flex:1;min-width:160px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="ind-area" onchange="onIndAreaChange()"></select></div>
           <div class="form-group" style="flex:2;min-width:200px"><label class="lbl">Colaborador</label><select class="form-sel" id="ind-colab"></select></div>
           <button class="btn primary" onclick="addIndicado()">+ Indicar</button>
         </div>
@@ -1249,6 +1264,41 @@ const pageTitles = {
   quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', indicados:'Indicados por Procedimento', capacitacao:'Avaliação Comportamental', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
 };
 
+function makeSearchable(selectId){
+  const sel = document.getElementById(selectId);
+  if(!sel || sel.dataset.searchable) return;
+  sel.dataset.searchable='1';
+  const input = document.createElement('input');
+  input.type='text';
+  input.className = sel.className;
+  input.setAttribute('list', selectId+'-dl');
+  input.setAttribute('autocomplete','off');
+  input.placeholder = 'Digite para buscar...';
+  input.style.width='100%';
+  const dl = document.createElement('datalist');
+  dl.id = selectId+'-dl';
+  sel.style.display='none';
+  sel.parentNode.insertBefore(input, sel);
+  sel.parentNode.insertBefore(dl, sel);
+  function syncOptions(){
+    dl.innerHTML='';
+    [...sel.options].forEach(o=>{ if(o.value!==''){ const opt=document.createElement('option'); opt.value=o.textContent; dl.appendChild(opt); } });
+  }
+  function syncInputFromSelect(){
+    const o=sel.options[sel.selectedIndex];
+    input.value = (o && o.value!=='') ? o.textContent : '';
+  }
+  input.addEventListener('input', ()=>{
+    if(input.value===''){ sel.value=''; sel.dispatchEvent(new Event('change')); return; }
+    const match=[...sel.options].find(o=>o.textContent===input.value);
+    if(match){ sel.value=match.value; sel.dispatchEvent(new Event('change')); }
+  });
+  // Mantém o datalist e o input sincronizados quando as opções/valor mudam
+  const obs=new MutationObserver(()=>{ syncOptions(); setTimeout(syncInputFromSelect,0); });
+  obs.observe(sel, {childList:true});
+  syncOptions(); syncInputFromSelect();
+}
+
 function hideCover(){ const c=document.getElementById('cover-screen'); if(c) c.classList.add('hidden'); }
 function showCover(){ const c=document.getElementById('cover-screen'); if(c) c.classList.remove('hidden'); }
 
@@ -1260,6 +1310,7 @@ function toggleSection(headerEl){
 }
 
 function navTo(page, el){
+  avalCompUnlocked = false; // re-bloqueia a Avaliação Comportamental a cada navegação
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -1283,6 +1334,11 @@ function navTo(page, el){
   if(page==='caplista') renderCapLista();
   if(page==='capprog') renderCapProg();
   if(page==='capreg') renderCapReg();
+  // Busca por digitação nas listas grandes (Procedimento e Colaborador)
+  if(page==='pesquisa'){ makeSearchable('pq-operador'); makeSearchable('pq-proc'); }
+  if(page==='revisoes') makeSearchable('rcp-proc');
+  if(page==='questoes') makeSearchable('quiz-proc-sel');
+  if(page==='indicados'){ makeSearchable('ind-proc'); makeSearchable('ind-colab'); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1417,6 +1473,7 @@ function renderProcs(){
 
   document.getElementById('proc-tbody').innerHTML = pageData.map(p=>`
     <tr>
+      <td><input type="checkbox" class="proc-check" value="${p.id}"></td>
       <td><strong>${p.numero}</strong></td>
       <td><span class="badge neutral">${p.revisao}</span></td>
       <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.descricao}">${p.descricao}</td>
@@ -1430,6 +1487,7 @@ function renderProcs(){
         <button class="btn sm" onclick="openRevisaoProc(${p.id})">Revisar</button>
       </td>
     </tr>`).join('');
+  const pca=document.getElementById('proc-check-all'); if(pca) pca.checked=false;
 
   // Pagination
   let pages='';
@@ -1441,10 +1499,23 @@ function renderProcs(){
 // INDICADOS POR PROCEDIMENTO (matriz de treinamento)
 // ═══════════════════════════════════════════════════════
 function renderIndicadosPage(){
-  const ps=document.getElementById('ind-proc');
-  if(ps){ const cur=ps.value; ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+procs.slice().sort((a,b)=>a.numero.localeCompare(b.numero)).map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join(''); ps.value=cur; }
   const as=document.getElementById('ind-area');
-  if(as){ const cur=as.value; const areas=[...new Set(operadores.map(o=>o.area).filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
+  if(as){ const cur=as.value; const areas=[...new Set([...procs.map(p=>p.setor), ...operadores.map(o=>o.area)].filter(Boolean))].sort(); as.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join(''); as.value=cur; }
+  populateIndProcs();
+  populateIndColab();
+  renderIndicados();
+}
+function populateIndProcs(){
+  const area=(document.getElementById('ind-area')||{}).value||'';
+  const ps=document.getElementById('ind-proc');
+  if(!ps) return;
+  const cur=ps.value;
+  const lista=procs.filter(p=>!area||p.setor===area).slice().sort((a,b)=>a.numero.localeCompare(b.numero));
+  ps.innerHTML='<option value="">— Selecione um procedimento —</option>'+lista.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,45)}</option>`).join('');
+  ps.value = lista.some(p=>String(p.id)===String(cur)) ? cur : '';
+}
+function onIndAreaChange(){
+  populateIndProcs();
   populateIndColab();
   renderIndicados();
 }
@@ -2082,6 +2153,18 @@ function saveRevisaoProc(){
   persist(); closeModal(); renderProcs();
   alert('Procedimento '+p.numero+' atualizado para '+novaRev+'. As capacitações foram zeradas — os indicados estão Pendentes na nova revisão.');
 }
+function toggleAllProcs(el){ document.querySelectorAll('.proc-check').forEach(c=>c.checked=el.checked); }
+function getSelectedProcs(){ return [...document.querySelectorAll('.proc-check:checked')].map(c=>parseInt(c.value)); }
+function deleteSelectedProcs(){
+  const ids=getSelectedProcs();
+  if(!ids.length){ alert('Selecione pelo menos um procedimento.'); return; }
+  if(!confirm('Excluir '+ids.length+' procedimento(s)? Os indicados e capacitações vinculados a eles também serão removidos.')) return;
+  procs=procs.filter(p=>!ids.includes(p.id));
+  indicados=indicados.filter(i=>!ids.includes(parseInt(i.procId)) && !ids.map(String).includes(String(i.procId)));
+  capacProc=capacProc.filter(r=>!ids.map(String).includes(String(r.procId)));
+  persist(); renderProcs();
+}
+
 function populateProcsSelect(id){
   const sel=document.getElementById(id);
   sel.innerHTML=procs.map(p=>`<option value="${p.id}">${p.numero} — ${p.descricao.substring(0,50)}</option>`).join('');
@@ -2523,7 +2606,31 @@ function avalCompResultado(a){
   return naoAtende>0 ? 'Requer Ação' : 'Aprovado';
 }
 
+function unlockAvalComp(){
+  const pin=(document.getElementById('avalcomp-pin')||{}).value||'';
+  if(pin === loadState('avalCompPin','1234')){ avalCompUnlocked=true; renderAvalComp(); }
+  else { document.getElementById('avalcomp-pin-err').textContent='Senha incorreta. Tente novamente.'; const p=document.getElementById('avalcomp-pin'); if(p){ p.value=''; p.focus(); } }
+}
+function lockAvalComp(){ avalCompUnlocked=false; renderAvalComp(); }
+function changeAvalCompPin(){
+  const atual=prompt('Digite a senha atual (4 dígitos):'); if(atual===null) return;
+  if(atual!==loadState('avalCompPin','1234')){ alert('Senha atual incorreta.'); return; }
+  const nova=prompt('Digite a NOVA senha (4 dígitos):'); if(nova===null) return;
+  if(!/^\d{4}$/.test(nova)){ alert('A senha deve ter exatamente 4 dígitos numéricos.'); return; }
+  saveState('avalCompPin', nova); alert('Senha alterada com sucesso!');
+}
+let avalCompUnlocked = false;
 function renderAvalComp(){
+  // Bloqueio por senha (sigilo)
+  const locked = !avalCompUnlocked;
+  document.getElementById('avalcomp-lock').classList.toggle('hidden', !locked);
+  if(locked){
+    document.getElementById('avalcomp-list').classList.add('hidden');
+    document.getElementById('avalcomp-runner').classList.add('hidden');
+    const pin=document.getElementById('avalcomp-pin'); if(pin){ pin.value=''; setTimeout(()=>pin.focus(),50); }
+    document.getElementById('avalcomp-pin-err').textContent='';
+    return;
+  }
   // Show list view, hide runner
   document.getElementById('avalcomp-list').classList.remove('hidden');
   document.getElementById('avalcomp-runner').classList.add('hidden');
