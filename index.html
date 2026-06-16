@@ -260,6 +260,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="nav-item" data-page="caplista" onclick="navTo('caplista',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lista de Capacitações</div>
     <div class="nav-item" data-page="capprog" onclick="navTo('capprog',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Capacit. Programadas</div>
     <div class="nav-item" data-page="capreg" onclick="navTo('capreg',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>Registro de Capacitações</div>
+    <div class="nav-item" data-page="crachas" onclick="navTo('crachas',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2.5"/><line x1="13" y1="10" x2="19" y2="10"/><line x1="13" y1="14" x2="17" y2="14"/></svg>Crachás de Capacitação</div>
     </div>
   </div>
   <div class="nav-group">
@@ -595,11 +596,11 @@ textarea{resize:vertical;min-height:70px}
     <!-- CAPACITAÇÕES: LISTA (CATÁLOGO) -->
     <div class="page" id="page-caplista">
       <div style="margin-bottom:16px"><button class="btn primary" onclick="openNovoCapTipo()">+ Nova Capacitação</button></div>
-      <div class="alert info" style="margin-bottom:16px">📚 Cadastre os tipos de capacitação (ex: NR-11, NR-33, Brigada de Emergência) e a <strong>validade em meses</strong>. A validade define o vencimento da capacitação de cada operador.</div>
+      <div class="alert info" style="margin-bottom:16px">📚 Cadastre os tipos de capacitação (ex: NR-11, NR-33, Brigada de Emergência). O vencimento é definido no <strong>registro de cada colaborador</strong>, pois o que vence é o treinamento da pessoa.</div>
       <div class="table-wrap">
         <div class="table-header"><h3>Lista de Capacitações</h3></div>
         <table>
-          <thead><tr><th>Capacitação</th><th>Descrição</th><th>Validade</th><th style="width:140px">Ações</th></tr></thead>
+          <thead><tr><th>Capacitação</th><th>Descrição</th><th style="width:140px">Ações</th></tr></thead>
           <tbody id="caplista-tbody"></tbody>
         </table>
         <div id="caplista-empty" class="empty hidden"><p>Nenhuma capacitação cadastrada ainda.</p></div>
@@ -649,6 +650,32 @@ textarea{resize:vertical;min-height:70px}
           <tbody id="capreg-tbody"></tbody>
         </table>
         <div id="capreg-empty" class="empty hidden"><p>Nenhum registro de capacitação ainda.</p></div>
+      </div>
+    </div>
+
+    <!-- CRACHÁS DE CAPACITAÇÃO -->
+    <div class="page" id="page-crachas">
+      <div class="alert info" style="margin-bottom:16px">🪪 Gere o <strong>crachá de capacitações</strong> de cada colaborador (formato 8,5 × 5,4 cm). Os dados vêm do Registro de Capacitações. Selecione e clique em Imprimir — pode imprimir um ou vários de uma vez.</div>
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="padding:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="flex:1;min-width:200px"><label class="lbl">Filtrar por Área</label><select class="form-sel" id="cracha-area" onchange="renderCrachas()"><option value="">Todas as áreas</option></select></div>
+          <button class="btn primary" onclick="printCrachasSelecionados()">🖨️ Imprimir selecionados</button>
+          <button class="btn" onclick="printCrachasTodos()">🖨️ Imprimir todos</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Colaboradores com Capacitações</h3>
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="crachas-check-all" onclick="toggleAllCrachas(this)"> Selecionar todos</label>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:36px"></th>
+            <th>Colaborador</th><th>Área</th><th>Capacitações</th><th style="width:120px">Ações</th>
+          </tr></thead>
+          <tbody id="crachas-tbody"></tbody>
+        </table>
+        <div id="crachas-empty" class="empty hidden"><p>Nenhum colaborador com capacitações registradas. Cadastre no Registro de Capacitações.</p></div>
       </div>
     </div>
 
@@ -1300,7 +1327,7 @@ const pageTitles = {
   dashboard:'Dashboard', pesquisa:'Pesquisa', procedimentos:'Lista de Procedimentos',
   revisoes:'Capacitação por Procedimento', treinamentos:'Registros de Treinamentos',
   retreinamentos:'Retreinamentos', programados:'Treinamentos Programados',
-  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', indicados:'Indicados por Procedimento', capacitacao:'Avaliação Comportamental', avalregistros:'Registros de Avaliações', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações'
+  quiz:'Avaliação Online', questoes:'Banco de Questões', colaboradores:'Colaboradores', indicados:'Indicados por Procedimento', capacitacao:'Avaliação Comportamental', avalregistros:'Registros de Avaliações', caplista:'Lista de Capacitações', capprog:'Capacitações Programadas', capreg:'Registro de Capacitações', crachas:'Crachás de Capacitação'
 };
 
 function makeSearchable(selectId){
@@ -1388,6 +1415,7 @@ function navTo(page, el){
   if(page==='caplista') renderCapLista();
   if(page==='capprog') renderCapProg();
   if(page==='capreg') renderCapReg();
+  if(page==='crachas') renderCrachas();
   // Busca por digitação nas listas grandes (Procedimento e Colaborador)
   if(page==='pesquisa'){ makeSearchable('pq-operador'); makeSearchable('pq-proc'); }
   if(page==='revisoes') makeSearchable('rcp-proc');
@@ -3321,13 +3349,101 @@ function renderCapLista(){
   document.getElementById('caplista-tbody').innerHTML = capacTipos.map(c=>`<tr>
     <td><strong>${c.nome}</strong></td>
     <td>${c.descricao||'—'}</td>
-    <td><span class="badge neutral">${c.validadeMeses} meses</span></td>
     <td style="white-space:nowrap">
       <button class="btn sm" onclick="openEditCapTipo(${c.id})">Editar</button>
       <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCapTipo(${c.id})">Excluir</button>
     </td>
   </tr>`).join('');
 }
+// ═══════════════════════════════════════════════════════
+// CRACHÁS DE CAPACITAÇÃO
+// ═══════════════════════════════════════════════════════
+function crachaData(){
+  const map={};
+  capacRegistros.forEach(r=>{
+    if(!map[r.operador]) map[r.operador]={operador:r.operador, area:getColaboradorArea(r.operador)||'—', caps:{}};
+    const k=(r.capacitacao||'')+'|'+(r.funcao||'');
+    const cur=map[r.operador].caps[k];
+    if(!cur || (r.dataRealizada||'')>(cur.dataRealizada||'')) map[r.operador].caps[k]={capacitacao:r.capacitacao, funcao:r.funcao, vencimento:r.vencimento, dataRealizada:r.dataRealizada};
+  });
+  return Object.values(map).map(o=>({operador:o.operador, area:o.area, caps:Object.values(o.caps).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''))}));
+}
+function renderCrachas(){
+  const data=crachaData();
+  const arSel=document.getElementById('cracha-area');
+  if(arSel){ const cur=arSel.value; const ars=[...new Set(data.map(d=>d.area).filter(x=>x&&x!=='—'))].sort(); arSel.innerHTML='<option value="">Todas as áreas</option>'+ars.map(a=>`<option value="${a}">${a}</option>`).join(''); arSel.value=cur; }
+  const far=(arSel||{}).value||'';
+  const rows=data.filter(d=>!far||d.area===far).sort((a,b)=>a.operador.localeCompare(b.operador));
+  const empty=document.getElementById('crachas-empty');
+  const tbl=document.querySelector('#page-crachas table');
+  if(!rows.length){ empty.classList.remove('hidden'); tbl.style.display='none'; const ca=document.getElementById('crachas-check-all'); if(ca)ca.checked=false; return; }
+  empty.classList.add('hidden'); tbl.style.display='';
+  document.getElementById('crachas-tbody').innerHTML=rows.map(d=>`<tr>
+    <td><input type="checkbox" class="cracha-check" value="${encodeURIComponent(d.operador)}"></td>
+    <td><strong>${d.operador}</strong></td>
+    <td>${d.area}</td>
+    <td style="font-size:12px;color:var(--text2)">${d.caps.map(c=>c.capacitacao+(c.funcao&&c.funcao!=='Não se aplica'?' - '+c.funcao:'')).join(', ')||'—'}</td>
+    <td><button class="btn sm" onclick="printCrachaUm('${d.operador.replace(/'/g,"\\'")}')">🖨️ Imprimir</button></td>
+  </tr>`).join('');
+  const ca=document.getElementById('crachas-check-all'); if(ca)ca.checked=false;
+}
+function toggleAllCrachas(el){ document.querySelectorAll('.cracha-check').forEach(c=>c.checked=el.checked); }
+function getSelectedCrachas(){ return [...document.querySelectorAll('.cracha-check:checked')].map(c=>decodeURIComponent(c.value)); }
+function printCrachaUm(nome){ printCrachas([nome]); }
+function printCrachasSelecionados(){
+  const sel=getSelectedCrachas();
+  if(!sel.length){ alert('Selecione pelo menos um colaborador.'); return; }
+  printCrachas(sel);
+}
+function printCrachasTodos(){
+  const far=(document.getElementById('cracha-area')||{}).value||'';
+  const nomes=crachaData().filter(d=>!far||d.area===far).map(d=>d.operador);
+  if(!nomes.length){ alert('Nenhum colaborador com capacitações.'); return; }
+  printCrachas(nomes);
+}
+function _crachaSVG(){
+  return '<svg width="24" height="20" viewBox="0 0 24 20"><path d="M5 15 L8 4 L11 15 Z" fill="#00814B"/><path d="M10 15 L13 7 L16 15 Z" fill="#006667"/><path d="M14 15 L17 9 L20 15 Z" fill="#3aa76d"/><rect x="7" y="15" width="1.6" height="3" fill="#6b5840"/><rect x="12" y="15" width="1.6" height="3" fill="#6b5840"/><rect x="16" y="15" width="1.6" height="3" fill="#6b5840"/></svg>';
+}
+function printCrachas(nomes){
+  const data=crachaData();
+  const sel=data.filter(d=>nomes.includes(d.operador));
+  if(!sel.length){ alert('Nenhum dado para impressão.'); return; }
+  let css='<style>'+
+    '@page{size:auto;margin:8mm}'+
+    'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:6px;display:flex;flex-wrap:wrap;gap:8px;background:#fff}'+
+    '.cracha{width:8.5cm;height:5.4cm;box-sizing:border-box;border:1px solid #cfd8d3;border-radius:14px;position:relative;overflow:hidden;background:#fff;padding:12px 16px;page-break-inside:avoid;color:#1d3a2f}'+
+    '.cracha .bg{position:absolute;top:-45px;right:-45px;width:130px;height:130px;background:#e7f0ea;border-radius:50%}'+
+    '.cracha .bar{position:absolute;bottom:0;left:0;width:55%;height:9px;background:linear-gradient(90deg,#00814B,#006667)}'+
+    '.ct{position:relative;z-index:1}'+
+    '.cr-logo{font-size:17px;font-weight:800;letter-spacing:1px;color:#1d3a2f;display:flex;align-items:center;gap:6px}'+
+    '.cr-lbl{font-size:8px;letter-spacing:1.2px;color:#6b7d74;font-weight:700;margin-top:8px}'+
+    '.cr-nome{font-size:15px;font-weight:800;color:#143026;line-height:1.15;margin-bottom:4px}'+
+    '.cr-tit{display:inline-block;background:#1d3a2f;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:20px;margin:4px 0 5px}'+
+    '.cr-cap{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;padding:1.5px 0;border-bottom:1px solid #eef2f0}'+
+    '.cr-cap b{color:#143026}'+
+    '.cr-venc{color:#00814B;font-weight:700;white-space:nowrap}'+
+    '.cr-foot{position:absolute;bottom:7px;right:14px;font-size:8px;color:#8a9990;z-index:1}'+
+    '@media print{button{display:none}}</style>';
+  let cards='';
+  sel.sort((a,b)=>a.operador.localeCompare(b.operador)).forEach(d=>{
+    const caps=d.caps.slice(0,6);
+    let list=caps.map(c=>{
+      const nome=c.capacitacao+(c.funcao&&c.funcao!=='Não se aplica'?' - '+c.funcao:'');
+      return '<div class="cr-cap"><b>'+nome+'</b><span class="cr-venc">Venc. '+fmtDate(c.vencimento)+'</span></div>';
+    }).join('');
+    if(d.caps.length>6) list+='<div class="cr-cap" style="border:none;color:#8a9990">+ '+(d.caps.length-6)+' outras capacitações</div>';
+    cards+='<div class="cracha"><div class="bg"></div><div class="bar"></div>'+
+      '<div class="ct"><div class="cr-logo">'+_crachaSVG()+'TECNORED</div>'+
+      '<div class="cr-lbl">COLABORADOR:</div><div class="cr-nome">'+d.operador+'</div>'+
+      '<div class="cr-tit">🛡️ CAPACITAÇÕES OBRIGATÓRIAS</div>'+
+      list+'</div><div class="cr-foot">By GestorPRO</div></div>';
+  });
+  const win=window.open('','_blank');
+  win.document.write('<html><head><title>Crachás de Capacitação</title><meta charset="UTF-8">'+css+'</head><body>'+cards+'</body></html>');
+  win.document.close(); win.focus();
+  setTimeout(function(){ try{ win.print(); }catch(e){} }, 500);
+}
+
 function openNovoCapTipo(){
   editCapTipoId = null;
   document.getElementById('captipo-title').textContent='Nova Capacitação';
