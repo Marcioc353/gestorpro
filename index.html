@@ -517,10 +517,9 @@ textarea{resize:vertical;min-height:70px}
         <div class="alert info" style="margin-bottom:16px">📋 O <strong>Gestor</strong> avalia o comportamento do colaborador no período observado. Crie a avaliação e clique em <strong>Iniciar Avaliação</strong> para responder o questionário (Atende / Não Atende / Oportunidade de Melhoria).</div>
         <div class="table-wrap">
           <div class="table-header">
-            <h3>Avaliações Comportamentais</h3>
+            <h3>Avaliações Pendentes</h3>
             <select id="filter-avalcomp-op" onchange="renderAvalComp()"><option value="">Todos os colaboradores</option></select>
             <select id="filter-avalcomp-mes" onchange="renderAvalComp()"><option value="">Todos os meses</option></select>
-            <select id="filter-avalcomp-status" onchange="renderAvalComp()"><option value="">Todos os status</option><option value="Pendente">Pendentes</option><option value="Concluída">Concluídas</option></select>
             <button class="btn" onclick="printSelectedAvalComp()">🖨️ Imprimir selecionados</button>
             <button class="btn danger" onclick="deleteSelectedAvalComp()">Excluir selecionados</button>
           </div>
@@ -531,7 +530,7 @@ textarea{resize:vertical;min-height:70px}
             </tr></thead>
             <tbody id="avalcomp-tbody"></tbody>
           </table>
-          <div id="avalcomp-empty" class="empty hidden"><p>Nenhuma avaliação comportamental cadastrada ainda.</p></div>
+          <div id="avalcomp-empty" class="empty hidden"><p>Nenhuma avaliação pendente. As concluídas ficam em "Registros de Avaliações".</p></div>
         </div>
       </div>
       <!-- RUNNER VIEW (questionário) -->
@@ -2250,6 +2249,7 @@ function openNovoTrein(){
   populateProcsSelect('ft-proc');
   populateOperadoresSelect('ft-operador');
   document.getElementById('ft-data').value=new Date().toISOString().slice(0,10);
+  makeSearchable('ft-proc'); makeSearchable('ft-operador');
   openModal('trein');
 }
 function saveTrein(){
@@ -2266,6 +2266,7 @@ function openNovoRetreino(){
   populateProcsSelect('frt-proc');
   populateOperadoresSelect('frt-operador');
   document.getElementById('frt-data').value=new Date().toISOString().slice(0,10);
+  makeSearchable('frt-proc'); makeSearchable('frt-operador');
   openModal('retrein');
 }
 function saveRetreino(){
@@ -2287,6 +2288,7 @@ function openNovoProg(){
   populateOperadoresSelect('fprog-ops');
   document.getElementById('fprog-resp').value='';
   document.getElementById('fprog-data').value=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+  makeSearchable('fprog-proc'); makeSearchable('fprog-ops');
   openModal('prog');
 }
 function saveProg(){
@@ -2336,6 +2338,7 @@ function openEditRetreino(id){
   document.getElementById('fre-responsavel').value = r.responsavel;
   document.getElementById('fre-data-treino').value = r.data_treino||'';
   document.getElementById('fre-status').value = r.status;
+  makeSearchable('fre-proc'); makeSearchable('fre-operador');
   openModal('retrein-edit');
 }
 function saveRetreinEdit(){
@@ -2373,6 +2376,7 @@ function openEditProg(id){
   document.getElementById('fpe-freq').value = p.frequencia;
   document.getElementById('fpe-data').value = p.proxima_data;
   document.getElementById('fpe-obs').value = p.obs||'';
+  makeSearchable('fpe-proc'); makeSearchable('fpe-ops');
   openModal('prog-edit');
 }
 function saveProgEdit(){
@@ -2463,6 +2467,7 @@ function openAgendarAvaliacao(){
   populateOperadoresSelect('fag-operadores');
   document.getElementById('fag-data').value=new Date().toISOString().slice(0,10);
   document.getElementById('fag-obs').value='';
+  makeSearchable('fag-proc'); makeSearchable('fag-operadores');
   openModal('agendar');
 }
 
@@ -2700,11 +2705,11 @@ function renderAvalComp(){
   if(mfEl){ const cur=mfEl.value; const ms=[...new Set(avaliacoesComp.map(a=>a.mesAno).filter(Boolean))].sort().reverse(); mfEl.innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${fmtMesAno(m)}</option>`).join(''); mfEl.value=cur; }
   const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
   const fmes=(document.getElementById('filter-avalcomp-mes')||{}).value||'';
-  const fstatus=(document.getElementById('filter-avalcomp-status')||{}).value||'';
-  const filtered = avaliacoesComp.filter(a=>(!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes)&&(!fstatus||a.status===fstatus));
+  // Somente pendentes — as concluídas ficam em "Registros de Avaliações"
+  const filtered = avaliacoesComp.filter(a=>a.status!=='Concluída' && (!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes));
   const empty = document.getElementById('avalcomp-empty');
   const tbl = document.querySelector('#avalcomp-list table');
-  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; const ca=document.getElementById('avalcomp-check-all'); if(ca) ca.checked=false; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   document.getElementById('avalcomp-tbody').innerHTML = filtered.map(a=>{
     const res = avalCompResultado(a);
@@ -2735,6 +2740,7 @@ function openNovaAvalComp(){
   document.getElementById('fac-area').value='';
   document.getElementById('fac-mes').value=new Date().toISOString().slice(0,7);
   document.getElementById('fac-avaliador').value='';
+  makeSearchable('fac-colaborador');
   openModal('avalcomp-nova');
 }
 
@@ -2913,9 +2919,8 @@ function printResultadoAvalComp(id){
 function printAvalCompLista(){
   const fop=(document.getElementById('filter-avalcomp-op')||{}).value||'';
   const fmes=(document.getElementById('filter-avalcomp-mes')||{}).value||'';
-  const fstatus=(document.getElementById('filter-avalcomp-status')||{}).value||'';
-  const rows = avaliacoesComp.filter(a=>(!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes)&&(!fstatus||a.status===fstatus));
-  if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
+  const rows = avaliacoesComp.filter(a=>a.status!=='Concluída' && (!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes));
+  if(!rows.length){ alert('Não há avaliações pendentes para imprimir.'); return; }
   let html = _avalCompPrintHead('Avaliações Comportamentais');
   html += '<h1>🛡️ GestorPRO — Avaliações Comportamentais</h1>';
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
@@ -3370,6 +3375,7 @@ function openNovaCapProg(){
   document.getElementById('fcp-resp').value='';
   document.getElementById('fcp-freq').value='Anual';
   document.getElementById('fcp-ultima').value='';
+  makeSearchable('fcp-operador');
   openModal('capprog');
 }
 function openEditCapProg(id){
@@ -3382,6 +3388,7 @@ function openEditCapProg(id){
   document.getElementById('fcp-resp').value=p.responsavel||'';
   document.getElementById('fcp-freq').value=p.frequencia||'Anual';
   document.getElementById('fcp-ultima').value=p.ultima||'';
+  makeSearchable('fcp-operador');
   openModal('capprog');
 }
 function saveCapProg(){
