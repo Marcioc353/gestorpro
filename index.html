@@ -2911,6 +2911,7 @@ function _avalCompPrintHead(titulo){
     'td{padding:7px;border:1px solid #ddd}'+
     '.box{display:inline-block;width:14px;height:14px;border:1px solid #333;margin-right:5px;vertical-align:middle}'+
     '.sign{margin-top:30px;font-size:12px}.sign-line{margin-top:42px;border-top:1px solid #333;width:280px;padding-top:4px}'+
+    '.signs{display:flex;gap:50px;margin-top:55px;font-size:12px}.signs .col{flex:1;max-width:300px}.signs .line{border-top:1px solid #333;padding-top:4px;text-align:center}'+
     '@media print{button{display:none}}</style></head><body>';
 }
 
@@ -2930,8 +2931,8 @@ function printProgramadoAvalComp(id){
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:120px">Atende</th><th style="width:120px">Não Atende</th><th style="width:170px">Oport. de Melhoria</th></tr></thead><tbody>';
   AVAL_COMP_PERGUNTAS.forEach(p=>{ html += '<tr><td>'+p+'</td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td></tr>'; });
   html += '</tbody></table>';
-  html += '<h2>Observações</h2><div style="border:1px solid #ddd;border-radius:6px;height:90px"></div>';
-  html += '<div class="sign"><div class="sign-line">Assinatura do Avaliador</div></div>';
+  html += '<h2>Observações</h2><div style="border:1px solid #ddd;border-radius:6px;min-height:120px"></div>';
+  html += '<div class="signs"><div class="col"><div class="line">Assinatura do Avaliador</div></div><div class="col"><div class="line">Assinatura do Avaliado</div></div></div>';
   html += '</body></html>';
   _avalCompPrintWindow(html);
 }
@@ -2949,8 +2950,8 @@ function printResultadoAvalComp(id){
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
   (a.respostas||[]).forEach(r=>{ html += '<tr><td>'+r.pergunta+'</td><td>'+r.resposta+'</td></tr>'; });
   html += '</tbody></table>';
-  if(a.observacoes){ html += '<h2>Observações</h2><div style="font-size:12px;border:1px solid #ddd;border-radius:6px;padding:10px;white-space:pre-wrap">'+a.observacoes+'</div>'; }
-  html += '<div class="sign"><div class="sign-line">Assinatura do Avaliador</div></div>';
+  html += '<h2>Observações</h2><div style="font-size:12px;border:1px solid #ddd;border-radius:6px;padding:10px;min-height:120px;white-space:pre-wrap">'+(a.observacoes||'')+'</div>';
+  html += '<div class="signs"><div class="col"><div class="line">Assinatura do Avaliador</div></div><div class="col"><div class="line">Assinatura do Avaliado</div></div></div>';
   html += '</body></html>';
   _avalCompPrintWindow(html);
 }
