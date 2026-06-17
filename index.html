@@ -218,6 +218,12 @@ textarea{resize:vertical;min-height:70px}
       <span class="cover-chip">✅ Competências</span>
     </div>
     <button class="cover-btn" onclick="hideCover()">Entrar →</button>
+    <div style="margin-top:22px">
+      <button onclick="printRelatorioGerencial()" title="Imprimir Relatório Gerencial" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Relatório Gerencial
+      </button>
+    </div>
   </div>
 </div>
 
@@ -684,11 +690,12 @@ textarea{resize:vertical;min-height:70px}
           <h3>Cadastro de Colaboradores</h3>
           <input type="text" id="novo-colaborador" placeholder="Nome..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:160px">
           <input type="text" id="novo-colaborador-area" placeholder="Área..." style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:130px">
-          <input type="email" id="novo-colaborador-email" placeholder="E-mail (opcional)" style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:170px">
+          <input type="email" id="novo-colaborador-email" placeholder="E-mail (opcional)" oninput="autoEmpresa()" style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;background:var(--bg);outline:none;color:var(--text);min-width:170px">
+          <select id="novo-colaborador-empresa" class="form-sel" style="min-width:120px"><option value="Tecnored">Tecnored</option><option value="Adecco">Adecco</option></select>
           <button class="btn primary" onclick="addColaborador()">+ Adicionar</button>
         </div>
         <table>
-          <thead><tr><th>Nome</th><th>Área</th><th>E-mail</th><th style="width:120px">Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Área</th><th>Empresa</th><th>E-mail</th><th style="width:120px">Ações</th></tr></thead>
           <tbody id="colab-tbody"></tbody>
         </table>
         <div id="colab-empty" class="empty hidden"><p>Nenhum colaborador cadastrado ainda.</p></div>
@@ -1172,6 +1179,7 @@ textarea{resize:vertical;min-height:70px}
     <div class="modal-body">
       <div class="form-row"><div class="form-group"><label class="lbl">Nome *</label><input type="text" id="frc-nome"></div><div class="form-group"><label class="lbl">Área</label><input type="text" id="frc-area" placeholder="Ex: Forno, Utilidades..."></div></div>
       <div class="form-row full"><div class="form-group"><label class="lbl">E-mail</label><input type="email" id="frc-email" placeholder="E-mail (opcional)"></div></div>
+      <div class="form-row full"><div class="form-group"><label class="lbl">Empresa</label><select class="form-sel" id="frc-empresa"><option value="Tecnored">Tecnored</option><option value="Adecco">Adecco</option></select></div></div>
       <div id="frc-ficha" style="margin-top:8px"></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveRevisarColab()">Salvar</button></div>
@@ -1254,6 +1262,14 @@ if(loadState('dataVersion','') !== DATA_VERSION){
   saveState('capacProc', capacProc);
   saveState('dataVersion', DATA_VERSION);
 }
+// Empresa do colaborador (Tecnored x Adecco) — detecta pelo "ext" no e-mail
+function empresaFromEmail(email){
+  if(!email) return 'Tecnored';
+  const local = String(email).toLowerCase().split('@')[0];
+  return local.split(/[._\-]/).includes('ext') ? 'Adecco' : 'Tecnored';
+}
+// Revisa os colaboradores já cadastrados e preenche a empresa quando ausente
+(function(){ let ch=false; operadores.forEach(o=>{ if(!o.empresa){ o.empresa=empresaFromEmail(o.email); ch=true; } }); if(ch) saveState('operadores', operadores); })();
 let procPage = 1;
 const PAGE_SIZE = 20;
 
@@ -2525,29 +2541,40 @@ function renderColaboradores(){
   if(!operadores.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   const sorted = [...operadores].sort((a,b)=>a.nome.localeCompare(b.nome));
-  document.getElementById('colab-tbody').innerHTML = sorted.map(o=>`<tr>
+  document.getElementById('colab-tbody').innerHTML = sorted.map(o=>{
+    const emp = o.empresa || empresaFromEmail(o.email);
+    const empBadge = emp==='Adecco' ? '<span class="badge warn">Adecco</span>' : '<span class="badge ok">Tecnored</span>';
+    return `<tr>
     <td>${o.nome}</td>
     <td>${o.area||'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${empBadge}</td>
     <td>${o.email||'<span style="color:var(--text3)">—</span>'}</td>
     <td style="white-space:nowrap">
       <button class="btn sm" onclick="openRevisarColab('${o.nome.replace(/'/g,"\\'")}')">Revisar</button>
       <button class="btn sm" style="color:var(--red);border-color:var(--red)" onclick="deleteColaborador('${o.nome.replace(/'/g,"\\'")}')">Excluir</button>
     </td>
-  </tr>`).join('');
+  </tr>`;}).join('');
+}
+
+function autoEmpresa(){
+  const e=document.getElementById('novo-colaborador-email').value;
+  document.getElementById('novo-colaborador-empresa').value = empresaFromEmail(e);
 }
 
 function addColaborador(){
   const inp = document.getElementById('novo-colaborador');
   const inpArea = document.getElementById('novo-colaborador-area');
   const inpEmail = document.getElementById('novo-colaborador-email');
+  const inpEmp = document.getElementById('novo-colaborador-empresa');
   const nome = inp.value.trim();
   const area = inpArea.value.trim();
   const email = inpEmail.value.trim();
+  const empresa = inpEmp.value || empresaFromEmail(email);
   if(!nome){ alert('Digite o nome do colaborador.'); return; }
   if(operadores.some(o=>o.nome.toLowerCase()===nome.toLowerCase())){ alert('Este colaborador já está cadastrado.'); return; }
-  operadores.push({nome:nome, email:email, area:area});
+  operadores.push({nome:nome, email:email, area:area, empresa:empresa});
   persist();
-  inp.value=''; inpArea.value=''; inpEmail.value='';
+  inp.value=''; inpArea.value=''; inpEmail.value=''; inpEmp.value='Tecnored';
   renderColaboradores();
 }
 
@@ -2565,6 +2592,7 @@ function openRevisarColab(nome){
   document.getElementById('frc-nome').value = o.nome;
   document.getElementById('frc-area').value = o.area||'';
   document.getElementById('frc-email').value = o.email||'';
+  document.getElementById('frc-empresa').value = o.empresa || empresaFromEmail(o.email);
   // Ficha: treinamentos e capacitações do colaborador
   const treins = treinamentos.filter(t=>t.operador===nome);
   const caps = capacRegistros.filter(r=>r.operador===nome);
@@ -2615,7 +2643,7 @@ function saveRevisarColab(){
     capacRegistros.forEach(r=>{ if(r.operador===antigo) r.operador=novoNome; });
     if(typeof agendaAvaliacoes!=='undefined') agendaAvaliacoes.forEach(a=>{ if(a.operador===antigo) a.operador=novoNome; });
   }
-  o.nome=novoNome; o.area=area; o.email=email;
+  o.nome=novoNome; o.area=area; o.email=email; o.empresa=document.getElementById('frc-empresa').value;
   persist(); closeModal(); renderColaboradores();
 }
 
@@ -2627,6 +2655,11 @@ function getColaboradorEmail(nome){
 function getColaboradorArea(nome){
   const o = operadores.find(x=>x.nome===nome);
   return o ? (o.area||'') : '';
+}
+
+function getColaboradorEmpresa(nome){
+  const o = operadores.find(x=>x.nome===nome);
+  return o ? (o.empresa || empresaFromEmail(o.email)) : 'Tecnored';
 }
 
 function notifyColaborador(nome, assunto, corpo){
@@ -3350,7 +3383,7 @@ function crachaData(){
     const cur=map[r.operador].caps[k];
     if(!cur || (r.dataRealizada||'')>(cur.dataRealizada||'')) map[r.operador].caps[k]={capacitacao:r.capacitacao, funcao:r.funcao, vencimento:r.vencimento, dataRealizada:r.dataRealizada};
   });
-  return Object.values(map).map(o=>({operador:o.operador, area:o.area, caps:Object.values(o.caps).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''))}));
+  return Object.values(map).map(o=>({operador:o.operador, area:o.area, empresa:getColaboradorEmpresa(o.operador), caps:Object.values(o.caps).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''))}));
 }
 function openCrachaModal(){
   const data=crachaData().sort((a,b)=>a.operador.localeCompare(b.operador));
@@ -3379,35 +3412,114 @@ function printCrachas(nomes){
   let css='<style>'+
     '@page{size:auto;margin:8mm}'+
     'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:6px;display:flex;flex-wrap:wrap;gap:8px;background:#fff}'+
-    '.cracha{width:8.5cm;height:5.4cm;box-sizing:border-box;border:1px solid #cfd8d3;border-radius:14px;position:relative;overflow:hidden;background:#fff;padding:12px 16px;page-break-inside:avoid;color:#1d3a2f}'+
-    '.cracha .bg{position:absolute;top:-45px;right:-45px;width:130px;height:130px;background:#e7f0ea;border-radius:50%}'+
-    '.cracha .bar{position:absolute;bottom:0;left:0;width:55%;height:9px;background:linear-gradient(90deg,#00814B,#006667)}'+
+    '.cracha{width:8.5cm;height:5.4cm;box-sizing:border-box;border:1px solid #cfd8d3;border-radius:14px;position:relative;overflow:hidden;background:#fff;padding:10px 16px 12px;page-break-inside:avoid;color:#1d3a2f}'+
+    '.cracha .bar{position:absolute;bottom:0;left:0;width:100%;height:18px;background:linear-gradient(90deg,#0b3b2e,#006667)}'+
+    '.cracha .barlbl{position:absolute;bottom:3px;left:0;width:100%;text-align:center;font-size:8px;color:#cfe8db;letter-spacing:.5px;z-index:2}'+
     '.ct{position:relative;z-index:1}'+
-    '.cr-logo{font-size:17px;font-weight:800;letter-spacing:1px;color:#1d3a2f;display:flex;align-items:center;gap:6px}'+
-    '.cr-lbl{font-size:8px;letter-spacing:1.2px;color:#6b7d74;font-weight:700;margin-top:8px}'+
-    '.cr-nome{font-size:15px;font-weight:800;color:#143026;line-height:1.15;margin-bottom:4px}'+
-    '.cr-tit{display:inline-block;background:#1d3a2f;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:20px;margin:4px 0 5px}'+
-    '.cr-cap{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;padding:1.5px 0;border-bottom:1px solid #eef2f0}'+
+    '.cr-head{display:flex;align-items:center;gap:10px}'+
+    '.cr-brand{flex:0 0 auto}'+
+    '.cr-logo{font-size:16px;font-weight:800;letter-spacing:1px;color:#1d3a2f;display:flex;align-items:center;gap:5px}'+
+    '.cr-sub{font-size:6px;letter-spacing:.8px;color:#5a6b62;font-weight:700;margin-top:-1px}'+
+    '.cr-div{width:1.5px;height:38px;background:#cfd8d3;margin:0 2px}'+
+    '.cr-ad-name{font-size:15px;font-weight:800;color:#E2001A;line-height:1}'+
+    '.cr-ad-sub{font-size:6px;letter-spacing:.3px;color:#555;font-weight:700}'+
+    '.cr-ad-serv{font-size:7.5px;color:#333;margin-top:2px}.cr-ad-serv b{color:#006667}'+
+    '.cr-hr{height:2px;background:linear-gradient(90deg,#006667,#00814B 55%,rgba(0,129,75,0));border-radius:2px;margin:5px 0 4px}'+
+    '.cr-lbl{font-size:8px;letter-spacing:1.2px;color:#1d7a52;font-weight:700;margin-top:2px}'+
+    '.cr-nome{font-size:15px;font-weight:800;color:#143026;line-height:1.1;padding-bottom:3px;border-bottom:1px solid #d6e2db;margin-bottom:4px}'+
+    '.cr-tit{display:inline-block;background:#1d3a2f;color:#fff;font-size:8px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:20px;margin:2px 0 4px}'+
+    '.cr-cap{display:flex;justify-content:space-between;gap:8px;font-size:9px;padding:1.5px 0;border-bottom:1px solid #eef2f0}'+
     '.cr-cap b{color:#143026}'+
     '.cr-venc{color:#00814B;font-weight:700;white-space:nowrap}'+
-    '.cr-foot{position:absolute;bottom:7px;right:14px;font-size:8px;color:#8a9990;z-index:1}'+
     '@media print{button{display:none}}</style>';
+  const adeccoBlock = '<div class="cr-div"></div><div class="cr-adecco"><div class="cr-ad-name">Adecco</div><div class="cr-ad-sub">EMPRESA PRESTADORA DE SERVIÇOS</div><div class="cr-ad-serv">A serviço da <b>Tecnored</b></div></div>';
   let cards='';
   sel.sort((a,b)=>a.operador.localeCompare(b.operador)).forEach(d=>{
-    const caps=d.caps.slice(0,6);
+    const caps=d.caps.slice(0,5);
     let list=caps.map(c=>{
       const nome=c.capacitacao+(c.funcao&&c.funcao!=='Não se aplica'?' - '+c.funcao:'');
       return '<div class="cr-cap"><b>'+nome+'</b><span class="cr-venc">Venc. '+fmtDate(c.vencimento)+'</span></div>';
     }).join('');
-    if(d.caps.length>6) list+='<div class="cr-cap" style="border:none;color:#8a9990">+ '+(d.caps.length-6)+' outras capacitações</div>';
-    cards+='<div class="cracha"><div class="bg"></div><div class="bar"></div>'+
-      '<div class="ct"><div class="cr-logo">'+_crachaSVG()+'TECNORED</div>'+
+    if(d.caps.length>5) list+='<div class="cr-cap" style="border:none;color:#8a9990">+ '+(d.caps.length-5)+' outras capacitações</div>';
+    const head='<div class="cr-head"><div class="cr-brand"><div class="cr-logo">'+_crachaSVG()+'TECNORED</div><div class="cr-sub">DESENVOLVIMENTO TECNOLÓGICO S.A.</div></div>'+(d.empresa==='Adecco'?adeccoBlock:'')+'</div>';
+    cards+='<div class="cracha"><div class="bar"></div><div class="barlbl">By GestorPRO</div>'+
+      '<div class="ct">'+head+'<div class="cr-hr"></div>'+
       '<div class="cr-lbl">COLABORADOR:</div><div class="cr-nome">'+d.operador+'</div>'+
       '<div class="cr-tit">🛡️ CAPACITAÇÕES OBRIGATÓRIAS</div>'+
-      list+'</div><div class="cr-foot">By GestorPRO</div></div>';
+      list+'</div></div>';
   });
   const win=window.open('','_blank');
   win.document.write('<html><head><title>Crachás de Capacitação</title><meta charset="UTF-8">'+css+'</head><body>'+cards+'</body></html>');
+  win.document.close(); win.focus();
+  setTimeout(function(){ try{ win.print(); }catch(e){} }, 500);
+}
+
+function printRelatorioGerencial(){
+  const recs=[...capacProc.map(r=>({colab:r.colaborador,venc:r.vencimento})), ...capacRegistros.map(r=>({colab:r.operador,venc:r.vencimento}))];
+  const statusOf=(cols)=>{
+    const cb={}; recs.filter(r=>!cols||cols.includes(r.colab)).forEach(r=>{(cb[r.colab]=cb[r.colab]||[]).push(capVencStatus(r.venc));});
+    let vig=0,ale=0,ven=0;
+    Object.keys(cb).forEach(c=>{const s=cb[c]; if(s.includes('vencido'))ven++; else if(s.includes('vencendo'))ale++; else vig++;});
+    return {vig,ale,ven};
+  };
+  const g=statusOf(null);
+  let gPend=0; indicados.forEach(i=>{ if(!capacProc.some(r=>String(r.procId)===String(i.procId)&&r.colaborador===i.colaborador)) gPend++; }); gPend+=capacProgramadas.length;
+  const nTec=operadores.filter(o=>(o.empresa||empresaFromEmail(o.email))==='Tecnored').length;
+  const nAde=operadores.length-nTec;
+  const treinTotal=treinamentos.length;
+  const avalConcl=avaliacoesComp.filter(a=>a.status==='Concluída').length;
+  const areas=[...new Set([...procs.map(p=>p.setor), ...operadores.map(o=>o.area)].filter(Boolean))].sort();
+  const areaRows=areas.map(a=>{
+    const nProcs=procs.filter(p=>p.setor===a).length;
+    const cols=operadores.filter(o=>o.area===a).map(o=>o.nome);
+    const st=statusOf(cols);
+    let pend=0; indicados.forEach(i=>{ if(cols.includes(i.colaborador) && !capacProc.some(r=>String(r.procId)===String(i.procId)&&r.colaborador===i.colaborador)) pend++; });
+    pend+=capacProgramadas.filter(p=>cols.includes(p.operador)).length;
+    return {a,nProcs,nColab:cols.length,...st,pend};
+  });
+  const css='<style>'+
+    '@page{size:A4;margin:14mm}'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;margin:0}'+
+    'h1{font-size:20px;color:#0b3b2e;margin:0 0 2px;display:flex;align-items:center;gap:8px}'+
+    '.sub{font-size:12px;color:#6b7280;margin-bottom:16px;border-bottom:2px solid #006667;padding-bottom:10px}'+
+    'h2{font-size:13px;color:#006667;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px}'+
+    '.cards{display:flex;flex-wrap:wrap;gap:10px}'+
+    '.card{flex:1;min-width:120px;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}'+
+    '.card .v{font-size:26px;font-weight:800}.card .l{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}'+
+    '.green{color:#00814B}.amber{color:#b45309}.red{color:#b91c1c}.blue{color:#1d4ed8}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}'+
+    'th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left}'+
+    'th{background:#0b3b2e;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.4px}'+
+    'td.n{text-align:center}tr:nth-child(even) td{background:#f8faf9}'+
+    'tfoot td{font-weight:700;background:#eef4f1}'+
+    '.foot{margin-top:24px;font-size:10px;color:#9ca3af;text-align:center}'+
+    '@media print{button{display:none}}</style>';
+  let html='<h1>🛡️ GestorPRO — Relatório Gerencial</h1>';
+  html+='<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' &nbsp;|&nbsp; Operação Tecnored Pinda</div>';
+  html+='<h2>Resumo Geral</h2><div class="cards">'+
+    '<div class="card"><div class="v">'+procs.length+'</div><div class="l">Procedimentos</div></div>'+
+    '<div class="card"><div class="v">'+operadores.length+'</div><div class="l">Colaboradores</div></div>'+
+    '<div class="card"><div class="v green">'+g.vig+'</div><div class="l">Vigentes</div></div>'+
+    '<div class="card"><div class="v amber">'+g.ale+'</div><div class="l">Alerta (90d)</div></div>'+
+    '<div class="card"><div class="v red">'+g.ven+'</div><div class="l">Vencidos</div></div>'+
+    '<div class="card"><div class="v amber">'+gPend+'</div><div class="l">Pendentes</div></div>'+
+  '</div>';
+  html+='<h2>Quadro de Pessoal</h2><div class="cards">'+
+    '<div class="card"><div class="v green">'+nTec+'</div><div class="l">Tecnored</div></div>'+
+    '<div class="card"><div class="v" style="color:#E2001A">'+nAde+'</div><div class="l">Adecco</div></div>'+
+    '<div class="card"><div class="v blue">'+treinTotal+'</div><div class="l">Treinamentos registrados</div></div>'+
+    '<div class="card"><div class="v blue">'+avalConcl+'</div><div class="l">Aval. comportamentais</div></div>'+
+  '</div>';
+  html+='<h2>Indicadores por Área</h2>';
+  html+='<table><thead><tr><th>Área</th><th>Proced.</th><th>Colab.</th><th>Vigentes</th><th>Alerta</th><th>Vencidos</th><th>Pendentes</th></tr></thead><tbody>';
+  let tP=0,tC=0,tV=0,tA=0,tVe=0,tPe=0;
+  areaRows.forEach(r=>{ tP+=r.nProcs;tC+=r.nColab;tV+=r.vig;tA+=r.ale;tVe+=r.ven;tPe+=r.pend;
+    html+='<tr><td>'+r.a+'</td><td class="n">'+r.nProcs+'</td><td class="n">'+r.nColab+'</td><td class="n green">'+r.vig+'</td><td class="n amber">'+r.ale+'</td><td class="n red">'+r.ven+'</td><td class="n">'+r.pend+'</td></tr>';
+  });
+  html+='</tbody><tfoot><tr><td>TOTAL</td><td class="n">'+tP+'</td><td class="n">'+tC+'</td><td class="n">'+tV+'</td><td class="n">'+tA+'</td><td class="n">'+tVe+'</td><td class="n">'+tPe+'</td></tr></tfoot></table>';
+  html+='<div class="foot">Relatório gerado automaticamente pelo GestorPRO — Gestão Operacional</div>';
+  const win=window.open('','_blank');
+  win.document.write('<html><head><title>Relatório Gerencial — GestorPRO</title><meta charset="UTF-8">'+css+'</head><body>'+html+'</body></html>');
   win.document.close(); win.focus();
   setTimeout(function(){ try{ win.print(); }catch(e){} }, 500);
 }
