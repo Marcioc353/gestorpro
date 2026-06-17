@@ -1431,47 +1431,38 @@ function navTo(page, el){
 // DASHBOARD
 // ═══════════════════════════════════════════════════════
 function renderDashboard(){
-  // ===== CONTROLE DE CAPACITAÇÃO DOS COLABORADORES =====
-  // Junta os vínculos colaborador↔procedimento (capacProc) + capacitações NR (capacRegistros)
-  const recs = [
-    ...capacProc.map(r=>({colab:r.colaborador, venc:r.vencimento, ref:r.procNumero, tipo:'Procedimento'})),
-    ...capacRegistros.map(r=>({colab:r.operador, venc:r.vencimento, ref:r.capacitacao, tipo:'Capacitação'}))
-  ];
-  // Agrupa por colaborador para classificar pelo pior status
-  const byColab = {};
-  recs.forEach(r=>{ (byColab[r.colab] = byColab[r.colab] || []).push(capVencStatus(r.venc)); });
-  let cVig=0, cAle=0, cVen=0;
-  Object.keys(byColab).forEach(c=>{
-    const sts=byColab[c];
-    if(sts.includes('vencido')) cVen++;
-    else if(sts.includes('vencendo')) cAle++;
-    else cVig++;
-  });
+  // ===== Domínio PROCEDIMENTOS (capacitação por procedimento) =====
+  const byColabP = {};
+  capacProc.forEach(r=>{ (byColabP[r.colaborador]=byColabP[r.colaborador]||[]).push(capVencStatus(r.vencimento)); });
+  let pVig=0,pAle=0,pVen=0;
+  Object.keys(byColabP).forEach(c=>{ const s=byColabP[c]; if(s.includes('vencido')) pVen++; else if(s.includes('vencendo')) pAle++; else pVig++; });
+  let pPend=0;
+  indicados.forEach(i=>{ if(!capacProc.some(r=>String(r.procId)===String(i.procId)&&r.colaborador===i.colaborador)) pPend++; });
 
-  // Pendentes: indicados sem capacitação no procedimento (revisão atual) + capacitações NR programadas (não realizadas)
-  let cPend = 0;
-  const pendList = [];
-  indicados.forEach(i=>{
-    const has = capacProc.some(r=>String(r.procId)===String(i.procId) && r.colaborador===i.colaborador);
-    if(!has){ cPend++; const p=procs.find(x=>String(x.id)===String(i.procId)); pendList.push({colab:i.colaborador, ref:(p?p.numero:i.procId), tipo:'Procedimento'}); }
-  });
-  capacProgramadas.forEach(p=>{ cPend++; pendList.push({colab:p.operador, ref:p.capacitacao, tipo:'Capacitação NR'}); });
+  // ===== Domínio CAPACITAÇÕES (registros NR) =====
+  const byColabK = {};
+  capacRegistros.forEach(r=>{ (byColabK[r.operador]=byColabK[r.operador]||[]).push(capVencStatus(r.vencimento)); });
+  let kVig=0,kAle=0,kVen=0;
+  Object.keys(byColabK).forEach(c=>{ const s=byColabK[c]; if(s.includes('vencido')) kVen++; else if(s.includes('vencendo')) kAle++; else kVig++; });
+  const kPend = capacProgramadas.length;
 
   // Documentos por área (setor do procedimento)
   const porArea = {};
   procs.forEach(p=>{ const a=p.setor||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
-  const areasCount = Object.keys(porArea).length;
 
   document.getElementById('stats-proc').innerHTML = `
     <div class="stat-card info"><div class="stat-label">Total de Procedimentos</div><div class="stat-val">${procs.length}</div><div class="stat-sub">Cadastrados no sistema</div></div>
-    <div class="stat-card info"><div class="stat-label">Documentos por Área</div><div class="stat-val">${areasCount}</div><div class="stat-sub">Áreas com procedimentos</div></div>
+    <div class="stat-card warn"><div class="stat-label">Capacitações Pendentes</div><div class="stat-val">${pPend}</div><div class="stat-sub">Indicados a capacitar</div></div>
+    <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${pVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
+    <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${pAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
+    <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${pVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
   `;
   document.getElementById('stats-cap').innerHTML = `
     <div class="stat-card info"><div class="stat-label">Total de Capacitações</div><div class="stat-val">${capacRegistros.length}</div><div class="stat-sub">Registros realizados</div></div>
-    <div class="stat-card warn"><div class="stat-label">Treinamentos Pendentes</div><div class="stat-val">${cPend}</div><div class="stat-sub">Treinamentos/capacit. a realizar</div></div>
-    <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${cVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
-    <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${cAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
-    <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${cVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
+    <div class="stat-card warn"><div class="stat-label">Treinamentos Pendentes</div><div class="stat-val">${kPend}</div><div class="stat-sub">Capacitações programadas</div></div>
+    <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${kVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
+    <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${kAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
+    <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${kVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
   `;
 
   // Documentos por área (barras)
