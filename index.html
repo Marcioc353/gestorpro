@@ -299,26 +299,28 @@ textarea{resize:vertical;min-height:70px}
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div class="stat-grid" id="stats-grid"></div>
-      <div style="height:4px"></div>
-      <div class="table-wrap" style="margin-bottom:16px">
+      <h3 style="margin:2px 0 10px;font-size:15px;color:var(--text);border-left:4px solid var(--blue);padding-left:10px">📋 Procedimentos</h3>
+      <div class="stat-grid" id="stats-proc"></div>
+      <div class="table-wrap" style="margin:16px 0">
         <div class="table-header"><h3>📁 Documentos por Área</h3></div>
         <div id="dash-por-area" style="padding:16px"></div>
       </div>
+
+      <h3 style="margin:22px 0 10px;font-size:15px;color:var(--text);border-left:4px solid var(--green);padding-left:10px">🎓 Capacitações</h3>
+      <div class="stat-grid" id="stats-cap"></div>
+      <div class="table-wrap" style="margin:16px 0">
+        <div class="table-header"><h3>👥 Colaborador por Capacitação</h3></div>
+        <div id="dash-cap-area" style="padding:16px"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="table-wrap">
-          <div class="table-header"><h3>🔴 Colaboradores com capacitação vencida</h3></div>
+          <div class="table-header"><h3>🔴 Colaborador com Treinamento Vencido</h3></div>
           <div id="dash-vencidos"></div>
         </div>
         <div class="table-wrap">
           <div class="table-header"><h3>🟡 Vencem em 90 dias</h3></div>
           <div id="dash-proximos"></div>
         </div>
-      </div>
-      <div style="height:16px"></div>
-      <div class="table-wrap">
-        <div class="table-header"><h3>⏳ Treinamentos/Capacitações Pendentes</h3></div>
-        <div id="dash-pendentes"></div>
       </div>
     </div>
 
@@ -332,6 +334,7 @@ textarea{resize:vertical;min-height:70px}
           <div class="form-group" style="flex:1;min-width:200px"><label class="lbl">Procedimento</label><select class="form-sel" id="pq-proc" onchange="renderPesquisa()"></select></div>
           <div class="form-group" style="flex:1;min-width:180px"><label class="lbl">Capacitação</label><select class="form-sel" id="pq-cap" onchange="renderPesquisa()"></select></div>
           <button class="btn" onclick="limparPesquisa()">Limpar</button>
+          <button class="btn primary" onclick="printPesquisa()">🖨️ Imprimir</button>
         </div>
       </div>
       <div id="pq-resultado"></div>
@@ -374,7 +377,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="table-wrap" style="margin-bottom:16px">
         <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:end">
           <div class="form-group" style="flex:2;min-width:240px"><label class="lbl">Procedimento *</label><select class="form-sel" id="rcp-proc" onchange="renderCapProcList()"></select></div>
-          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Status</label><select class="form-sel" id="rcp-fstatus" onchange="renderCapProcList()"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="capacitado">Capacitados</option></select></div>
+          <div class="form-group" style="flex:1;min-width:150px"><label class="lbl">Status</label><select class="form-sel" id="rcp-fstatus" onchange="renderCapProcList()"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="capacitado">Capacitados</option><option value="vencido">Vencidos</option></select></div>
         </div>
       </div>
       <div class="table-wrap">
@@ -399,6 +402,7 @@ textarea{resize:vertical;min-height:70px}
           <h3>Registros de Treinamentos</h3>
           <select id="search-trein" onchange="renderTreinamentos()"><option value="">Todos os operadores</option></select>
           <select id="filter-trein-proc" onchange="renderTreinamentos()"><option value="">Todos os procedimentos</option></select>
+          <select id="filter-trein-res" onchange="renderTreinamentos()"><option value="">Todos os resultados</option></select>
           <button class="btn" onclick="printSelectedTrein()">🖨️ Imprimir selecionados</button>
           <button class="btn danger" onclick="deleteSelectedTrein()">Excluir selecionados</button>
         </div>
@@ -1458,9 +1462,13 @@ function renderDashboard(){
   procs.forEach(p=>{ const a=p.setor||'Sem área'; porArea[a]=(porArea[a]||0)+1; });
   const areasCount = Object.keys(porArea).length;
 
-  document.getElementById('stats-grid').innerHTML = `
+  document.getElementById('stats-proc').innerHTML = `
     <div class="stat-card info"><div class="stat-label">Total de Procedimentos</div><div class="stat-val">${procs.length}</div><div class="stat-sub">Cadastrados no sistema</div></div>
-    <div class="stat-card warn"><div class="stat-label">Capacitações Pendentes</div><div class="stat-val">${cPend}</div><div class="stat-sub">Treinamentos/capacit. a realizar</div></div>
+    <div class="stat-card info"><div class="stat-label">Documentos por Área</div><div class="stat-val">${areasCount}</div><div class="stat-sub">Áreas com procedimentos</div></div>
+  `;
+  document.getElementById('stats-cap').innerHTML = `
+    <div class="stat-card info"><div class="stat-label">Total de Capacitações</div><div class="stat-val">${capacRegistros.length}</div><div class="stat-sub">Registros realizados</div></div>
+    <div class="stat-card warn"><div class="stat-label">Treinamentos Pendentes</div><div class="stat-val">${cPend}</div><div class="stat-sub">Treinamentos/capacit. a realizar</div></div>
     <div class="stat-card ok"><div class="stat-label">Vigentes</div><div class="stat-val">${cVig}</div><div class="stat-sub">Colaboradores em dia</div></div>
     <div class="stat-card warn"><div class="stat-label">Alerta (90 dias)</div><div class="stat-val">${cAle}</div><div class="stat-sub">Colaboradores a vencer</div></div>
     <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-val">${cVen}</div><div class="stat-sub">Colaboradores fora do prazo</div></div>
@@ -1508,16 +1516,20 @@ function renderDashboard(){
       </div></div>`).join('')+'</div>';
   }
 
-  // Lista de pendentes
-  const dp = document.getElementById('dash-pendentes');
-  if(dp){
-    if(!pendList.length){ dp.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">✅ Nenhum treinamento/capacitação pendente!</p>'; }
-    else{
-      const ord = pendList.slice().sort((a,b)=>a.colab.localeCompare(b.colab));
-      dp.innerHTML='<table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Referência</th></tr></thead><tbody>'+
-        ord.slice(0,30).map(r=>`<tr><td>${r.colab}</td><td>${r.tipo}</td><td>${r.ref}</td></tr>`).join('')+
-        '</tbody></table>'+(ord.length>30?`<p style="padding:10px 16px;color:var(--text3);font-size:12px">Mostrando 30 de ${ord.length} pendências.</p>`:'');
-    }
+  // Colaborador por Capacitação (nº de colaboradores distintos por tipo de capacitação)
+  const dca = document.getElementById('dash-cap-area');
+  if(dca){
+    const porCap = {};
+    capacRegistros.forEach(r=>{ const k=r.capacitacao||'—'; (porCap[k]=porCap[k]||new Set()).add(r.operador); });
+    const capArr = Object.keys(porCap).map(k=>({label:k, value:porCap[k].size})).sort((a,b)=>b.value-a.value);
+    const maxC = Math.max(1, ...capArr.map(d=>d.value));
+    dca.innerHTML = capArr.map(d=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:130px;font-size:12px;text-align:right;color:var(--text2);flex-shrink:0">${d.label}</div>
+      <div style="flex:1;background:var(--bg);border-radius:6px;height:24px;position:relative">
+        <div style="width:${Math.round(d.value/maxC*100)}%;background:var(--green);height:100%;border-radius:6px;min-width:24px"></div>
+        <span style="position:absolute;left:8px;top:0;line-height:24px;font-size:12px;font-weight:600;color:#fff">${d.value}</span>
+      </div>
+    </div>`).join('') || '<p style="color:var(--text3);font-size:13px">Nenhuma capacitação registrada.</p>';
   }
 }
 
@@ -1696,6 +1708,7 @@ function renderCapProcList(){
   let linhas=nomes.map(n=>{ const s=capProcStatusOf(pid,n); return {nome:n, ...s}; });
   if(fstatus==='pendente') linhas=linhas.filter(l=>l.status==='pendente');
   if(fstatus==='capacitado') linhas=linhas.filter(l=>l.status!=='pendente');
+  if(fstatus==='vencido') linhas=linhas.filter(l=>l.status==='vencido');
   if(!linhas.length){ empty.classList.remove('hidden'); empty.querySelector('p').textContent = capProcRows(pid).length? 'Nenhum colaborador para este filtro.' : 'Nenhum colaborador indicado neste procedimento. Cadastre os indicados em "Indicados por Procedimento".'; tbl.style.display='none'; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   const statusBadgeCP = s => s==='pendente' ? '<span class="badge warn">⏳ Pendente</span>' : capVencBadgeFromStatus(s);
@@ -1785,9 +1798,19 @@ function renderTreinamentos(){
     sf.innerHTML = '<option value="">Todos os procedimentos</option>' + procsInLog.map(p=>`<option value="${p}">${p}</option>`).join('');
     sf.value = cur;
   }
+  // Populate resultado filter
+  const rf = document.getElementById('filter-trein-res');
+  if(rf){
+    const cur = rf.value;
+    const ress = [...new Set(treinamentos.map(t=>t.resultado).filter(Boolean))].sort();
+    rf.innerHTML = '<option value="">Todos os resultados</option>' + ress.map(r=>`<option value="${r}">${r}</option>`).join('');
+    rf.value = cur;
+  }
+  const fres = (document.getElementById('filter-trein-res')||{}).value||'';
   const filtered = treinamentos.filter(t=>{
     if(fop && t.operador!==fop) return false;
     if(fproc && t.proc!==fproc) return false;
+    if(fres && t.resultado!==fres) return false;
     return true;
   });
   const empty = document.getElementById('trein-empty');
@@ -3385,12 +3408,46 @@ function cardMiniColor(titulo, valor, cor){
   return '<div class="stat-card"><div class="stat-label">'+titulo+'</div><div class="stat-val" style="color:'+cor+'">'+valor+'</div></div>';
 }
 
+function clearSearchable(id){
+  const sel=document.getElementById(id);
+  if(sel) sel.value='';
+  const inp=document.querySelector('input[list="'+id+'-dl"]');
+  if(inp){ inp.value=''; const wrap=inp.parentNode; const x=wrap&&wrap.querySelector('span'); if(x) x.style.display='none'; }
+}
+
 function limparPesquisa(){
-  document.getElementById('pq-operador').value='';
+  clearSearchable('pq-operador');
   document.getElementById('pq-area').value='';
-  document.getElementById('pq-proc').value='';
+  clearSearchable('pq-proc');
   document.getElementById('pq-cap').value='';
   renderPesquisa();
+}
+
+function printPesquisa(){
+  const content=document.getElementById('pq-resultado').innerHTML;
+  if(!content || content.indexOf('Selecione')>-1){ alert('Faça uma pesquisa antes de imprimir.'); return; }
+  const fop=(document.getElementById('pq-operador')||{}).value||'Todos';
+  const far=(document.getElementById('pq-area')||{}).value||'Todas';
+  const fpr=(document.getElementById('pq-proc')||{}).value||'Todos';
+  const fcap=(document.getElementById('pq-cap')||{}).value||'Todas';
+  const css='<style>'+
+    ':root{--blue:#1d4ed8;--green:#00814B;--red:#b91c1c;--text:#1a2332;--text2:#555;--text3:#9ca3af;--bg:#eef2f6;--border:#e5e7eb;--surface:#fff;--radius:8px;--green-bg:#eafaf0;--green-border:#bfe6cf;--red-bg:#fdeaea;--red-border:#f3c0c0;--blue-bg:#e8f0fe;--warn:#b45309}'+
+    '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;color:#1a2332;margin:0}'+
+    '.stat-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}'+
+    '.stat-card{flex:1;min-width:110px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center}'+
+    '.stat-label{font-size:10px;color:#6b7280;text-transform:uppercase}.stat-val{font-size:22px;font-weight:800}.stat-sub{font-size:10px;color:#9ca3af}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0 14px}th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left}th{background:#0b3b2e;color:#fff}'+
+    '.table-wrap{margin-bottom:14px}.table-header{font-weight:700;font-size:13px;margin:10px 0 4px}.table-header h3{margin:0;font-size:13px}'+
+    '.badge{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid #d1d5db;background:#f3f4f6}'+
+    '.timeline{padding:0}.tl-item{margin-bottom:6px}.tl-title{font-weight:700;font-size:11px}.tl-sub{color:#6b7280;font-size:10px}.tl-dot{display:none}'+
+    '.empty{display:none}'+
+    '@media print{button{display:none}}</style>';
+  const filtros='<div style="font-size:12px;background:#f4f6f9;padding:10px;border-radius:6px;margin-bottom:14px">'+
+    '<strong>Colaborador:</strong> '+fop+' &nbsp;|&nbsp; <strong>Área:</strong> '+far+' &nbsp;|&nbsp; <strong>Procedimento:</strong> '+fpr+' &nbsp;|&nbsp; <strong>Capacitação:</strong> '+fcap+
+    '<br><span style="color:#6b7280">Emitido em '+new Date().toLocaleDateString('pt-BR')+'</span></div>';
+  const win=window.open('','_blank');
+  win.document.write('<html><head><title>Pesquisa — GestorPRO</title><meta charset="UTF-8">'+css+'</head><body>'+_printBrandHead('Pesquisa / Panorama Operacional')+filtros+content+'</body></html>');
+  win.document.close(); win.focus(); setTimeout(function(){try{win.print();}catch(e){}},500);
 }
 
 // ═══════════════════════════════════════════════════════
