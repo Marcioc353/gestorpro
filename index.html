@@ -621,6 +621,7 @@ textarea{resize:vertical;min-height:70px}
           <h3>Capacitações Programadas</h3>
           <select id="filter-capprog-op" onchange="renderCapProg()"><option value="">Todos os operadores</option></select>
           <select id="filter-capprog-cap" onchange="renderCapProg()"><option value="">Todas as capacitações</option></select>
+          <select id="filter-capprog-status" onchange="renderCapProg()"><option value="">Todos os status</option><option value="valido">Válidos</option><option value="vencido">Vencidos</option><option value="vencendo">Vencendo (90d)</option></select>
           <button class="btn" onclick="printSelectedCapProg()">🖨️ Imprimir selecionados</button>
           <button class="btn danger" onclick="deleteSelectedCapProg()">Excluir selecionados</button>
         </div>
@@ -643,7 +644,6 @@ textarea{resize:vertical;min-height:70px}
           <h3>Registro de Capacitações</h3>
           <select id="filter-capreg-op" onchange="renderCapReg()"><option value="">Todos os operadores</option></select>
           <select id="filter-capreg-cap" onchange="renderCapReg()"><option value="">Todas as capacitações</option></select>
-          <select id="filter-capreg-status" onchange="renderCapReg()"><option value="">Todos os status</option><option value="vencido">Vencidos</option><option value="vencendo">Vencendo (90d)</option><option value="valido">Válidos</option></select>
           <button class="btn" onclick="printSelectedCapReg()">🖨️ Imprimir selecionados</button>
           <button class="btn" onclick="openCrachaModal()">🪪 Imprimir Crachás</button>
           <button class="btn danger" onclick="deleteSelectedCapReg()">Excluir selecionados</button>
@@ -651,7 +651,7 @@ textarea{resize:vertical;min-height:70px}
         <table>
           <thead><tr>
             <th style="width:36px"><input type="checkbox" id="capreg-check-all" onclick="toggleAllCapReg(this)"></th>
-            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Status</th><th>Responsável</th>
+            <th>Operador</th><th>Capacitação</th><th>Função</th><th>Data Realizada</th><th>Vencimento</th><th>Responsável</th>
           </tr></thead>
           <tbody id="capreg-tbody"></tbody>
         </table>
@@ -1123,7 +1123,7 @@ textarea{resize:vertical;min-height:70px}
   <div class="modal hidden" id="modal-verprova">
     <div class="modal-head"><h3>Visualização da Prova Online</h3><button class="close-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body" id="verprova-body"></div>
-    <div class="modal-foot"><button class="btn primary" onclick="closeModal()">Fechar</button></div>
+    <div class="modal-foot"><button class="btn" onclick="printProva(verProvaId)">🖨️ Imprimir Resultado</button><button class="btn primary" onclick="closeModal()">Fechar</button></div>
   </div>
 
   <!-- Nova/Editar Tipo de Capacitação -->
@@ -1860,7 +1860,7 @@ function printSelectedTrein(){
     '.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}'+
     '</style></head><body>';
-  html += '<h1>🛡️ GestorPRO — Registros de Treinamento</h1>';
+  html += _printBrandHead('Registros de Treinamento');
   html += '<div class="sub">'+title+' &nbsp;|&nbsp; Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' registro(s)</div>';
   html += '<table><thead><tr><th>Data</th><th>Operador</th><th>Procedimento</th><th>Revisão</th><th>Setor</th><th>Tipo</th><th>Resultado</th><th>Responsável</th></tr></thead><tbody>';
   rows.forEach(t=>{
@@ -2139,7 +2139,7 @@ function showQuizResult(){
   const motivoProva = quizState.motivo || 'Avaliação Online';
   // Store quiz detail for later review
   const quizDetail = qs.map((q,i)=>({pergunta:q.pergunta, opcoes:q.opcoes, correta:q.correta, resposta:answers[i]}));
-  treinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, revisao:proc?.revisao||'', setor:proc?.setor||'', tipo:'Avaliação Online', motivo:motivoProva, resultado: pass?'Aprovado':'Reprovado', instrutor:'Sistema GestorPRO', obs:`Quiz: ${pct}% (${correct}/${qs.length}) — Motivo: ${motivoProva}`, quizDetail:quizDetail, quizPct:pct});
+  treinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), hora:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), operador, proc:proc?.numero||procId, revisao:proc?.revisao||'', setor:proc?.setor||'', tipo:'Avaliação Online', motivo:motivoProva, resultado: pass?'Aprovado':'Reprovado', instrutor:'Sistema GestorPRO', obs:`Quiz: ${pct}% (${correct}/${qs.length}) — Motivo: ${motivoProva}`, quizDetail:quizDetail, quizPct:pct});
   if(!pass){
     retreinamentos.push({id:genId(), data:new Date().toISOString().slice(0,10), operador, proc:proc?.numero||procId, motivo:`Reprovado na avaliação online (${pct}% — abaixo de 70%)`, responsavel:'A definir', status:'Pendente', data_treino:''});
   }
@@ -2841,7 +2841,7 @@ function printSelectedAvalComp(){
   if(ids.length){
     const rows = avaliacoesComp.filter(a=>ids.includes(a.id));
     let html = _avalCompPrintHead('Avaliações Comportamentais');
-    html += '<h1>🛡️ GestorPRO — Avaliações Comportamentais</h1>';
+    html += _printBrandHead('Avaliações Comportamentais');
     html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
     html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th></tr></thead><tbody>';
     rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+(a.status==='Concluída'?avalCompResultado(a):'Pendente')+'</td></tr>'; });
@@ -2966,12 +2966,21 @@ function _avalCompPrintWindow(html){
   setTimeout(function(){ try{ win.print(); }catch(e){} }, 400);
 }
 
+// Cabeçalho padrão de impressão: TECNORED + GestorPRO + título
+function _printBrandHead(titulo){
+  return '<div style="border-bottom:3px solid #006667;padding-bottom:10px;margin-bottom:16px">'+
+    '<div style="font-size:22px;font-weight:800;letter-spacing:2px;color:#0b3b2e;line-height:1">TECNORED</div>'+
+    '<div style="font-size:11px;color:#6b7280;margin-top:3px">GestorPRO — Gestão Operacional</div>'+
+    (titulo?'<div style="font-size:16px;font-weight:700;color:#143026;margin-top:10px">'+titulo+'</div>':'')+
+  '</div>';
+}
+
 // Print blank form (Programado) for one assessment
 function printProgramadoAvalComp(id){
   const a = avaliacoesComp.find(x=>x.id===id);
   if(!a) return;
   let html = _avalCompPrintHead('Avaliação Comportamental — Formulário');
-  html += '<h1>🛡️ GestorPRO — Avaliação Comportamental</h1>';
+  html += _printBrandHead('Avaliação Comportamental');
   html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'</div>';
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:120px">Atende</th><th style="width:120px">Não Atende</th><th style="width:170px">Oport. de Melhoria</th></tr></thead><tbody>';
   AVAL_COMP_PERGUNTAS.forEach(p=>{ html += '<tr><td>'+p+'</td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td><td style="text-align:center"><span class="box"></span></td></tr>'; });
@@ -2989,7 +2998,7 @@ function printResultadoAvalComp(id){
   const res = avalCompResultado(a);
   const sc = avalCompScore(a);
   let html = _avalCompPrintHead('Avaliação Comportamental — Resultado');
-  html += '<h1>🛡️ GestorPRO — Avaliação Comportamental (Resultado)</h1>';
+  html += _printBrandHead('Avaliação Comportamental (Resultado)');
   html += '<div class="meta"><strong>Colaborador:</strong> '+a.colaborador+' &nbsp;|&nbsp; <strong>Área:</strong> '+(a.area||'—')+'<br><strong>Mês/Ano observado:</strong> '+fmtMesAno(a.mesAno)+' &nbsp;|&nbsp; <strong>Avaliador:</strong> '+(a.avaliador||'—')+'<br><strong>Data da avaliação:</strong> '+fmtDate(a.data_avaliacao)+'</div>';
   html += '<div class="meta"><strong>Pontuação:</strong> '+sc.pct+'% &nbsp;|&nbsp; <strong>Resultado final:</strong> '+res+'<br><strong>Atende:</strong> '+sc.atende+' &nbsp;|&nbsp; <strong>Oportunidade de Melhoria:</strong> '+sc.opp+' &nbsp;|&nbsp; <strong>Não Atende:</strong> '+sc.nao+'</div>';
   html += '<table><thead><tr><th>Item Avaliado</th><th style="width:200px">Resultado</th></tr></thead><tbody>';
@@ -3008,7 +3017,7 @@ function printAvalCompLista(){
   const rows = avaliacoesComp.filter(a=>a.status!=='Concluída' && (!fop||a.colaborador===fop)&&(!fmes||a.mesAno===fmes));
   if(!rows.length){ alert('Não há avaliações pendentes para imprimir.'); return; }
   let html = _avalCompPrintHead('Avaliações Comportamentais');
-  html += '<h1>🛡️ GestorPRO — Avaliações Comportamentais</h1>';
+  html += _printBrandHead('Avaliações Comportamentais');
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
   html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Resultado</th></tr></thead><tbody>';
   rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+(a.status==='Concluída'?avalCompResultado(a):'Pendente')+'</td></tr>'; });
@@ -3076,7 +3085,7 @@ function printSelectedAvalReg(){
   const rows = avaliacoesComp.filter(a=>a.status==='Concluída' && (ids.length? ids.includes(a.id):true));
   if(!rows.length){ alert('Não há avaliações para imprimir.'); return; }
   let html = _avalCompPrintHead('Registros de Avaliações');
-  html += '<h1>🛡️ GestorPRO — Registros de Avaliações</h1>';
+  html += _printBrandHead('Registros de Avaliações');
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+rows.length+' avaliação(ões)</div>';
   html += '<table><thead><tr><th>Colaborador</th><th>Área</th><th>Mês/Ano</th><th>Avaliador</th><th>Data</th><th>Resultado</th></tr></thead><tbody>';
   rows.forEach(a=>{ html += '<tr><td>'+a.colaborador+'</td><td>'+(a.area||'—')+'</td><td>'+fmtMesAno(a.mesAno)+'</td><td>'+(a.avaliador||'—')+'</td><td>'+fmtDate(a.data_avaliacao)+'</td><td>'+avalCompResultado(a)+'</td></tr>'; });
@@ -3088,9 +3097,11 @@ function printSelectedAvalReg(){
 // ═══════════════════════════════════════════════════════
 // VISUALIZAR PROVA
 // ═══════════════════════════════════════════════════════
+let verProvaId = null;
 function verProva(treinId){
   const t = treinamentos.find(x=>x.id===treinId);
   if(!t || !t.quizDetail) return;
+  verProvaId = treinId;
   const letras = ['A','B','C','D'];
   let acertos = t.quizDetail.filter(q=>q.resposta===q.correta).length;
   let html = `<div class="alert info" style="margin-bottom:16px"><strong>${t.operador}</strong> — ${t.proc} (${t.revisao||'—'})<br>Data: ${fmtDate(t.data)} | Motivo: ${t.motivo||'—'} | Resultado: <strong>${t.resultado}</strong> (${t.quizPct!=null?t.quizPct+'%':''} — ${acertos}/${t.quizDetail.length})</div>`;
@@ -3113,6 +3124,57 @@ function verProva(treinId){
   openModal('verprova');
 }
 
+function printProva(treinId){
+  const t = treinamentos.find(x=>x.id===treinId);
+  if(!t || !t.quizDetail){ alert('Prova não disponível para impressão.'); return; }
+  const letras=['A','B','C','D'];
+  const acertos = t.quizDetail.filter(q=>q.resposta===q.correta).length;
+  const empresa = getColaboradorEmpresa(t.operador);
+  const dataHora = fmtDate(t.data) + (t.hora ? ' às '+t.hora : '');
+  const css='<style>'+
+    '@page{size:A4;margin:14mm}'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#1a2332;margin:0}'+
+    '.meta{font-size:12px;background:#f4f6f9;padding:10px 12px;border-radius:6px;margin-bottom:14px;line-height:1.5}'+
+    '.q{border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px;page-break-inside:avoid}'+
+    '.q .tit{font-size:13px;font-weight:700;margin-bottom:7px}'+
+    '.opt{font-size:12px;padding:4px 8px;border-radius:5px;margin-bottom:3px;border:1px solid transparent}'+
+    '.ok{background:#eafaf0;color:#0b7a43;border-color:#bfe6cf}'+
+    '.wrong{background:#fdeaea;color:#b91c1c;border-color:#f3c0c0}'+
+    '.tag{font-weight:700}'+
+    '.res{font-size:13px;font-weight:700}'+
+    '.sig{margin-top:30px;border-top:1px solid #cfd8d3;padding-top:14px;font-size:12px}'+
+    '.sig .row{margin-bottom:10px}'+
+    '.box{display:inline-block;width:14px;height:14px;border:1.5px solid #333;margin:0 5px 0 14px;text-align:center;line-height:13px;font-weight:700;vertical-align:middle}'+
+    '.sigline{margin-top:40px;border-top:1px solid #333;width:320px;padding-top:4px}'+
+    '@media print{button{display:none}}</style>';
+  let html=_printBrandHead('Resultado da Avaliação Online');
+  html+='<div class="meta"><strong>Executante:</strong> '+t.operador+' &nbsp;|&nbsp; <strong>Empresa:</strong> '+empresa+'<br>'+
+    '<strong>Procedimento:</strong> '+t.proc+' ('+(t.revisao||'—')+') &nbsp;|&nbsp; <strong>Data/Hora:</strong> '+dataHora+'<br>'+
+    '<strong>Resultado:</strong> <span class="res">'+t.resultado+'</span> &nbsp; ('+(t.quizPct!=null?t.quizPct+'% — ':'')+acertos+'/'+t.quizDetail.length+' corretas)</div>';
+  t.quizDetail.forEach((q,i)=>{
+    html+='<div class="q"><div class="tit">'+(i+1)+'. '+q.pergunta+' '+(q.resposta===q.correta?'✓':'✗')+'</div>';
+    q.opcoes.forEach((o,j)=>{
+      let cls='opt', tag='';
+      if(j===q.correta){ cls+=' ok'; tag=' <span class="tag">✓ (gabarito)</span>'; }
+      if(j===q.resposta && j!==q.correta){ cls+=' wrong'; tag=' <span class="tag">← resposta do executante</span>'; }
+      if(j===q.resposta && j===q.correta){ tag=' <span class="tag">← resposta do executante</span>'; }
+      html+='<div class="'+cls+'">'+letras[j]+') '+o+tag+'</div>';
+    });
+    if(q.resposta===undefined||q.resposta===null) html+='<div style="font-size:11px;color:#b91c1c;margin-top:3px">Não respondida</div>';
+    html+='</div>';
+  });
+  html+='<div class="sig">'+
+    '<div class="row"><strong>Empresa:</strong> <span class="box">'+(empresa==='Adecco'?'X':'')+'</span> Adecco '+
+    '<span class="box">'+(empresa==='Tecnored'?'X':'')+'</span> Tecnored</div>'+
+    '<div class="row"><strong>Data/Hora da realização:</strong> '+dataHora+'</div>'+
+    '<div class="sigline">Assinatura do Executante &nbsp;—&nbsp; '+t.operador+'</div>'+
+  '</div>';
+  const win=window.open('','_blank');
+  win.document.write('<html><head><title>Resultado da Avaliação Online — '+t.operador+'</title><meta charset="UTF-8">'+css+'</head><body>'+html+'</body></html>');
+  win.document.close(); win.focus();
+  setTimeout(function(){ try{ win.print(); }catch(e){} }, 500);
+}
+
 // ═══════════════════════════════════════════════════════
 // IMPRESSÃO GENÉRICA
 // ═══════════════════════════════════════════════════════
@@ -3128,7 +3190,7 @@ function printGenerico(titulo, colunas, linhas){
     'tr:nth-child(even){background:#f4f6f9}'+
     '.sign{margin-top:40px;font-size:12px}.sign-line{margin-top:48px;border-top:1px solid #333;width:280px;padding-top:4px}'+
     '@media print{button{display:none}}</style></head><body>';
-  html += '<h1>🛡️ GestorPRO — '+titulo+'</h1>';
+  html += _printBrandHead(titulo);
   html += '<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' &nbsp;|&nbsp; '+linhas.length+' registro(s)</div>';
   html += '<table><thead><tr>'+colunas.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
   linhas.forEach(linha=>{ html += '<tr>'+linha.map(c=>'<td>'+(c||'—')+'</td>').join('')+'</tr>'; });
@@ -3494,7 +3556,7 @@ function printRelatorioGerencial(){
     'tfoot td{font-weight:700;background:#eef4f1}'+
     '.foot{margin-top:24px;font-size:10px;color:#9ca3af;text-align:center}'+
     '@media print{button{display:none}}</style>';
-  let html='<h1>🛡️ GestorPRO — Relatório Gerencial</h1>';
+  let html=_printBrandHead('Relatório Gerencial');
   html+='<div class="sub">Emitido em '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' &nbsp;|&nbsp; Operação Tecnored Pinda</div>';
   html+='<h2>Resumo Geral</h2><div class="cards">'+
     '<div class="card"><div class="v">'+procs.length+'</div><div class="l">Procedimentos</div></div>'+
@@ -3576,14 +3638,14 @@ function renderCapProg(){
   if(cfEl){ const cur=cfEl.value; const cs=[...new Set(capacProgramadas.map(p=>p.capacitacao))].sort(); cfEl.innerHTML='<option value="">Todas as capacitações</option>'+cs.map(c=>`<option value="${c}">${c}</option>`).join(''); cfEl.value=cur; }
   const fop=(document.getElementById('filter-capprog-op')||{}).value||'';
   const fcap=(document.getElementById('filter-capprog-cap')||{}).value||'';
-  const filtered=capacProgramadas.filter(p=>(!fop||p.operador===fop)&&(!fcap||p.capacitacao===fcap));
+  const fst=(document.getElementById('filter-capprog-status')||{}).value||'';
+  const filtered=capacProgramadas.filter(p=>(!fop||p.operador===fop)&&(!fcap||p.capacitacao===fcap)&&(!fst||capVencStatus(p.proxima)===fst));
   const empty=document.getElementById('capprog-empty');
   const tbl=document.querySelector('#page-capprog table');
-  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
+  if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; const ca0=document.getElementById('capprog-check-all'); if(ca0) ca0.checked=false; return; }
   empty.classList.add('hidden'); tbl.style.display='';
   document.getElementById('capprog-tbody').innerHTML = filtered.map(p=>{
-    const nd=parseDate(p.proxima); const late=nd&&nd<today; const soon=nd&&!late&&nd<=in90;
-    const st=late?'<span class="badge danger">Atrasado</span>':soon?'<span class="badge warn">Em breve</span>':'<span class="badge ok">Agendado</span>';
+    const st=p.proxima?capVencBadge(p.proxima):'<span class="badge neutral">—</span>';
     return `<tr>
       <td><input type="checkbox" class="capprog-check" value="${p.id}"></td>
       <td>${p.operador}</td>
@@ -3710,8 +3772,7 @@ function renderCapReg(){
   if(cfEl){ const cur=cfEl.value; const cs=[...new Set(capacRegistros.map(r=>r.capacitacao))].sort(); cfEl.innerHTML='<option value="">Todas as capacitações</option>'+cs.map(c=>`<option value="${c}">${c}</option>`).join(''); cfEl.value=cur; }
   const fop=(document.getElementById('filter-capreg-op')||{}).value||'';
   const fcap=(document.getElementById('filter-capreg-cap')||{}).value||'';
-  const fst=(document.getElementById('filter-capreg-status')||{}).value||'';
-  const filtered = capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap)&&(!fst||capVencStatus(r.vencimento)===fst));
+  const filtered = capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap));
   const empty=document.getElementById('capreg-empty');
   const tbl=document.querySelector('#page-capreg table');
   if(!filtered.length){ empty.classList.remove('hidden'); tbl.style.display='none'; return; }
@@ -3723,7 +3784,6 @@ function renderCapReg(){
     <td>${r.funcao||'—'}</td>
     <td>${fmtDate(r.dataRealizada)}</td>
     <td>${fmtDate(r.vencimento)}</td>
-    <td>${capVencBadge(r.vencimento)}</td>
     <td>${r.responsavel||'—'}</td>
   </tr>`).join('');
   const ca=document.getElementById('capreg-check-all'); if(ca) ca.checked=false;
@@ -3764,11 +3824,9 @@ function printSelectedCapReg(){
   let ids=getSelectedCapReg();
   const fop=(document.getElementById('filter-capreg-op')||{}).value||'';
   const fcap=(document.getElementById('filter-capreg-cap')||{}).value||'';
-  const fst=(document.getElementById('filter-capreg-status')||{}).value||'';
-  let rows = ids.length ? capacRegistros.filter(r=>ids.includes(r.id)) : capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap)&&(!fst||capVencStatus(r.vencimento)===fst));
+  let rows = ids.length ? capacRegistros.filter(r=>ids.includes(r.id)) : capacRegistros.filter(r=>(!fop||r.operador===fop)&&(!fcap||r.capacitacao===fcap));
   if(!rows.length){ alert('Não há registros para imprimir.'); return; }
-  const statusTxt = v=>{ const s=capVencStatus(v); return s==='vencido'?'Vencido':s==='vencendo'?'Vencendo':'Válido'; };
-  printGenerico('Registros de Capacitação', ['Operador','Capacitação','Função','Data Realizada','Vencimento','Status','Responsável'], rows.map(r=>[r.operador,r.capacitacao,r.funcao||'—',fmtDate(r.dataRealizada),fmtDate(r.vencimento),statusTxt(r.vencimento),r.responsavel]));
+  printGenerico('Registros de Capacitação', ['Operador','Capacitação','Função','Data Realizada','Vencimento','Responsável'], rows.map(r=>[r.operador,r.capacitacao,r.funcao||'—',fmtDate(r.dataRealizada),fmtDate(r.vencimento),r.responsavel]));
 }
 
 // ═══════════════════════════════════════════════════════
