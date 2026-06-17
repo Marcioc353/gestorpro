@@ -3617,9 +3617,9 @@ function printRelatorioGerencial(){
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;margin:0}'+
     '.sub{font-size:12px;color:#6b7280;margin-bottom:16px;border-bottom:2px solid #006667;padding-bottom:10px}'+
     'h2{font-size:13px;color:#006667;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px;border-left:4px solid #006667;padding-left:8px}'+
-    '.cards{display:flex;flex-wrap:wrap;gap:10px}'+
-    '.card{flex:1;min-width:110px;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}'+
-    '.card .v{font-size:24px;font-weight:800}.card .l{font-size:9.5px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}'+
+    '.cards{display:flex;flex-wrap:nowrap;gap:8px}'+
+    '.card{flex:1;min-width:0;border:1px solid #e5e7eb;border-radius:8px;padding:10px 6px;text-align:center}'+
+    '.card .v{font-size:23px;font-weight:800}.card .l{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-top:2px}'+
     '.green{color:#00814B}.amber{color:#b45309}.red{color:#b91c1c}.blue{color:#1d4ed8}'+
     'table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}'+
     'th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left}'+
@@ -3648,41 +3648,34 @@ function printRelatorioGerencial(){
     '<div class="card"><div class="v red">'+kVen+'</div><div class="l">Vencidos</div></div>'+
   '</div>';
   // Quadro de Pessoal
-  html+='<h2>👥 Quadro de Pessoal</h2><div class="cards">'+
-    '<div class="card"><div class="v green">'+nTec+'</div><div class="l">Tecnored</div></div>'+
-    '<div class="card"><div class="v" style="color:#E2001A">'+nAde+'</div><div class="l">Adecco</div></div>'+
-    '<div class="card"><div class="v blue">'+treinTotal+'</div><div class="l">Treinamentos registrados</div></div>'+
-    '<div class="card"><div class="v blue">'+avalConcl+'</div><div class="l">Aval. comportamentais</div></div>'+
-  '</div>';
-  // Indicadores por Área
-  html+='<h2>📊 Indicadores por Área</h2>';
-  html+='<table><thead><tr><th>Área</th><th>Proced.</th><th>Colab.</th><th>Vigentes</th><th>Alerta</th><th>Vencidos</th><th>Pendentes</th></tr></thead><tbody>';
-  let tP=0,tC=0,tV=0,tA=0,tVe=0,tPe=0;
-  areaRows.forEach(r=>{ tP+=r.nProcs;tC+=r.nColab;tV+=r.vig;tA+=r.ale;tVe+=r.ven;tPe+=r.pend;
-    html+='<tr><td>'+r.a+'</td><td class="n">'+r.nProcs+'</td><td class="n">'+r.nColab+'</td><td class="n green">'+r.vig+'</td><td class="n amber">'+r.ale+'</td><td class="n red">'+r.ven+'</td><td class="n">'+r.pend+'</td></tr>';
-  });
-  html+='</tbody><tfoot><tr><td>TOTAL</td><td class="n">'+tP+'</td><td class="n">'+tC+'</td><td class="n">'+tV+'</td><td class="n">'+tA+'</td><td class="n">'+tVe+'</td><td class="n">'+tPe+'</td></tr></tfoot></table>';
-  // Pendências detalhadas
-  html+='<h2>⏳ Pendências (com responsável)</h2>';
-  if(pendList.length){
-    html+='<table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Referência</th><th>Responsável</th><th>Prazo</th></tr></thead><tbody>';
-    pendList.forEach(p=>{ html+='<tr><td>'+p.colab+'</td><td>'+p.tipo+'</td><td>'+p.ref+'</td><td>'+p.resp+'</td><td class="n">'+(p.prazo?fmtDate(p.prazo):'—')+'</td></tr>'; });
-    html+='</tbody></table>';
-  } else { html+='<div class="empty">✅ Nenhuma pendência.</div>'; }
+  // ===== ALERTAS GERAIS =====
+  html+='<h2>🔔 Alertas Gerais</h2>';
   // Vencendo em 90 dias
-  html+='<h2>🟡 Vencendo em 90 dias</h2>';
+  html+='<h3 style="font-size:12px;margin:10px 0 4px;color:#b45309">🟡 Vencendo em 90 dias</h3>';
   if(venc90.length){
     html+='<table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Referência</th><th>Vence em</th><th>Responsável</th></tr></thead><tbody>';
     venc90.forEach(r=>{ html+='<tr><td>'+r.colab+'</td><td>'+r.tipo+'</td><td>'+r.ref+'</td><td class="n amber">'+fmtDate(r.venc)+'</td><td>'+r.resp+'</td></tr>'; });
     html+='</tbody></table>';
   } else { html+='<div class="empty">✅ Nada vencendo nos próximos 90 dias.</div>'; }
   // Vencidos
-  html+='<h2>🔴 Vencidos</h2>';
+  html+='<h3 style="font-size:12px;margin:12px 0 4px;color:#b91c1c">🔴 Vencidos</h3>';
   if(vencidos.length){
     html+='<table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Referência</th><th>Venceu em</th><th>Responsável</th></tr></thead><tbody>';
     vencidos.forEach(r=>{ html+='<tr><td>'+r.colab+'</td><td>'+r.tipo+'</td><td>'+r.ref+'</td><td class="n red">'+fmtDate(r.venc)+'</td><td>'+r.resp+'</td></tr>'; });
     html+='</tbody></table>';
   } else { html+='<div class="empty">✅ Nenhuma capacitação vencida.</div>'; }
+  // Frase de impacto (aleatória)
+  const frases=[
+    'Gerir procedimentos e capacitações é transformar conhecimento em segurança e resultado.',
+    'Equipe capacitada, operação confiável: o controle de hoje evita o retrabalho de amanhã.',
+    'Cada capacitação em dia é um risco a menos e uma entrega a mais.',
+    'Procedimentos vivos e treinamentos atualizados são a base de uma operação de excelência.',
+    'Quem controla os prazos das capacitações antecipa problemas e protege pessoas.',
+    'Conformidade não é burocracia: é o caminho mais curto para a segurança e a produtividade.',
+    'A gestão visível das competências fortalece a cultura de segurança em toda a planta.'
+  ];
+  const frase=frases[Math.floor(Math.random()*frases.length)];
+  html+='<div style="margin-top:18px;padding:12px 16px;border-left:4px solid #00814B;background:#f0f7f3;border-radius:6px;font-size:12px;font-style:italic;color:#0b3b2e">💡 '+frase+'</div>';
   html+='<div class="foot">Relatório gerado automaticamente pelo GestorPRO — Gestão Operacional</div>';
   const win=window.open('','_blank');
   win.document.write('<html><head><title>Relatório Gerencial — GestorPRO</title><meta charset="UTF-8">'+css+'</head><body>'+html+'</body></html>');
