@@ -1440,9 +1440,10 @@ function renderDashboard(){
   let pPend=0;
   indicados.forEach(i=>{ if(!capacProc.some(r=>String(r.procId)===String(i.procId)&&r.colaborador===i.colaborador)) pPend++; });
 
-  // ===== Domínio CAPACITAÇÕES (registros NR) =====
+  // ===== Domínio CAPACITAÇÕES (registros NR realizados + programadas pela "Próxima") =====
   const byColabK = {};
   capacRegistros.forEach(r=>{ (byColabK[r.operador]=byColabK[r.operador]||[]).push(capVencStatus(r.vencimento)); });
+  capacProgramadas.forEach(p=>{ if(p.proxima){ (byColabK[p.operador]=byColabK[p.operador]||[]).push(capVencStatus(p.proxima)); } });
   let kVig=0,kAle=0,kVen=0;
   Object.keys(byColabK).forEach(c=>{ const s=byColabK[c]; if(s.includes('vencido')) kVen++; else if(s.includes('vencendo')) kAle++; else kVig++; });
   const kPend = capacProgramadas.length;
@@ -1480,10 +1481,11 @@ function renderDashboard(){
     </div>`).join('') || '<p style="color:var(--text3);font-size:13px">Nenhum procedimento cadastrado.</p>';
   }
 
-  // Listas de ação: vencidos e a vencer (por registro, com colaborador)
+  // Listas de ação: vencidos e a vencer (por registro, com colaborador) — inclui programadas pela "Próxima"
   const allRecs = [
     ...capacProc.map(r=>({colab:r.colaborador, venc:r.vencimento, ref:r.procNumero, tipo:'Procedimento'})),
-    ...capacRegistros.map(r=>({colab:r.operador, venc:r.vencimento, ref:r.capacitacao, tipo:'Capacitação'}))
+    ...capacRegistros.map(r=>({colab:r.operador, venc:r.vencimento, ref:r.capacitacao, tipo:'Capacitação'})),
+    ...capacProgramadas.filter(p=>p.proxima).map(p=>({colab:p.operador, venc:p.proxima, ref:p.capacitacao+(p.funcao&&p.funcao!=='Não se aplica'?' - '+p.funcao:''), tipo:'Capacitação programada'}))
   ];
   const vencidosR = allRecs.filter(r=>capVencStatus(r.venc)==='vencido').sort((a,b)=>(a.venc||'').localeCompare(b.venc||''));
   const alertaR = allRecs.filter(r=>capVencStatus(r.venc)==='vencendo').sort((a,b)=>(a.venc||'').localeCompare(b.venc||''));
