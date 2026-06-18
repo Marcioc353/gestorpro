@@ -524,7 +524,7 @@ textarea{resize:vertical;min-height:70px}
       </div>
       <!-- LIST VIEW -->
       <div id="avalcomp-list">
-        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" onclick="openNovaAvalComp()">+ Nova Avaliação Comportamental</button><button class="btn" onclick="changeAvalCompPin()">🔑 Alterar senha</button><button class="btn" onclick="lockAvalComp()">🔒 Bloquear</button></div>
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" onclick="openNovaAvalComp()">+ Nova Avaliação Comportamental</button></div>
         <div class="alert info" style="margin-bottom:16px">📋 O <strong>Gestor</strong> avalia o comportamento do colaborador no período observado. Crie a avaliação e clique em <strong>Iniciar Avaliação</strong> para responder o questionário (Atende / Não Atende / Oportunidade de Melhoria).</div>
         <div class="table-wrap">
           <div class="table-header">
@@ -1396,7 +1396,7 @@ function toggleSection(headerEl){
 }
 
 function navTo(page, el){
-  if(page!=='capacitacao' && page!=='avalregistros') avalCompUnlocked = false; // re-bloqueia ao sair das Competências
+  // Acesso livre (senha removida para uso no celular)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -2764,10 +2764,10 @@ function changeAvalCompPin(){
   if(!/^\d{4}$/.test(nova)){ alert('A senha deve ter exatamente 4 dígitos numéricos.'); return; }
   saveState('avalCompPin', nova); alert('Senha alterada com sucesso!');
 }
-let avalCompUnlocked = false;
+let avalCompUnlocked = true;
 function renderAvalComp(){
   // Bloqueio por senha (sigilo)
-  const locked = !avalCompUnlocked;
+  const locked = false; // senha removida
   document.getElementById('avalcomp-lock').classList.toggle('hidden', !locked);
   if(locked){
     document.getElementById('avalcomp-list').classList.add('hidden');
@@ -3054,7 +3054,7 @@ function unlockAvalReg(){
   else { document.getElementById('avalreg-pin-err').textContent='Senha incorreta. Tente novamente.'; const p=document.getElementById('avalreg-pin'); if(p){ p.value=''; p.focus(); } }
 }
 function renderAvalRegistros(){
-  const locked = !avalCompUnlocked;
+  const locked = false; // senha removida
   document.getElementById('avalreg-lock').classList.toggle('hidden', !locked);
   document.getElementById('avalreg-content').classList.toggle('hidden', locked);
   if(locked){
